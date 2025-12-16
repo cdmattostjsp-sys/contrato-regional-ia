@@ -1,0 +1,6 @@
+# Logs do sistema
+*.log
+*.log.*
+
+# Manter diretório no Git
+!.gitkeep

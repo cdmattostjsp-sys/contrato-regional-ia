@@ -1,0 +1,7 @@
+# Arquivos de exportação gerados pelo sistema
+*.docx
+*.pdf
+*.xlsx
+
+# Temporários
+*.tmp
