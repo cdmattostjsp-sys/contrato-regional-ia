@@ -5,10 +5,16 @@ Processa perguntas sobre contratos usando contexto específico.
 
 Padrão: Responde EXCLUSIVAMENTE com base no contrato carregado.
 Não inventa informações. Se não souber, admite.
+
+Base de Conhecimento:
+- Manual de Contratos TJSP 2025
+- Instrução Normativa 12/2025
+- Manual de Boas Práticas em Contratações Públicas
 """
 
 from typing import Dict
 from datetime import datetime
+from pathlib import Path
 
 
 def processar_pergunta_copilot(pergunta: str, contrato: Dict) -> str:
@@ -198,6 +204,15 @@ Posso fornecer informações sobre:
 - "Qual o valor do contrato?"
 
 💡 Estou aqui para ajudar com informações específicas deste contrato!
+
+---
+
+📚 **Base de Conhecimento Disponível:**
+- Manual de Contratos TJSP 2025
+- Instrução Normativa 12/2025
+- Manual de Boas Práticas em Contratações
+
+*Consulte a página "Biblioteca" para mais informações sobre os manuais institucionais.*
 """
 
 

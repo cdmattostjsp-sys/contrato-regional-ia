@@ -167,19 +167,22 @@ http://localhost:8501
 ## 📊 ESTATÍSTICAS DO PROJETO
 
 - **Diretórios criados:** 11
-- **Arquivos Python:** 16
-- **Linhas de código:** ~2.500+
-- **Páginas Streamlit:** 5 (1 principal + 4 páginas)
+- **Arquivos Python:** 18 (+2 novos)
+- **Linhas de código:** ~3.000+ (+500)
+- **Páginas Streamlit:** 6 (1 principal + 5 páginas)
 - **Agentes de IA:** 2
-- **Serviços:** 2
+- **Serviços:** 3 (+1 document_service)
 - **Testes:** 10
 - **Contratos mockados:** 8
+- **Manuais institucionais:** 3 (28,6 MB)
 
 ## 🎯 PRÓXIMOS PASSOS (Fase 2)
 
 ### Integrações
 - [ ] API REST para contratos reais
 - [ ] Integração com LLM (OpenAI/Azure)
+- [x] Base de conhecimento com manuais institucionais
+- [ ] Extração automática de PDFs
 - [ ] Sistema de autenticação
 - [ ] Upload de documentos
 
@@ -188,21 +191,27 @@ http://localhost:8501
 - [ ] Envio de notificações por e-mail
 - [ ] Dashboard analytics
 - [ ] Alertas automáticos
+- [ ] Busca nos manuais institucionais
+- [ ] Copilot com RAG (Retrieval Augmented Generation)
 
-### Qualidade
-- [ ] Aumentar cobertura de testes
-- [ ] Testes de integração
-- [ ] Testes E2E
-- [ ] CI/CD pipeline
+## ✅ STATUS FINAL: MVP COMPLETO E EXPANDIDO
 
-## ✅ STATUS FINAL: MVP COMPLETO E FUNCIONAL
-
-O projeto está **100% completo** conforme especificações do MVP.
-Todos os requisitos obrigatórios foram implementados e testados.
+O projeto está **100% completo** conforme especificações do MVP, com
+**expansão da base de conhecimento** incluindo 3 manuais institucionais.
 
 **Data de conclusão:** 16/12/2025
-**Versão:** 1.0.0 (MVP)
-**Status:** ✅ Pronto para validação
+**Versão:** 1.1.0 (MVP + Base de Conhecimento Expandida)
+**Status:** ✅ Pronto para validação e uso
+
+### 🆕 Novidades da v1.1.0
+
+✨ **Base de Conhecimento Expandida:**
+- Manual de Contratos TJSP 2025
+- Instrução Normativa 12/2025
+- Manual de Boas Práticas em Contratações Públicas
+- Nova página "Biblioteca" para consulta aos manuais
+- Serviço de gerenciamento de documentos
+- Infraestrutura preparada para extração de PDF
 
 ---
 

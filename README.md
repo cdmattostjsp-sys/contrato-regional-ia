@@ -128,6 +128,13 @@ contrato-regional-ia/
 - Fluxos de tratamento de irregularidades
 - Base legal e normativa aplicável
 
+### 📚 Biblioteca de Manuais
+- Consulta aos manuais institucionais em PDF
+- Manual de Contratos TJSP 2025 (1,7 MB)
+- Instrução Normativa 12/2025 (2,6 MB)
+- Manual de Boas Práticas em Contratações (24,3 MB)
+- Referências legais estruturadas
+
 ---
 
 ## 🎨 Design System
@@ -169,7 +176,15 @@ Referência: `DESIGN_SYSTEM_TJSP.md` (repositório synapse-next-homologacao)
 - [x] Navegação entre páginas
 - [x] Session state management
 
-### 🔄 Em Desenvolvimento
+### � Base de Conhecimento
+- [x] Manual de Contratos TJSP 2025
+- [x] Instrução Normativa 12/2025
+- [x] Manual de Boas Práticas em Contratações Públicas
+- [x] Página de Biblioteca de Manuais
+- [ ] Extração automática de texto PDF
+- [ ] Busca nos documentos
+
+### �🔄 Em Desenvolvimento
 - [ ] Integração com API REST corporativa
 - [ ] Integração com modelo LLM real (OpenAI/Azure)
 - [ ] Upload de documentos contratuais
