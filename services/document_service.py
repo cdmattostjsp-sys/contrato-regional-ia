@@ -17,18 +17,39 @@ def listar_documentos_disponiveis() -> List[Dict]:
     Returns:
         Lista de dicionários com informações dos documentos
     """
-    knowledge_path = Path(__file__).parent.parent / "knowledge" / "raj_10_1"
+    base_path = Path(__file__).parent.parent / "knowledge"
     documentos = []
     
-    if knowledge_path.exists():
-        for pdf_file in knowledge_path.glob("*.pdf"):
+    # RAJ 10.1 - Manuais institucionais
+    raj_path = base_path / "raj_10_1"
+    if raj_path.exists():
+        for pdf_file in raj_path.glob("*.pdf"):
             tamanho_mb = pdf_file.stat().st_size / (1024 * 1024)
             documentos.append({
                 "nome": pdf_file.name,
                 "caminho": str(pdf_file),
                 "tamanho_mb": round(tamanho_mb, 2),
-                "tipo": classificar_documento(pdf_file.name)
+                "tipo": classificar_documento(pdf_file.name),
+                "categoria": "Manuais Institucionais"
             })
+    
+    # Cadernos Técnicos
+    cadernos_path = base_path / "cadernos_tecnicos"
+    if cadernos_path.exists():
+        for servico_dir in cadernos_path.iterdir():
+            if servico_dir.is_dir():
+                servico_nome = servico_dir.name.replace("_", " ").title()
+                for doc_file in servico_dir.glob("*.*"):
+                    if doc_file.suffix.lower() in ['.pdf', '.xlsx', '.xls']:
+                        tamanho_mb = doc_file.stat().st_size / (1024 * 1024)
+                        documentos.append({
+                            "nome": doc_file.name,
+                            "caminho": str(doc_file),
+                            "tamanho_mb": round(tamanho_mb, 2),
+                            "tipo": f"Caderno Técnico - {servico_nome}",
+                            "categoria": "Cadernos Técnicos",
+                            "servico": servico_nome
+                        })
     
     return documentos
 
@@ -197,19 +218,29 @@ def gerar_resumo_documentos() -> str:
     documentos = listar_documentos_disponiveis()
     referencias = obter_referencias_legais()
     
+    # Agrupa por categoria
+    por_categoria = {}
+    for doc in documentos:
+        categoria = doc.get('categoria', 'Outros')
+        if categoria not in por_categoria:
+            por_categoria[categoria] = []
+        por_categoria[categoria].append(doc)
+    
     resumo = """
-# 📚 Base de Conhecimento - RAJ 10.1
+# 📚 Base de Conhecimento Completa
 
-## Documentos Disponíveis
+## Documentos por Categoria
 
 """
     
-    for doc in documentos:
-        resumo += f"""
-### {doc['tipo']}
-**Arquivo:** `{doc['nome']}`  
-**Tamanho:** {doc['tamanho_mb']} MB  
-**Status:** ✅ Disponível
+    for categoria, docs in por_categoria.items():
+        resumo += f"\n### {categoria}\n\n"
+        for doc in docs:
+            resumo += f"""
+**{doc['tipo']}**  
+Arquivo: `{doc['nome']}`  
+Tamanho: {doc['tamanho_mb']} MB  
+Status: ✅ Disponível
 
 """
     
@@ -224,7 +255,16 @@ def gerar_resumo_documentos() -> str:
         else:
             resumo += f"- **{ref['nome']}**: {ref['descricao']}\n"
     
-    resumo += """
+    total_docs = len(documentos)
+    total_mb = sum(d['tamanho_mb'] for d in documentos)
+    
+    resumo += f"""
+
+## 📊 Estatísticas
+
+- **Total de documentos:** {total_docs}
+- **Tamanho total:** {total_mb:.1f} MB
+- **Categorias:** {len(por_categoria)}
 
 ## Próximas Implementações
 
@@ -234,10 +274,11 @@ def gerar_resumo_documentos() -> str:
 - [ ] Cache de conteúdo extraído
 - [ ] Busca semântica com embeddings
 - [ ] Citação automática de fontes nas respostas
+- [ ] Análise de planilhas XLSX (Cadernos Técnicos)
 
 ## Como Usar
 
-Os documentos estão armazenados em `knowledge/raj_10_1/` e serão
+Os documentos estão armazenados em `knowledge/` e serão
 automaticamente consultados pelos agentes de IA quando a extração
 de PDF for implementada.
 
@@ -246,6 +287,7 @@ de PDF for implementada.
 PyPDF2==3.0.1
 # ou
 pdfplumber==0.10.3
+openpyxl==3.1.2  # Para planilhas Excel
 ```
 
 Depois implemente a extração real em `extrair_texto_pdf()`.

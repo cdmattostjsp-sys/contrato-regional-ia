@@ -81,11 +81,54 @@ def main():
         documentos = listar_documentos_disponiveis()
         
         if documentos:
-            st.success(f"✅ {len(documentos)} documento(s) disponível(is) na base de conhecimento")
-            
+            # Agrupa por categoria
+            categorias = {}
             for doc in documentos:
-                render_documento_card(doc)
-                st.markdown("<br>", unsafe_allow_html=True)
+                cat = doc.get('categoria', 'Outros')
+                if cat not in categorias:
+                    categorias[cat] = []
+                categorias[cat].append(doc)
+            
+            total_docs = len(documentos)
+            total_mb = sum(d['tamanho_mb'] for d in documentos)
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.metric("📚 Documentos", total_docs)
+            with col2:
+                st.metric("💾 Tamanho Total", f"{total_mb:.1f} MB")
+            with col3:
+                st.metric("🗂️ Categorias", len(categorias))
+            
+            st.markdown("---")
+            
+            # Exibe por categoria
+            for categoria, docs in categorias.items():
+                st.markdown(f"### {categoria}")
+                
+                if categoria == "Cadernos Técnicos":
+                    # Agrupa por serviço
+                    por_servico = {}
+                    for doc in docs:
+                        servico = doc.get('servico', 'Outros')
+                        if servico not in por_servico:
+                            por_servico[servico] = []
+                        por_servico[servico].append(doc)
+                    
+                    for servico, docs_servico in por_servico.items():
+                        with st.expander(f"📋 {servico}"):
+                            for doc in docs_servico:
+                                col1, col2 = st.columns([4, 1])
+                                with col1:
+                                    st.write(f"📄 {doc['nome']}")
+                                with col2:
+                                    st.write(f"{doc['tamanho_mb']} MB")
+                else:
+                    for doc in docs:
+                        render_documento_card(doc)
+                        st.markdown("<br>", unsafe_allow_html=True)
+                
+                st.markdown("---")
             
             # Informações sobre implementação futura
             with st.expander("ℹ️ Sobre a Integração dos Documentos"):
