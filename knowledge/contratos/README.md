@@ -6,27 +6,41 @@ Este diretório armazena os arquivos PDF dos contratos cadastrados via sistema.
 
 ```
 knowledge/contratos/
-├── CTR20251217120000.pdf    # Contrato principal
-├── CTR20251217120001.pdf    # Outro contrato
+├── CTR20251217120000/              # Diretório do contrato
+│   ├── CTR20251217120000_PRINCIPAL.pdf     # Contrato principal
+│   ├── CTR20251217120000_ADITIVO_01.pdf    # 1º Aditivo
+│   ├── CTR20251217120000_ADITIVO_02.pdf    # 2º Aditivo
+│   └── ...                                 # N aditivos
+├── CTR20251217120001/              # Outro contrato
+│   └── CTR20251217120001_PRINCIPAL.pdf
 └── ...
 ```
 
 ## 📝 Nomenclatura
 
-Os arquivos são nomeados automaticamente com o padrão:
-- **Formato:** `{ID_CONTRATO}.pdf`
-- **Exemplo:** `CTR20251217120530.pdf`
+**Diretórios:**
+- Um diretório por contrato
+- Nome = ID do contrato (timestamp único)
 
-O ID é gerado automaticamente no momento do cadastro baseado em timestamp.
+**Arquivos:**
+- **Contrato:** `{ID}_PRINCIPAL.pdf`
+- **Aditivos:** `{ID}_ADITIVO_{NN}.pdf` (numeração sequencial 01, 02, 03...)
 
 ## 🔄 Fluxo de Upload
 
+### Cadastro Inicial
 1. Usuário acessa **Gestão de Contratos** (página 06)
 2. Preenche formulário com dados estruturados
-3. Faz upload do PDF do contrato
-4. Sistema salva:
-   - **PDF** → `knowledge/contratos/{ID}.pdf`
+3. Faz upload do PDF do contrato principal
+4. **NOVO:** Pode fazer upload de múltiplos aditivos de uma vez
+5. Sistema salva:
+   - **Diretório** → `knowledge/contratos/{ID}/`
+   - **Contrato** → `{ID}_PRINCIPAL.pdf`
+   - **Aditivos** → `{ID}_ADITIVO_01.pdf`, `{ID}_ADITIVO_02.pdf`, ...
    - **Metadados** → `data/contratos_cadastrados.json`
+
+### Adicionar Aditivos Posteriormente
+(Funcionalidade futura - preparada na estrutura)
 
 ## 🎯 Uso dos PDFs
 

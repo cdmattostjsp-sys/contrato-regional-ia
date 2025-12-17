@@ -23,13 +23,14 @@ from ui.styles import apply_tjsp_styles
 from services.session_manager import initialize_session_state
 
 
-def salvar_contrato(dados_contrato: dict, arquivo_pdf):
+def salvar_contrato(dados_contrato: dict, arquivo_pdf, arquivos_aditivos=None):
     """
-    Salva contrato no sistema (metadados + PDF)
+    Salva contrato no sistema (metadados + PDF + aditivos)
     
     Args:
         dados_contrato: Dicionário com dados do contrato
-        arquivo_pdf: Arquivo PDF uploaded
+        arquivo_pdf: Arquivo PDF principal do contrato
+        arquivos_aditivos: Lista de arquivos de aditivos (opcional)
     """
     # Define caminhos
     data_dir = Path("data")
@@ -43,10 +44,14 @@ def salvar_contrato(dados_contrato: dict, arquivo_pdf):
     else:
         contratos = []
     
-    # Salva PDF
+    # Cria subdiretório para o contrato (comporta múltiplos PDFs)
+    contrato_dir = contratos_dir / dados_contrato['id']
+    contrato_dir.mkdir(exist_ok=True)
+    
+    # Salva PDF principal
     if arquivo_pdf:
-        pdf_filename = f"{dados_contrato['id']}.pdf"
-        pdf_path = contratos_dir / pdf_filename
+        pdf_filename = f"{dados_contrato['id']}_PRINCIPAL.pdf"
+        pdf_path = contrato_dir / pdf_filename
         
         with open(pdf_path, 'wb') as f:
             f.write(arquivo_pdf.getbuffer())
@@ -54,8 +59,27 @@ def salvar_contrato(dados_contrato: dict, arquivo_pdf):
         dados_contrato['pdf_path'] = str(pdf_path)
         dados_contrato['pdf_filename'] = pdf_filename
     
+    # Salva aditivos (se houver)
+    dados_contrato['aditivos'] = []
+    if arquivos_aditivos and len(arquivos_aditivos) > 0:
+        for i, aditivo_file in enumerate(arquivos_aditivos, 1):
+            aditivo_filename = f"{dados_contrato['id']}_ADITIVO_{i:02d}.pdf"
+            aditivo_path = contrato_dir / aditivo_filename
+            
+            with open(aditivo_path, 'wb') as f:
+                f.write(aditivo_file.getbuffer())
+            
+            dados_contrato['aditivos'].append({
+                'numero': i,
+                'filename': aditivo_filename,
+                'path': str(aditivo_path),
+                'data_upload': datetime.now().isoformat(),
+                'nome_original': aditivo_file.name
+            })
+    
     # Adiciona timestamp
     dados_contrato['data_cadastro'] = datetime.now().isoformat()
+    dados_contrato['total_aditivos'] = len(dados_contrato['aditivos'])
     
     # Adiciona à lista
     contratos.append(dados_contrato)
@@ -173,13 +197,30 @@ def main():
                     help="Status atual do contrato"
                 )
             
-            st.markdown("### 📎 Upload de Documento")
+            st.markdown("### 📎 Upload de Documentos")
             
             arquivo_pdf = st.file_uploader(
-                "Contrato em PDF *",
+                "Contrato Principal em PDF *",
                 type=['pdf'],
-                help="Faça upload do contrato assinado em PDF"
+                help="Faça upload do contrato assinado em PDF",
+                key="pdf_principal"
             )
+            
+            st.markdown("#### 📑 Termos Aditivos (Opcional)")
+            st.caption("Contratos podem ter múltiplos aditivos. Faça upload de todos de uma vez ou adicione depois.")
+            
+            arquivos_aditivos = st.file_uploader(
+                "Aditivos em PDF (pode selecionar múltiplos)",
+                type=['pdf'],
+                accept_multiple_files=True,
+                help="Selecione um ou mais arquivos de aditivos contratuais",
+                key="pdfs_aditivos"
+            )
+            
+            if arquivos_aditivos:
+                st.info(f"📋 **{len(arquivos_aditivos)} aditivo(s) selecionado(s):**")
+                for i, aditivo in enumerate(arquivos_aditivos, 1):
+                    st.write(f"  {i}. {aditivo.name}")
             
             # Botão de submissão
             submitted = st.form_submit_button(
@@ -218,8 +259,13 @@ def main():
                     
                     # Salva contrato
                     try:
-                        salvar_contrato(dados_contrato, arquivo_pdf)
+                        salvar_contrato(dados_contrato, arquivo_pdf, arquivos_aditivos)
+                        
                         st.success(f"✅ Contrato **{numero}** cadastrado com sucesso!")
+                        
+                        if arquivos_aditivos and len(arquivos_aditivos) > 0:
+                            st.success(f"📑 **{len(arquivos_aditivos)} aditivo(s)** anexado(s) com sucesso!")
+                        
                         st.balloons()
                         st.info(f"**ID gerado:** {contrato_id}")
                     except Exception as e:
@@ -254,8 +300,17 @@ def main():
                     
                     st.write(f"**Objeto:** {contrato['objeto']}")
                     
+                    # Exibe PDFs
                     if 'pdf_filename' in contrato:
-                        st.write(f"**PDF:** {contrato['pdf_filename']}")
+                        st.write(f"**📄 Contrato Principal:** {contrato['pdf_filename']}")
+                    
+                    # Exibe aditivos
+                    if 'aditivos' in contrato and len(contrato['aditivos']) > 0:
+                        st.write(f"**📑 Aditivos ({len(contrato['aditivos'])}):**")
+                        for aditivo in contrato['aditivos']:
+                            st.write(f"  • Aditivo {aditivo['numero']:02d}: {aditivo.get('nome_original', aditivo['filename'])}")
+                    else:
+                        st.write("**📑 Aditivos:** Nenhum aditivo cadastrado")
 
 
 if __name__ == "__main__":
