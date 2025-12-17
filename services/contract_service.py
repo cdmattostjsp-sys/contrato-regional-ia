@@ -3,12 +3,45 @@ Serviço de Contratos
 ====================
 Gerencia operações relacionadas a contratos regionais.
 
-Nota: Atualmente utiliza dados mockados.
+Nota: Atualmente utiliza dados mockados + contratos cadastrados via upload.
 Preparado para futura integração com API REST corporativa.
 """
 
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
+import json
+from pathlib import Path
+
+
+def get_contratos_cadastrados() -> List[Dict]:
+    """
+    Retorna contratos cadastrados via upload (sistema de gestão).
+    
+    Returns:
+        Lista de contratos cadastrados pelos usuários
+    """
+    json_path = Path("data/contratos_cadastrados.json")
+    
+    if not json_path.exists():
+        return []
+    
+    try:
+        with open(json_path, 'r', encoding='utf-8') as f:
+            contratos = json.load(f)
+        
+        # Converte strings ISO de data para datetime
+        for contrato in contratos:
+            if 'data_inicio' in contrato and isinstance(contrato['data_inicio'], str):
+                contrato['data_inicio'] = datetime.fromisoformat(contrato['data_inicio'])
+            if 'data_fim' in contrato and isinstance(contrato['data_fim'], str):
+                contrato['data_fim'] = datetime.fromisoformat(contrato['data_fim'])
+            if 'ultima_atualizacao' in contrato and isinstance(contrato['ultima_atualizacao'], str):
+                contrato['ultima_atualizacao'] = datetime.fromisoformat(contrato['ultima_atualizacao'])
+        
+        return contratos
+    except Exception as e:
+        print(f"Erro ao carregar contratos cadastrados: {e}")
+        return []
 
 
 def get_contratos_mock() -> List[Dict]:
@@ -146,9 +179,34 @@ def get_contratos_mock() -> List[Dict]:
     return contratos
 
 
+def get_todos_contratos() -> List[Dict]:
+    """
+    Retorna TODOS os contratos: mockados + cadastrados via upload.
+    
+    Esta é a função principal para listar contratos no sistema.
+    Combina contratos de exemplo (mock) com contratos reais cadastrados.
+    
+    Returns:
+        Lista completa de contratos disponíveis
+    """
+    contratos_mock = get_contratos_mock()
+    contratos_cadastrados = get_contratos_cadastrados()
+    
+    # Combina as duas listas
+    todos_contratos = contratos_mock + contratos_cadastrados
+    
+    # Ordena por data de atualização (mais recentes primeiro)
+    todos_contratos.sort(
+        key=lambda x: x.get('ultima_atualizacao', datetime.now()),
+        reverse=True
+    )
+    
+    return todos_contratos
+
+
 def get_contrato_by_id(contrato_id: str) -> Optional[Dict]:
     """
-    Busca contrato por ID.
+    Busca contrato por ID (em ambas as fontes: mock e cadastrados).
     
     Args:
         contrato_id: ID do contrato
@@ -156,7 +214,7 @@ def get_contrato_by_id(contrato_id: str) -> Optional[Dict]:
     Returns:
         Dados do contrato ou None se não encontrado
     """
-    contratos = get_contratos_mock()
+    contratos = get_todos_contratos()
     for contrato in contratos:
         if contrato["id"] == contrato_id:
             return contrato

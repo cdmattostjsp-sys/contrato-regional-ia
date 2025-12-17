@@ -21,7 +21,7 @@ sys.path.append(str(Path(__file__).parent))
 
 from ui.styles import apply_tjsp_styles
 from services.session_manager import initialize_session_state
-from services.contract_service import get_contratos_mock
+from services.contract_service import get_todos_contratos
 
 
 def render_header():
@@ -140,8 +140,8 @@ def render_contracts_dashboard():
     
     st.markdown("---")
     
-    # Lista de contratos
-    contratos = get_contratos_mock()
+    # Lista de contratos (mock + cadastrados)
+    contratos = get_todos_contratos()
     
     for contrato in contratos:
         render_contract_card(contrato)
