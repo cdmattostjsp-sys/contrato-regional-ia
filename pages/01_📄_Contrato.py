@@ -406,7 +406,7 @@ def main():
     if not st.session_state.contrato_selecionado:
         st.warning("⚠️ Nenhum contrato selecionado. Retorne ao dashboard.")
         if st.button("🏠 Voltar ao Dashboard"):
-            st.switch_page("app.py")
+            st.switch_page("🏠_Visão_Geral.py")
         return
     
     # Obtém detalhes completos do contrato
@@ -432,7 +432,7 @@ def main():
     
     with col1:
         if st.button("🏠 Dashboard", use_container_width=True):
-            st.switch_page("app.py")
+            st.switch_page("🏠_Visão_Geral.py")
     
     with col2:
         if st.button("🤖 Copilot", use_container_width=True):
