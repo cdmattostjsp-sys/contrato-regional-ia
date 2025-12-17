@@ -168,7 +168,7 @@ def render_sidebar():
         st.markdown("---")
         
         st.markdown("### 📚 Navegação")
-        st.page_link("Home.py", label="🏠 Home", icon="🏠")
+        st.page_link("app.py", label="🏠 Home", icon="🏠")
         st.page_link("pages/04_📖_Como_Proceder.py", label="📖 Como Proceder", icon="📖")
         st.page_link("pages/05_📚_Biblioteca.py", label="📚 Biblioteca", icon="📚")
         
