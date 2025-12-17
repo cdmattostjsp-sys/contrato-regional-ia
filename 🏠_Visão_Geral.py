@@ -101,9 +101,9 @@ def render_contract_card(contrato: dict):
                 st.switch_page("pages/01_📄_Contrato.py")
         
         with col2:
-            if st.button("🤖 Copilot", key=f"copilot_{contrato['id']}", use_container_width=True):
+            if st.button("💬 Copiloto", key=f"copilot_{contrato['id']}", use_container_width=True):
                 st.session_state.contrato_selecionado = contrato
-                st.switch_page("pages/02_🤖_Copilot.py")
+                st.switch_page("pages/02_💬_Copiloto.py")
         
         with col3:
             if st.button("📝 Notificar", key=f"notify_{contrato['id']}", use_container_width=True):

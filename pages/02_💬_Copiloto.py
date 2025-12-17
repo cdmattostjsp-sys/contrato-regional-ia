@@ -38,8 +38,8 @@ def render_chat_message(role: str, content: str, timestamp: datetime):
 
 def main():
     st.set_page_config(
-        page_title="TJSP - Copilot de Contrato",
-        page_icon="🤖",
+        page_title="TJSP - Copiloto de Contrato",
+        page_icon="💬",
         layout="wide"
     )
     
@@ -93,9 +93,9 @@ def main():
     st.markdown("### 💬 Conversa")
     
     # Instruções
-    with st.expander("ℹ️ Como usar o Copilot"):
+    with st.expander("ℹ️ Como usar o Copiloto"):
         st.info("""
-        O Copilot responde perguntas **exclusivamente sobre o contrato carregado**.
+        O Copiloto responde perguntas **exclusivamente sobre o contrato carregado**.
         
         **Exemplos de perguntas:**
         - Qual é o prazo de vigência do contrato?
@@ -111,7 +111,7 @@ def main():
     
     with chat_container:
         if len(st.session_state.chat_history) == 0:
-            st.info("👋 Olá! Sou o Copilot de Contratos. Posso responder perguntas sobre o contrato selecionado. Como posso ajudar?")
+            st.info("👋 Olá! Sou o Copiloto de Contratos. Posso responder perguntas sobre o contrato selecionado. Como posso ajudar?")
         
         for msg in st.session_state.chat_history:
             render_chat_message(
@@ -146,7 +146,7 @@ def main():
             })
             
             # Log
-            add_log("INFO", f"Copilot: Pergunta processada para contrato {contrato['id']}")
+add_log("INFO", f"Copiloto: Pergunta processada para contrato {contrato['id']}")
             
             # Rerun para atualizar interface
             st.rerun()

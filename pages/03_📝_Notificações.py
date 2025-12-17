@@ -59,8 +59,8 @@ def main():
             st.switch_page("pages/01_📄_Contrato.py")
     
     with col3:
-        if st.button("🤖 Copilot", use_container_width=True):
-            st.switch_page("pages/02_🤖_Copilot.py")
+        if st.button("💬 Copiloto", use_container_width=True):
+            st.switch_page("pages/02_💬_Copiloto.py")
     
     with col4:
         if st.button("📖 Como Proceder", use_container_width=True):

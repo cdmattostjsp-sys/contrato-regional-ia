@@ -238,11 +238,11 @@ def render_acoes_documentos():
     
     with col2:
         if st.button("📊 Relatório do Fiscal", use_container_width=True):
-            st.info("🤖 Recurso em desenvolvimento. O copilot gerará o relatório baseado nos dados do contrato.")
+            st.info("🤖 Recurso em desenvolvimento. O copiloto gerará o relatório baseado nos dados do contrato.")
     
     with col3:
         if st.button("📋 Relatório Final ao Gestor", use_container_width=True):
-            st.info("🤖 Recurso em desenvolvimento. O copilot gerará o relatório final consolidado.")
+            st.info("🤖 Recurso em desenvolvimento. O copiloto gerará o relatório final consolidado.")
 
 
 def render_contrato_detalhes(contrato: dict):
@@ -355,12 +355,12 @@ def render_contrato_detalhes(contrato: dict):
         
         st.markdown("---")
         
-        st.markdown("### 🤖 Tire Dúvidas com o Copilot")
-        st.write("O Copilot pode responder questões sobre legislação trabalhista aplicável a este contrato.")
+        st.markdown("### 💬 Tire Dúvidas com o Copiloto")
+        st.write("O Copiloto pode responder questões sobre legislação trabalhista aplicável a este contrato.")
         
-        if st.button("💬 Abrir Copilot para Consulta Normativa", use_container_width=True, type="primary"):
+        if st.button("💬 Abrir Copiloto para Consulta Normativa", use_container_width=True, type="primary"):
             st.session_state.copilot_contexto = "normativo"
-            st.switch_page("pages/02_🤖_Copilot.py")
+            st.switch_page("pages/02_💬_Copiloto.py")
     
     with tab4:
         st.markdown("### 📁 Documentos do Contrato")
@@ -435,8 +435,8 @@ def main():
             st.switch_page("🏠_Visão_Geral.py")
     
     with col2:
-        if st.button("🤖 Copilot", use_container_width=True):
-            st.switch_page("pages/02_🤖_Copilot.py")
+        if st.button("💬 Copiloto", use_container_width=True):
+            st.switch_page("pages/02_💬_Copiloto.py")
     
     with col3:
         if st.button("📝 Notificar", use_container_width=True):
