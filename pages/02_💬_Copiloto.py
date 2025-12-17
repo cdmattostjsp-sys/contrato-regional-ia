@@ -146,7 +146,7 @@ def main():
             })
             
             # Log
-add_log("INFO", f"Copiloto: Pergunta processada para contrato {contrato['id']}")
+            add_log("INFO", f"Copiloto: Pergunta processada para contrato {contrato['id']}")
             
             # Rerun para atualizar interface
             st.rerun()
