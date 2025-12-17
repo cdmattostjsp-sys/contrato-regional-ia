@@ -37,36 +37,52 @@ def render_header():
 
 
 def render_metrics():
-    """Renderiza métricas gerais do dashboard"""
+    """Renderiza métricas gerais do dashboard calculadas dinamicamente"""
+    # Obtém todos os contratos
+    contratos = get_todos_contratos()
+    
+    # Calcula métricas reais
+    total_contratos = len(contratos)
+    contratos_ativos = len([c for c in contratos if c.get('status') == 'ativo'])
+    contratos_atencao = len([c for c in contratos if c.get('status') == 'atencao'])
+    contratos_criticos = len([c for c in contratos if c.get('status') == 'critico'])
+    contratos_com_pendencias = len([c for c in contratos if c.get('pendencias')])
+    
+    # Valor total
+    valor_total = sum(c.get('valor', 0) for c in contratos)
+    
+    # Taxa de conformidade (contratos sem pendências)
+    taxa_conformidade = int((contratos_ativos / total_contratos * 100)) if total_contratos > 0 else 0
+    
     col1, col2, col3, col4 = st.columns(4)
     
     with col1:
         st.metric(
-            label="📋 Contratos Ativos",
-            value="8",
-            delta="2 novos"
+            label="📋 Total de Contratos",
+            value=f"{total_contratos}",
+            delta=f"{contratos_ativos} ativos"
         )
     
     with col2:
         st.metric(
-            label="⚠️ Pendências",
-            value="3",
-            delta="-1 resolvida",
-            delta_color="inverse"
+            label="⚠️ Requerem Atenção",
+            value=f"{contratos_atencao + contratos_criticos}",
+            delta=f"{contratos_criticos} críticos",
+            delta_color="inverse" if contratos_criticos > 0 else "normal"
         )
     
     with col3:
         st.metric(
-            label="✅ Em Conformidade",
-            value="5",
-            delta="+1"
+            label="💰 Valor Total",
+            value=f"R$ {valor_total/1_000_000:.1f}M",
+            delta=f"{total_contratos} contratos"
         )
     
     with col4:
         st.metric(
-            label="📊 Taxa de Cumprimento",
-            value="87%",
-            delta="+5%"
+            label="📊 Contratos Ativos",
+            value=f"{taxa_conformidade}%",
+            delta=f"{contratos_ativos}/{total_contratos}"
         )
 
 
