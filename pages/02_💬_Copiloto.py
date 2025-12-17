@@ -50,7 +50,7 @@ def main():
     if not st.session_state.contrato_selecionado:
         st.warning("⚠️ Nenhum contrato selecionado. Retorne ao dashboard.")
         if st.button("🏠 Voltar ao Dashboard"):
-            st.switch_page("Principal.py")
+            st.switch_page("app.py")
         return
     
     contrato = st.session_state.contrato_selecionado
@@ -72,7 +72,7 @@ def main():
     
     with col1:
         if st.button("🏠 Dashboard", use_container_width=True):
-            st.switch_page("Principal.py")
+            st.switch_page("app.py")
     
     with col2:
         if st.button("📄 Ver Contrato", use_container_width=True):
