@@ -23,7 +23,7 @@ from ui.styles import apply_tjsp_styles
 from services.session_manager import initialize_session_state
 
 
-def salvar_contrato(dados_contrato: dict, arquivo_pdf, arquivos_aditivos=None):
+def salvar_contrato(dados_contrato: dict, arquivo_pdf, arquivos_aditivos=None, dados_aditivos=None):
     """
     Salva contrato no sistema (metadados + PDF + aditivos)
     
@@ -31,6 +31,7 @@ def salvar_contrato(dados_contrato: dict, arquivo_pdf, arquivos_aditivos=None):
         dados_contrato: Dicionário com dados do contrato
         arquivo_pdf: Arquivo PDF principal do contrato
         arquivos_aditivos: Lista de arquivos de aditivos (opcional)
+        dados_aditivos: Lista de dicionários com dados de cada aditivo (tipo, impactos, etc)
     """
     # Define caminhos
     data_dir = Path("data")
@@ -69,12 +70,28 @@ def salvar_contrato(dados_contrato: dict, arquivo_pdf, arquivos_aditivos=None):
             with open(aditivo_path, 'wb') as f:
                 f.write(aditivo_file.getbuffer())
             
+            # Obtém dados do aditivo (se fornecidos)
+            dados_aditivo_item = {}
+            if dados_aditivos and i <= len(dados_aditivos):
+                dados_aditivo_item = dados_aditivos[i-1]
+            
             dados_contrato['aditivos'].append({
                 'numero': i,
                 'filename': aditivo_filename,
                 'path': str(aditivo_path),
                 'data_upload': datetime.now().isoformat(),
-                'nome_original': aditivo_file.name
+                'nome_original': aditivo_file.name,
+                # Metadados de impacto do aditivo
+                'tipo_modificacao': dados_aditivo_item.get('tipo_modificacao', []),
+                'data_aditivo': dados_aditivo_item.get('data_aditivo', ''),
+                'justificativa': dados_aditivo_item.get('justificativa', ''),
+                'prorrogacao_dias': dados_aditivo_item.get('prorrogacao_dias', 0),
+                'nova_data_fim': dados_aditivo_item.get('nova_data_fim', ''),
+                'percentual_acrescimo': dados_aditivo_item.get('percentual_acrescimo', 0.0),
+                'percentual_supressao': dados_aditivo_item.get('percentual_supressao', 0.0),
+                'valor_acrescimo': dados_aditivo_item.get('valor_acrescimo', 0.0),
+                'valor_supressao': dados_aditivo_item.get('valor_supressao', 0.0),
+                'alteracoes_qualitativas': dados_aditivo_item.get('alteracoes_qualitativas', '')
             })
     
     # Adiciona timestamp
@@ -217,10 +234,133 @@ def main():
                 key="pdfs_aditivos"
             )
             
+            # Container para dados dos aditivos
+            dados_aditivos_list = []
+            
             if arquivos_aditivos:
-                st.info(f"📋 **{len(arquivos_aditivos)} aditivo(s) selecionado(s):**")
+                st.info(f"📋 **{len(arquivos_aditivos)} aditivo(s) selecionado(s)** - Informe os dados de cada um:")
+                
                 for i, aditivo in enumerate(arquivos_aditivos, 1):
-                    st.write(f"  {i}. {aditivo.name}")
+                    st.markdown(f"##### Aditivo {i:02d} - {aditivo.name}")
+                    
+                    with st.container():
+                        col_a, col_b = st.columns(2)
+                        
+                        with col_a:
+                            data_aditivo = st.date_input(
+                                f"Data do Aditivo {i}",
+                                key=f"data_aditivo_{i}",
+                                help="Data de assinatura do aditivo"
+                            )
+                            
+                            tipos_modificacao = st.multiselect(
+                                f"Tipo(s) de Modificação {i}",
+                                [
+                                    "Prorrogação de Prazo",
+                                    "Acréscimo de Valor",
+                                    "Supressão de Valor",
+                                    "Alteração Qualitativa",
+                                    "Alteração de Dotação Orçamentária",
+                                    "Outros"
+                                ],
+                                key=f"tipos_mod_{i}",
+                                help="Selecione um ou mais tipos de modificação"
+                            )
+                        
+                        with col_b:
+                            justificativa = st.text_area(
+                                f"Justificativa {i}",
+                                key=f"justificativa_{i}",
+                                height=100,
+                                help="Justificativa legal/técnica para o aditivo"
+                            )
+                        
+                        # Campos condicionais baseados no tipo
+                        dados_aditivo = {
+                            'data_aditivo': data_aditivo.isoformat() if data_aditivo else '',
+                            'tipo_modificacao': tipos_modificacao,
+                            'justificativa': justificativa,
+                            'prorrogacao_dias': 0,
+                            'nova_data_fim': '',
+                            'percentual_acrescimo': 0.0,
+                            'percentual_supressao': 0.0,
+                            'valor_acrescimo': 0.0,
+                            'valor_supressao': 0.0,
+                            'alteracoes_qualitativas': ''
+                        }
+                        
+                        if "Prorrogação de Prazo" in tipos_modificacao:
+                            col_p1, col_p2 = st.columns(2)
+                            with col_p1:
+                                prorrogacao_dias = st.number_input(
+                                    f"Dias de Prorrogação {i}",
+                                    min_value=0,
+                                    step=1,
+                                    key=f"prorrog_{i}"
+                                )
+                                dados_aditivo['prorrogacao_dias'] = prorrogacao_dias
+                            
+                            with col_p2:
+                                nova_data_fim = st.date_input(
+                                    f"Nova Data de Término {i}",
+                                    key=f"nova_data_{i}"
+                                )
+                                dados_aditivo['nova_data_fim'] = nova_data_fim.isoformat() if nova_data_fim else ''
+                        
+                        if "Acréscimo de Valor" in tipos_modificacao:
+                            col_a1, col_a2 = st.columns(2)
+                            with col_a1:
+                                percentual_acrescimo = st.number_input(
+                                    f"Percentual de Acréscimo (%) {i}",
+                                    min_value=0.0,
+                                    max_value=100.0,
+                                    step=0.1,
+                                    key=f"perc_acr_{i}"
+                                )
+                                dados_aditivo['percentual_acrescimo'] = percentual_acrescimo
+                            
+                            with col_a2:
+                                valor_acrescimo = st.number_input(
+                                    f"Valor do Acréscimo (R$) {i}",
+                                    min_value=0.0,
+                                    step=1000.0,
+                                    format="%.2f",
+                                    key=f"val_acr_{i}"
+                                )
+                                dados_aditivo['valor_acrescimo'] = float(valor_acrescimo)
+                        
+                        if "Supressão de Valor" in tipos_modificacao:
+                            col_s1, col_s2 = st.columns(2)
+                            with col_s1:
+                                percentual_supressao = st.number_input(
+                                    f"Percentual de Supressão (%) {i}",
+                                    min_value=0.0,
+                                    max_value=100.0,
+                                    step=0.1,
+                                    key=f"perc_sup_{i}"
+                                )
+                                dados_aditivo['percentual_supressao'] = percentual_supressao
+                            
+                            with col_s2:
+                                valor_supressao = st.number_input(
+                                    f"Valor da Supressão (R$) {i}",
+                                    min_value=0.0,
+                                    step=1000.0,
+                                    format="%.2f",
+                                    key=f"val_sup_{i}"
+                                )
+                                dados_aditivo['valor_supressao'] = float(valor_supressao)
+                        
+                        if "Alteração Qualitativa" in tipos_modificacao:
+                            alteracoes_qualitativas = st.text_area(
+                                f"Descrição das Alterações Qualitativas {i}",
+                                key=f"alt_qual_{i}",
+                                help="Descreva as alterações nas especificações, escopo, etc."
+                            )
+                            dados_aditivo['alteracoes_qualitativas'] = alteracoes_qualitativas
+                        
+                        dados_aditivos_list.append(dados_aditivo)
+                        st.markdown("---")
             
             # Botão de submissão
             submitted = st.form_submit_button(
@@ -259,7 +399,7 @@ def main():
                     
                     # Salva contrato
                     try:
-                        salvar_contrato(dados_contrato, arquivo_pdf, arquivos_aditivos)
+                        salvar_contrato(dados_contrato, arquivo_pdf, arquivos_aditivos, dados_aditivos_list)
                         
                         st.success(f"✅ Contrato **{numero}** cadastrado com sucesso!")
                         
@@ -304,11 +444,29 @@ def main():
                     if 'pdf_filename' in contrato:
                         st.write(f"**📄 Contrato Principal:** {contrato['pdf_filename']}")
                     
-                    # Exibe aditivos
+                    # Exibe aditivos com detalhes de impacto
                     if 'aditivos' in contrato and len(contrato['aditivos']) > 0:
                         st.write(f"**📑 Aditivos ({len(contrato['aditivos'])}):**")
                         for aditivo in contrato['aditivos']:
-                            st.write(f"  • Aditivo {aditivo['numero']:02d}: {aditivo.get('nome_original', aditivo['filename'])}")
+                            st.write(f"  • **Aditivo {aditivo['numero']:02d}:** {aditivo.get('nome_original', aditivo['filename'])}")
+                            
+                            if aditivo.get('tipo_modificacao'):
+                                st.write(f"    → Tipo: {', '.join(aditivo['tipo_modificacao'])}")
+                            
+                            if aditivo.get('data_aditivo'):
+                                st.write(f"    → Data: {aditivo['data_aditivo']}")
+                            
+                            if aditivo.get('prorrogacao_dias', 0) > 0:
+                                st.write(f"    → Prorrogação: {aditivo['prorrogacao_dias']} dias (Nova data: {aditivo.get('nova_data_fim', 'N/A')})")
+                            
+                            if aditivo.get('valor_acrescimo', 0) > 0:
+                                st.write(f"    → Acréscimo: R$ {aditivo['valor_acrescimo']:,.2f} ({aditivo.get('percentual_acrescimo', 0):.1f}%)")
+                            
+                            if aditivo.get('valor_supressao', 0) > 0:
+                                st.write(f"    → Supressão: R$ {aditivo['valor_supressao']:,.2f} ({aditivo.get('percentual_supressao', 0):.1f}%)")
+                            
+                            if aditivo.get('justificativa'):
+                                st.write(f"    → Justificativa: {aditivo['justificativa'][:100]}...")
                     else:
                         st.write("**📑 Aditivos:** Nenhum aditivo cadastrado")
 

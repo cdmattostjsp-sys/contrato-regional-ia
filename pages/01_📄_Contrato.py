@@ -150,6 +150,194 @@ def render_bloco_iss(contrato: dict):
     """, unsafe_allow_html=True)
 
 
+def render_bloco_aditivos(contrato: dict):
+    """
+    BLOCO DE ADITIVOS CONTRATUAIS
+    ==============================
+    Exibe timeline de aditivos com impactos consolidados.
+    Mostra evolução do contrato com prorrogações, acréscimos/supressões e alterações qualitativas.
+    """
+    st.markdown("""
+        <h3 style="color: #003366; margin: 0 0 1rem 0;">
+            📑 HISTÓRICO DE ADITIVOS CONTRATUAIS
+        </h3>
+    """, unsafe_allow_html=True)
+    
+    # Verifica se contrato foi consolidado
+    if not contrato.get('consolidado_com_aditivos', False):
+        st.info("Este contrato não possui aditivos cadastrados.")
+        return
+    
+    # Mostra resumo de impacto
+    total_aditivos = contrato.get('total_aditivos_aplicados', 0)
+    valor_original = contrato.get('valor_original', 0.0)
+    valor_atual = contrato.get('valor', 0.0)
+    data_fim_original = contrato.get('data_fim_original')
+    data_fim_atual = contrato.get('data_fim')
+    
+    st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%); 
+                    padding: 1.5rem; border-radius: 10px; margin-bottom: 1.5rem;">
+            <h4 style="margin: 0 0 1rem 0; color: #003366;">📊 RESUMO DE IMPACTOS</h4>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
+                <div>
+                    <p style="margin: 0; font-size: 0.9rem; color: #666;">Total de Aditivos</p>
+                    <p style="margin: 0.3rem 0 0 0; font-size: 1.5rem; font-weight: bold; color: #003366;">
+                        {total_aditivos}
+                    </p>
+                </div>
+                <div>
+                    <p style="margin: 0; font-size: 0.9rem; color: #666;">Valor do Contrato</p>
+                    <p style="margin: 0.3rem 0 0 0; font-size: 1.1rem; font-weight: bold; color: #003366;">
+                        R$ {valor_original:,.2f} → R$ {valor_atual:,.2f}
+                    </p>
+                    <p style="margin: 0.2rem 0 0 0; font-size: 0.85rem; color: {'#28A745' if valor_atual >= valor_original else '#DC3545'};">
+                        {'▲' if valor_atual > valor_original else ('▼' if valor_atual < valor_original else '=')} 
+                        {abs(((valor_atual - valor_original) / valor_original * 100) if valor_original > 0 else 0):.1f}%
+                    </p>
+                </div>
+                <div>
+                    <p style="margin: 0; font-size: 0.9rem; color: #666;">Vigência</p>
+                    <p style="margin: 0.3rem 0 0 0; font-size: 0.95rem; font-weight: bold; color: #003366;">
+                        {data_fim_original.strftime('%d/%m/%Y') if data_fim_original else 'N/A'}
+                    </p>
+                    <p style="margin: 0.2rem 0 0 0; font-size: 0.95rem; font-weight: bold; color: #FFC107;">
+                        ↓ {data_fim_atual.strftime('%d/%m/%Y') if data_fim_atual else 'N/A'}
+                    </p>
+                </div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # Timeline de aditivos
+    st.markdown("### 📅 Timeline de Modificações")
+    
+    historico = contrato.get('historico_aditivos', [])
+    
+    if not historico:
+        st.info("Nenhuma modificação registrada ainda.")
+        return
+    
+    for item in historico:
+        # Define cor baseada nos tipos
+        tipos = item.get('tipos', [])
+        if 'Prorrogação de Prazo' in tipos:
+            cor_border = "#FFC107"
+            icone = "⏰"
+        elif 'Acréscimo de Valor' in tipos:
+            cor_border = "#28A745"
+            icone = "💰"
+        elif 'Supressão de Valor' in tipos:
+            cor_border = "#DC3545"
+            icone = "💸"
+        else:
+            cor_border = "#6C757D"
+            icone = "📝"
+        
+        st.markdown(f"""
+            <div style="background: white; border-left: 5px solid {cor_border}; 
+                        padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem; 
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h4 style="margin: 0; color: #003366;">
+                        {icone} ADITIVO Nº {item.get('numero', 'N/A'):02d}
+                    </h4>
+                    <span style="background: {cor_border}; color: white; padding: 0.3rem 0.8rem; 
+                                border-radius: 15px; font-size: 0.85rem; font-weight: bold;">
+                        {item.get('data', 'Sem data')}
+                    </span>
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <p style="margin: 0; font-size: 0.9rem; color: #666;">Tipo(s) de Modificação:</p>
+                    <p style="margin: 0.3rem 0 0 0; font-weight: 600; color: #003366;">
+                        {', '.join(tipos) if tipos else 'Não especificado'}
+                    </p>
+                </div>
+        """, unsafe_allow_html=True)
+        
+        # Lista alterações
+        alteracoes = item.get('alteracoes', [])
+        if alteracoes:
+            st.markdown('<div style="margin-top: 1rem;"><strong>Alterações Aplicadas:</strong></div>', unsafe_allow_html=True)
+            for alt in alteracoes:
+                tipo_alt = alt.get('tipo', '')
+                descricao = alt.get('descricao', '')
+                
+                if tipo_alt == 'Prorrogação de Prazo':
+                    nova_data = alt.get('nova_data_fim', '')
+                    st.markdown(f"""
+                        <div style="background: #FFF3CD; padding: 0.8rem; border-radius: 5px; margin: 0.5rem 0;">
+                            <p style="margin: 0; color: #856404;">
+                                ⏰ <strong>{descricao}</strong><br>
+                                Nova data de término: <strong>{nova_data}</strong>
+                            </p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                elif tipo_alt == 'Acréscimo de Valor':
+                    valor = alt.get('valor', 0.0)
+                    novo_total = alt.get('novo_valor_total', 0.0)
+                    st.markdown(f"""
+                        <div style="background: #D4EDDA; padding: 0.8rem; border-radius: 5px; margin: 0.5rem 0;">
+                            <p style="margin: 0; color: #155724;">
+                                💰 <strong>{descricao}</strong><br>
+                                Valor acrescido: <strong>R$ {valor:,.2f}</strong><br>
+                                Novo valor total: <strong>R$ {novo_total:,.2f}</strong>
+                            </p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                elif tipo_alt == 'Supressão de Valor':
+                    valor = alt.get('valor', 0.0)
+                    novo_total = alt.get('novo_valor_total', 0.0)
+                    st.markdown(f"""
+                        <div style="background: #F8D7DA; padding: 0.8rem; border-radius: 5px; margin: 0.5rem 0;">
+                            <p style="margin: 0; color: #721C24;">
+                                💸 <strong>{descricao}</strong><br>
+                                Valor suprimido: <strong>R$ {abs(valor):,.2f}</strong><br>
+                                Novo valor total: <strong>R$ {novo_total:,.2f}</strong>
+                            </p>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                elif tipo_alt == 'Alteração Qualitativa':
+                    st.markdown(f"""
+                        <div style="background: #E7F3FF; padding: 0.8rem; border-radius: 5px; margin: 0.5rem 0;">
+                            <p style="margin: 0; color: #004085;">
+                                📝 <strong>Alteração Qualitativa</strong><br>
+                                {descricao}
+                            </p>
+                        </div>
+                    """, unsafe_allow_html=True)
+        
+        # Justificativa
+        justificativa = item.get('justificativa', '')
+        if justificativa:
+            st.markdown(f"""
+                <div style="margin-top: 1rem; padding: 0.8rem; background: #F8F9FA; 
+                            border-radius: 5px; border-left: 3px solid #6C757D;">
+                    <p style="margin: 0; font-size: 0.85rem; color: #666;">Justificativa:</p>
+                    <p style="margin: 0.3rem 0 0 0; color: #212529;">{justificativa}</p>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Link para PDFs dos aditivos
+    aditivos_pdfs = contrato.get('aditivos', [])
+    if aditivos_pdfs:
+        st.markdown("---")
+        st.markdown("### 📎 Documentos dos Aditivos")
+        
+        for aditivo in aditivos_pdfs:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.write(f"📄 **Aditivo {aditivo.get('numero', 0):02d}:** {aditivo.get('nome_original', aditivo.get('filename', 'N/A'))}")
+            with col2:
+                if st.button(f"📥 Baixar", key=f"download_aditivo_{aditivo.get('numero', 0)}"):
+                    st.info("Funcionalidade de download em desenvolvimento")
+
+
 def render_bloco_pagamentos(contrato: dict):
     """
     BLOCO DE ATESTES E PAGAMENTOS
@@ -252,9 +440,10 @@ def render_contrato_detalhes(contrato: dict):
     EVOLUÇÃO RAJ 10: Reorganizado com nova aba "Apoio ao Gestor" e dados consolidados.
     """
     
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
         "📋 Dados Gerais", 
         "💰 Pagamentos & ISS",
+        "📑 Aditivos",
         "👔 Apoio ao Gestor",
         "📁 Documentos", 
         "📊 Histórico"
@@ -299,6 +488,10 @@ def render_contrato_detalhes(contrato: dict):
         render_bloco_iss(contrato)
     
     with tab3:
+        # ABA DE ADITIVOS - Timeline e Impactos
+        render_bloco_aditivos(contrato)
+    
+    with tab4:
         # MODO GESTOR - Suporte Normativo
         st.markdown("""
             <div style="background: #FFF3CD; border-left: 4px solid #FFC107; padding: 1rem; 

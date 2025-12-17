@@ -317,4 +317,144 @@ def get_contrato_detalhes(contrato_id: str) -> Optional[Dict]:
         "sindicato": "SIEMACO - Sindicato dos Empregados em Edifícios e Condomínios de SP"
     }
     
+    # Consolida dados do contrato aplicando aditivos sequencialmente
+    contrato = consolidar_contrato_com_aditivos(contrato)
+    
+    return contrato
+
+
+def consolidar_contrato_com_aditivos(contrato: dict) -> dict:
+    """
+    Aplica aditivos sequencialmente sobre dados originais do contrato.
+    
+    Esta função é crítica para refletir a realidade dos contratos do TJSP:
+    - Prorrogações de prazo alteram data_fim e vigência
+    - Acréscimos/supressões alteram valor total
+    - Alterações qualitativas são registradas no histórico
+    
+    Args:
+        contrato: Dados originais do contrato
+        
+    Returns:
+        Contrato consolidado com todas as modificações dos aditivos aplicadas
+    """
+    # Se não tem aditivos, retorna contrato original
+    if 'aditivos' not in contrato or not contrato['aditivos']:
+        contrato['valor_original'] = contrato.get('valor', 0.0)
+        contrato['data_fim_original'] = contrato.get('data_fim')
+        return contrato
+    
+    # Salva valores originais
+    contrato['valor_original'] = contrato.get('valor', 0.0)
+    contrato['data_fim_original'] = contrato.get('data_fim')
+    
+    # Ordena aditivos por número (aplicação sequencial)
+    aditivos_ordenados = sorted(
+        contrato['aditivos'],
+        key=lambda x: x.get('numero', 0)
+    )
+    
+    # Valores acumulados
+    valor_atual = contrato['valor_original']
+    data_fim_atual = contrato['data_fim_original']
+    
+    # Histórico de modificações
+    contrato['historico_aditivos'] = []
+    
+    # Aplica cada aditivo sequencialmente
+    for aditivo in aditivos_ordenados:
+        modificacao = {
+            'numero': aditivo.get('numero'),
+            'data': aditivo.get('data_aditivo', ''),
+            'tipos': aditivo.get('tipo_modificacao', []),
+            'alteracoes': []
+        }
+        
+        # Aplica prorrogação de prazo
+        if 'Prorrogação de Prazo' in aditivo.get('tipo_modificacao', []):
+            nova_data = aditivo.get('nova_data_fim', '')
+            if nova_data:
+                # Converte string ISO para datetime se necessário
+                if isinstance(nova_data, str):
+                    from datetime import date
+                    nova_data = datetime.fromisoformat(nova_data)
+                elif isinstance(nova_data, date):
+                    nova_data = datetime.combine(nova_data, datetime.min.time())
+                
+                dias_prorrogados = aditivo.get('prorrogacao_dias', 0)
+                data_fim_atual = nova_data
+                
+                modificacao['alteracoes'].append({
+                    'tipo': 'Prorrogação de Prazo',
+                    'descricao': f'Prazo prorrogado em {dias_prorrogados} dias',
+                    'nova_data_fim': nova_data.strftime('%d/%m/%Y') if hasattr(nova_data, 'strftime') else str(nova_data)
+                })
+        
+        # Aplica acréscimo de valor
+        if 'Acréscimo de Valor' in aditivo.get('tipo_modificacao', []):
+            valor_acrescimo = aditivo.get('valor_acrescimo', 0.0)
+            percentual = aditivo.get('percentual_acrescimo', 0.0)
+            
+            if valor_acrescimo > 0:
+                valor_atual += valor_acrescimo
+                
+                modificacao['alteracoes'].append({
+                    'tipo': 'Acréscimo de Valor',
+                    'descricao': f'Acréscimo de {percentual:.1f}%',
+                    'valor': valor_acrescimo,
+                    'novo_valor_total': valor_atual
+                })
+        
+        # Aplica supressão de valor
+        if 'Supressão de Valor' in aditivo.get('tipo_modificacao', []):
+            valor_supressao = aditivo.get('valor_supressao', 0.0)
+            percentual = aditivo.get('percentual_supressao', 0.0)
+            
+            if valor_supressao > 0:
+                valor_atual -= valor_supressao
+                
+                modificacao['alteracoes'].append({
+                    'tipo': 'Supressão de Valor',
+                    'descricao': f'Supressão de {percentual:.1f}%',
+                    'valor': -valor_supressao,
+                    'novo_valor_total': valor_atual
+                })
+        
+        # Registra alterações qualitativas
+        if 'Alteração Qualitativa' in aditivo.get('tipo_modificacao', []):
+            alteracoes = aditivo.get('alteracoes_qualitativas', '')
+            if alteracoes:
+                modificacao['alteracoes'].append({
+                    'tipo': 'Alteração Qualitativa',
+                    'descricao': alteracoes[:200] + ('...' if len(alteracoes) > 200 else '')
+                })
+        
+        # Adiciona justificativa
+        if aditivo.get('justificativa'):
+            modificacao['justificativa'] = aditivo['justificativa']
+        
+        # Adiciona ao histórico
+        contrato['historico_aditivos'].append(modificacao)
+    
+    # Atualiza valores consolidados no contrato
+    contrato['valor'] = valor_atual
+    contrato['data_fim'] = data_fim_atual
+    
+    # Atualiza string de vigência
+    if contrato.get('data_inicio') and data_fim_atual:
+        data_inicio_fmt = contrato['data_inicio'].strftime('%d/%m/%Y') if hasattr(contrato['data_inicio'], 'strftime') else str(contrato['data_inicio'])
+        data_fim_fmt = data_fim_atual.strftime('%d/%m/%Y') if hasattr(data_fim_atual, 'strftime') else str(data_fim_atual)
+        contrato['vigencia'] = f"{data_inicio_fmt} a {data_fim_fmt}"
+    
+    # Recalcula vigência detalhada com data consolidada
+    if 'vigencia_detalhada' in contrato:
+        dias_restantes = (data_fim_atual - datetime.now()).days
+        contrato['vigencia_detalhada']['data_fim'] = data_fim_atual
+        contrato['vigencia_detalhada']['dias_restantes'] = dias_restantes
+        contrato['vigencia_detalhada']['status_semaforo'] = "verde" if dias_restantes > 120 else ("amarelo" if dias_restantes >= 60 else "vermelho")
+    
+    # Marca que o contrato foi consolidado
+    contrato['consolidado_com_aditivos'] = True
+    contrato['total_aditivos_aplicados'] = len(aditivos_ordenados)
+    
     return contrato
