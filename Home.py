@@ -159,9 +159,35 @@ def render_contracts_dashboard():
     # Lista de contratos (mock + cadastrados)
     contratos = get_todos_contratos()
     
-    for contrato in contratos:
-        render_contract_card(contrato)
-        st.markdown("<br>", unsafe_allow_html=True)
+    # APLICA FILTROS
+    contratos_filtrados = contratos
+    
+    # Filtro por status
+    if filtro_status != "Todos":
+        status_map = {
+            "Ativos": "ativo",
+            "Atenção": "atencao",
+            "Crítico": "critico"
+        }
+        status_busca = status_map.get(filtro_status)
+        if status_busca:
+            contratos_filtrados = [c for c in contratos_filtrados if c.get('status') == status_busca]
+    
+    # Filtro por tipo
+    if filtro_tipo != "Todos":
+        contratos_filtrados = [c for c in contratos_filtrados if c.get('tipo') == filtro_tipo]
+    
+    # Mostra contador de resultados
+    if len(contratos_filtrados) != len(contratos):
+        st.info(f"📊 Exibindo **{len(contratos_filtrados)}** de {len(contratos)} contratos")
+    
+    # Renderiza contratos filtrados
+    if not contratos_filtrados:
+        st.warning("Nenhum contrato encontrado com os filtros aplicados.")
+    else:
+        for contrato in contratos_filtrados:
+            render_contract_card(contrato)
+            st.markdown("<br>", unsafe_allow_html=True)
 
 
 def render_sidebar():
