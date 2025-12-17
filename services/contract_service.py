@@ -204,4 +204,59 @@ def get_contrato_detalhes(contrato_id: str) -> Optional[Dict]:
         {"data": datetime.now() - timedelta(days=2), "evento": "Relatório mensal recebido", "responsavel": contrato["fiscal_titular"]}
     ]
     
+    # Informações de vigência detalhadas
+    dias_restantes = (contrato["data_fim"] - datetime.now()).days
+    contrato["vigencia_detalhada"] = {
+        "data_inicio": contrato["data_inicio"],
+        "data_fim": contrato["data_fim"],
+        "dias_restantes": dias_restantes,
+        "status_semaforo": "verde" if dias_restantes > 120 else ("amarelo" if dias_restantes >= 60 else "vermelho")
+    }
+    
+    # Dados de pagamentos e atestes (mockados)
+    contrato["pagamentos"] = [
+        {
+            "competencia": "11/2024",
+            "nota_fiscal": "NF-001234",
+            "valor": contrato["valor"] / 12,
+            "status": "Atestado",
+            "unidade_ateste": "RAJ 10.1 - Comarca de São Paulo",
+            "data_ateste": datetime(2024, 12, 5),
+            "responsavel_ateste": contrato["fiscal_titular"]
+        },
+        {
+            "competencia": "10/2024",
+            "nota_fiscal": "NF-001189",
+            "valor": contrato["valor"] / 12,
+            "status": "Atestado",
+            "unidade_ateste": "RAJ 10.1 - Comarca de São Paulo",
+            "data_ateste": datetime(2024, 11, 8),
+            "responsavel_ateste": contrato["fiscal_titular"]
+        },
+        {
+            "competencia": "12/2024",
+            "nota_fiscal": "NF-001278",
+            "valor": contrato["valor"] / 12,
+            "status": "Pendente",
+            "unidade_ateste": "-",
+            "data_ateste": None,
+            "responsavel_ateste": "-"
+        }
+    ]
+    
+    # Informações de tributação ISS
+    contrato["tributacao"] = {
+        "retem_iss": True,
+        "base_legal_iss": "Lei Municipal nº 13.701/2003 - Art. 9º, § 3º",
+        "observacao_iss": "Retenção na fonte conforme legislação municipal de São Paulo. Alíquota: 5%"
+    }
+    
+    # Informações trabalhistas (para modo gestor)
+    contrato["info_trabalhista"] = {
+        "possui_mao_obra_residente": True if "Serviços" in contrato["tipo"] else False,
+        "aplica_convencao_coletiva": True if "Serviços" in contrato["tipo"] else False,
+        "categoria_profissional": "Trabalhadores em Edifícios e Condomínios" if "limpeza" in contrato["objeto"].lower() else "Serviços Gerais",
+        "sindicato": "SIEMACO - Sindicato dos Empregados em Edifícios e Condomínios de SP"
+    }
+    
     return contrato
