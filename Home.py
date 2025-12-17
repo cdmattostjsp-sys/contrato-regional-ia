@@ -131,6 +131,13 @@ def render_contracts_dashboard():
     """Renderiza o dashboard de contratos"""
     st.markdown("## 📋 Contratos Regionais - RAJ 10.1")
     
+    # Barra de busca
+    busca = st.text_input(
+        "🔍 Buscar contrato",
+        placeholder="Digite número, objeto, fornecedor ou palavra-chave...",
+        key="busca_contrato"
+    )
+    
     # Filtros
     col1, col2, col3 = st.columns([2, 2, 1])
     
@@ -162,6 +169,17 @@ def render_contracts_dashboard():
     # APLICA FILTROS
     contratos_filtrados = contratos
     
+    # Filtro por busca (palavra-chave)
+    if busca and busca.strip():
+        termo_busca = busca.lower().strip()
+        contratos_filtrados = [
+            c for c in contratos_filtrados
+            if termo_busca in c.get('numero', '').lower()
+            or termo_busca in c.get('objeto', '').lower()
+            or termo_busca in c.get('fornecedor', '').lower()
+            or termo_busca in str(c.get('id', '')).lower()
+        ]
+    
     # Filtro por status
     if filtro_status != "Todos":
         status_map = {
@@ -178,12 +196,20 @@ def render_contracts_dashboard():
         contratos_filtrados = [c for c in contratos_filtrados if c.get('tipo') == filtro_tipo]
     
     # Mostra contador de resultados
-    if len(contratos_filtrados) != len(contratos):
-        st.info(f"📊 Exibindo **{len(contratos_filtrados)}** de {len(contratos)} contratos")
+    total_original = len(contratos)
+    total_filtrado = len(contratos_filtrados)
+    
+    if total_filtrado != total_original:
+        if busca and busca.strip():
+            st.info(f"🔍 Encontrados **{total_filtrado}** contratos para '{busca}' ({total_original} no total)")
+        else:
+            st.info(f"📊 Exibindo **{total_filtrado}** de {total_original} contratos")
     
     # Renderiza contratos filtrados
     if not contratos_filtrados:
-        st.warning("Nenhum contrato encontrado com os filtros aplicados.")
+        st.warning("❌ Nenhum contrato encontrado com os filtros aplicados.")
+        if busca and busca.strip():
+            st.info(f"💡 **Dica:** Tente termos mais genéricos ou remova filtros de Status/Tipo")
     else:
         for contrato in contratos_filtrados:
             render_contract_card(contrato)
