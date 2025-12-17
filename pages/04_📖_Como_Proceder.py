@@ -37,7 +37,7 @@ def main():
     
     # Botão de navegação
     if st.button("🏠 Voltar ao Dashboard", use_container_width=False):
-        st.switch_page("app.py")
+        st.switch_page("Home.py")
     
     st.markdown("---")
     
