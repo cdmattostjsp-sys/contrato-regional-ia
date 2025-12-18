@@ -85,7 +85,7 @@ def exportar_para_excel(contratos):
 
 def render_header():
     """Renderiza o cabeçalho institucional TJSP com botões de exportação"""
-    col1, col2 = st.columns([3, 1])
+    col1, col2, col3 = st.columns([2, 1, 1])
     
     with col1:
         st.markdown("""
@@ -98,6 +98,13 @@ def render_header():
         """, unsafe_allow_html=True)
     
     with col2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Botão Meus Contratos
+        if st.button("👤 Meus Contratos", use_container_width=True, type="primary"):
+            st.switch_page("pages/10_👤_Meus_Contratos.py")
+    
+    with col3:
         st.markdown("<br>", unsafe_allow_html=True)
         
         # Botão de exportação
@@ -181,7 +188,7 @@ def render_metrics():
 def render_graficos_analytics():
     """Renderiza gráficos e visualizações analíticas do dashboard"""
     
-    st.markdown("## 📊 Analytics e Visualizações")
+    st.markdown("## 📊 Visão Executiva e Análises")
     
     # Obtém dados
     contratos = get_todos_contratos()
@@ -746,6 +753,7 @@ def render_sidebar():
         st.markdown("### 👤 Usuário")
         usuario = st.session_state.get("usuario", "Coordenador Regional")
         perfil = st.session_state.get("perfil", "Fiscal de Contrato")
+        fiscal_nome = st.session_state.get("fiscal_nome", usuario)
         
         st.info(f"""
         **Nome:** {usuario}  
@@ -753,10 +761,38 @@ def render_sidebar():
         **RAJ:** 10.1
         """)
         
+        # Seletor rápido de fiscal (para testes)
+        with st.expander("🔄 Trocar Fiscal"):
+            # Lista fiscais únicos dos contratos
+            contratos_temp = get_todos_contratos()
+            fiscais_unicos = set()
+            for c in contratos_temp:
+                if c.get('fiscal_titular'):
+                    fiscais_unicos.add(c.get('fiscal_titular'))
+                if c.get('fiscal_substituto'):
+                    fiscais_unicos.add(c.get('fiscal_substituto'))
+            
+            fiscais_lista = sorted(list(fiscais_unicos))
+            
+            if fiscais_lista:
+                fiscal_selecionado = st.selectbox(
+                    "Selecione o fiscal:",
+                    fiscais_lista,
+                    index=fiscais_lista.index(fiscal_nome) if fiscal_nome in fiscais_lista else 0,
+                    key="select_fiscal_sidebar"
+                )
+                
+                if st.button("✅ Aplicar", use_container_width=True):
+                    st.session_state.fiscal_nome = fiscal_selecionado
+                    st.session_state.usuario = fiscal_selecionado
+                    st.success(f"Fiscal alterado para: {fiscal_selecionado}")
+                    st.rerun()
+        
         st.markdown("---")
         
         st.markdown("### 📚 Navegação")
         st.page_link("app.py", label="🏠 Home", icon="🏠")
+        st.page_link("pages/10_👤_Meus_Contratos.py", label="👤 Meus Contratos", icon="👤")
         st.page_link("pages/04_📖_Como_Proceder.py", label="📖 Como Proceder", icon="📖")
         st.page_link("pages/05_📚_Biblioteca.py", label="📚 Biblioteca", icon="📚")
         st.page_link("pages/08_⚙️_Configurações.py", label="⚙️ Configurações", icon="⚙️")
