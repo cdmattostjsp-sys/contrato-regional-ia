@@ -44,49 +44,42 @@ def render_alerta_card(alerta: dict):
     
     config = config_tipos.get(alerta.get('tipo', 'info'), config_tipos['info'])
     
-    # Extrai dados com escape de caracteres especiais
-    titulo = str(alerta.get('titulo', 'Sem título')).replace("'", "&#39;").replace('"', '&quot;')
-    descricao = str(alerta.get('descricao', 'Sem descrição')).replace("'", "&#39;").replace('"', '&quot;')
-    contrato_numero = str(alerta.get('contrato_numero', 'N/A')).replace("'", "&#39;").replace('"', '&quot;')
-    categoria = str(alerta.get('categoria', 'Geral')).replace("'", "&#39;").replace('"', '&quot;')
-    data_alerta = alerta.get('data_alerta', datetime.now())
-    data_formatada = data_alerta.strftime('%d/%m/%Y %H:%M') if isinstance(data_alerta, datetime) else str(data_alerta)
+    # Container do card
+    container = st.container()
     
-    html_card = f"""
-        <div style="background: white; border-left: 5px solid {config['cor']}; 
-                    padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                <div>
-                    <span style="background: {config['cor']}; color: white; padding: 0.3rem 0.8rem;
-                                border-radius: 15px; font-size: 0.75rem; font-weight: bold;">
-                        {config['icone']} {config['label']}
-                    </span>
-                    <span style="background: #E9ECEF; color: #495057; padding: 0.3rem 0.8rem;
-                                border-radius: 15px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">
-                        {categoria}
-                    </span>
-                </div>
-                <span style="color: #6C757D; font-size: 0.85rem;">
-                    {data_formatada}
-                </span>
-            </div>
-            
-            <h4 style="margin: 0 0 0.5rem 0; color: {config['cor']};">
-                {titulo}
-            </h4>
-            
-            <p style="margin: 0 0 1rem 0; color: #495057; line-height: 1.6;">
-                {descricao}
-            </p>
-            
-            <p style="margin: 0; color: #6C757D; font-size: 0.9rem;">
-                <strong>Contrato:</strong> {contrato_numero}
-            </p>
-        </div>
-    """
-    
-    st.markdown(html_card, unsafe_allow_html=True)
+    with container:
+        # Cabeçalho com badges e data
+        col_badge, col_data = st.columns([3, 1])
+        
+        with col_badge:
+            st.markdown(
+                f"<span style='background: {config['cor']}; color: white; padding: 0.3rem 0.8rem; "
+                f"border-radius: 15px; font-size: 0.75rem; font-weight: bold;'>"
+                f"{config['icone']} {config['label']}</span>&nbsp;&nbsp;"
+                f"<span style='background: #E9ECEF; color: #495057; padding: 0.3rem 0.8rem; "
+                f"border-radius: 15px; font-size: 0.75rem; font-weight: bold;'>"
+                f"{alerta.get('categoria', 'Geral')}</span>",
+                unsafe_allow_html=True
+            )
+        
+        with col_data:
+            data_alerta = alerta.get('data_alerta', datetime.now())
+            data_formatada = data_alerta.strftime('%d/%m/%Y %H:%M') if isinstance(data_alerta, datetime) else str(data_alerta)
+            st.caption(data_formatada)
+        
+        # Título do alerta
+        titulo = alerta.get('titulo', 'Sem título')
+        st.markdown(f"### {config['icone']} {titulo}")
+        
+        # Descrição
+        descricao = alerta.get('descricao', 'Sem descrição')
+        st.write(descricao)
+        
+        # Informações do contrato
+        contrato_numero = alerta.get('contrato_numero', 'N/A')
+        st.caption(f"**Contrato:** {contrato_numero}")
+        
+        st.markdown("---")
     
     # Botões de ação
     col1, col2, col3 = st.columns(3)
