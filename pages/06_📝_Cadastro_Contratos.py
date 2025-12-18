@@ -1,6 +1,6 @@
 """
-Página de Gestão de Contratos
-==============================
+Página de Cadastro de Contratos
+================================
 Permite cadastro e upload de novos contratos em PDF.
 
 Funcionalidades:
@@ -121,8 +121,8 @@ def listar_contratos_cadastrados():
 
 def main():
     st.set_page_config(
-        page_title="TJSP - Gestão de Contratos",
-        page_icon="📂",
+        page_title="TJSP - Cadastro de Contratos",
+        page_icon="📝",
         layout="wide"
     )
     
@@ -132,7 +132,7 @@ def main():
     # Cabeçalho
     st.markdown("""
         <div class="tjsp-header">
-            <h1>📂 Gestão de Contratos</h1>
+            <h1>📝 Cadastro de Contratos</h1>
             <p class="tjsp-subtitle">Cadastro e Upload de Contratos em PDF</p>
         </div>
     """, unsafe_allow_html=True)
