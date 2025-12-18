@@ -145,14 +145,53 @@ def render_contracts_dashboard():
     """Renderiza o dashboard de contratos"""
     st.markdown("## 📋 Contratos Regionais - RAJ 10.1")
     
-    # Barra de busca
+    # Barra de busca geral
     busca = st.text_input(
         "🔍 Buscar contrato",
         placeholder="Digite número, objeto, fornecedor ou palavra-chave...",
         key="busca_contrato"
     )
     
-    # Filtros
+    # Filtros avançados em expander
+    with st.expander("🔎 Filtros Avançados", expanded=False):
+        col_f1, col_f2 = st.columns(2)
+        
+        with col_f1:
+            filtro_num_contrato = st.text_input(
+                "Número do Contrato",
+                placeholder="Ex: 2024/00070406",
+                key="filtro_num_contrato",
+                help="Filtra por número exato ou parcial do contrato"
+            )
+            
+            filtro_num_processo = st.text_input(
+                "Número do Processo",
+                placeholder="Ex: 2024/00070406",
+                key="filtro_num_processo",
+                help="Filtra por número exato ou parcial do processo"
+            )
+        
+        with col_f2:
+            # Lista de fornecedores únicos
+            contratos_temp = get_todos_contratos()
+            fornecedores = sorted(list(set([c.get('fornecedor', '') for c in contratos_temp if c.get('fornecedor')])))
+            filtro_fornecedor = st.selectbox(
+                "Fornecedor/Empresa",
+                ["Todos"] + fornecedores,
+                key="filtro_fornecedor",
+                help="Filtra por empresa contratada"
+            )
+            
+            # Lista de fiscais únicos
+            fiscais = sorted(list(set([c.get('fiscal_titular', '') for c in contratos_temp if c.get('fiscal_titular')])))
+            filtro_fiscal = st.selectbox(
+                "Fiscal/Gestor",
+                ["Todos"] + fiscais,
+                key="filtro_fiscal",
+                help="Filtra por fiscal titular do contrato"
+            )
+    
+    # Filtros básicos
     col1, col2, col3 = st.columns([2, 2, 1])
     
     with col1:
@@ -183,7 +222,7 @@ def render_contracts_dashboard():
     # APLICA FILTROS
     contratos_filtrados = contratos
     
-    # Filtro por busca (palavra-chave)
+    # Filtro por busca geral (palavra-chave)
     if busca and busca.strip():
         termo_busca = busca.lower().strip()
         contratos_filtrados = [
@@ -192,6 +231,36 @@ def render_contracts_dashboard():
             or termo_busca in c.get('objeto', '').lower()
             or termo_busca in c.get('fornecedor', '').lower()
             or termo_busca in str(c.get('id', '')).lower()
+        ]
+    
+    # Filtro por número do contrato (avançado)
+    if filtro_num_contrato and filtro_num_contrato.strip():
+        termo_contrato = filtro_num_contrato.lower().strip()
+        contratos_filtrados = [
+            c for c in contratos_filtrados
+            if termo_contrato in c.get('numero', '').lower()
+        ]
+    
+    # Filtro por número do processo (avançado)
+    if filtro_num_processo and filtro_num_processo.strip():
+        termo_processo = filtro_num_processo.lower().strip()
+        contratos_filtrados = [
+            c for c in contratos_filtrados
+            if termo_processo in c.get('numero', '').lower()  # Número do processo geralmente está no campo 'numero'
+        ]
+    
+    # Filtro por fornecedor (avançado)
+    if filtro_fornecedor != "Todos":
+        contratos_filtrados = [
+            c for c in contratos_filtrados
+            if c.get('fornecedor') == filtro_fornecedor
+        ]
+    
+    # Filtro por fiscal (avançado)
+    if filtro_fiscal != "Todos":
+        contratos_filtrados = [
+            c for c in contratos_filtrados
+            if c.get('fiscal_titular') == filtro_fiscal
         ]
     
     # Filtro por status
@@ -214,16 +283,30 @@ def render_contracts_dashboard():
     total_filtrado = len(contratos_filtrados)
     
     if total_filtrado != total_original:
+        filtros_ativos = []
         if busca and busca.strip():
-            st.info(f"🔍 Encontrados **{total_filtrado}** contratos para '{busca}' ({total_original} no total)")
-        else:
-            st.info(f"📊 Exibindo **{total_filtrado}** de {total_original} contratos")
+            filtros_ativos.append(f"busca '{busca}'")
+        if filtro_num_contrato and filtro_num_contrato.strip():
+            filtros_ativos.append(f"contrato '{filtro_num_contrato}'")
+        if filtro_num_processo and filtro_num_processo.strip():
+            filtros_ativos.append(f"processo '{filtro_num_processo}'")
+        if filtro_fornecedor != "Todos":
+            filtros_ativos.append(f"fornecedor '{filtro_fornecedor}'")
+        if filtro_fiscal != "Todos":
+            filtros_ativos.append(f"fiscal '{filtro_fiscal}'")
+        if filtro_status != "Todos":
+            filtros_ativos.append(f"status '{filtro_status}'")
+        if filtro_tipo != "Todos":
+            filtros_ativos.append(f"tipo '{filtro_tipo}'")
+        
+        filtros_texto = " + ".join(filtros_ativos) if filtros_ativos else "filtros aplicados"
+        st.info(f"🔍 Encontrados **{total_filtrado}** de {total_original} contratos ({filtros_texto})")
     
     # Renderiza contratos filtrados
     if not contratos_filtrados:
         st.warning("❌ Nenhum contrato encontrado com os filtros aplicados.")
-        if busca and busca.strip():
-            st.info(f"💡 **Dica:** Tente termos mais genéricos ou remova filtros de Status/Tipo")
+        if busca and busca.strip() or filtro_num_contrato or filtro_num_processo:
+            st.info(f"💡 **Dica:** Tente termos mais genéricos ou remova alguns filtros")
     else:
         for contrato in contratos_filtrados:
             render_contract_card(contrato)
