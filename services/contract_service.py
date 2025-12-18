@@ -458,3 +458,92 @@ def consolidar_contrato_com_aditivos(contrato: dict) -> dict:
     contrato['total_aditivos_aplicados'] = len(aditivos_ordenados)
     
     return contrato
+
+
+def adicionar_aditivo_contrato(contrato_id: str, arquivo_pdf, dados_aditivo: dict) -> bool:
+    """
+    Adiciona um novo aditivo a um contrato existente.
+    
+    Args:
+        contrato_id: ID do contrato
+        arquivo_pdf: Arquivo PDF do aditivo
+        dados_aditivo: Dicionário com dados do aditivo (tipo, impactos, datas, valores, etc)
+    
+    Returns:
+        True se sucesso, False caso contrário
+    """
+    try:
+        # Carrega contratos cadastrados
+        json_path = Path("data/contratos_cadastrados.json")
+        
+        if not json_path.exists():
+            return False
+        
+        with open(json_path, 'r', encoding='utf-8') as f:
+            contratos = json.load(f)
+        
+        # Encontra o contrato
+        contrato = None
+        indice_contrato = None
+        for i, c in enumerate(contratos):
+            if c.get('id') == contrato_id:
+                contrato = c
+                indice_contrato = i
+                break
+        
+        if not contrato:
+            return False
+        
+        # Garante que aditivos existe
+        if 'aditivos' not in contrato:
+            contrato['aditivos'] = []
+        
+        # Define próximo número do aditivo
+        proximo_numero = len(contrato['aditivos']) + 1
+        
+        # Salva PDF do aditivo
+        contratos_dir = Path("knowledge/contratos")
+        contrato_dir = contratos_dir / contrato_id
+        contrato_dir.mkdir(exist_ok=True)
+        
+        aditivo_filename = f"{contrato_id}_ADITIVO_{proximo_numero:02d}.pdf"
+        aditivo_path = contrato_dir / aditivo_filename
+        
+        with open(aditivo_path, 'wb') as f:
+            f.write(arquivo_pdf.getbuffer())
+        
+        # Adiciona aditivo ao contrato
+        novo_aditivo = {
+            'numero': proximo_numero,
+            'filename': aditivo_filename,
+            'path': str(aditivo_path),
+            'data_upload': datetime.now().isoformat(),
+            'nome_original': arquivo_pdf.name,
+            'tipo_modificacao': dados_aditivo.get('tipo_modificacao', []),
+            'data_aditivo': dados_aditivo.get('data_aditivo', ''),
+            'justificativa': dados_aditivo.get('justificativa', ''),
+            'prorrogacao_dias': dados_aditivo.get('prorrogacao_dias', 0),
+            'nova_data_fim': dados_aditivo.get('nova_data_fim', ''),
+            'percentual_acrescimo': dados_aditivo.get('percentual_acrescimo', 0.0),
+            'percentual_supressao': dados_aditivo.get('percentual_supressao', 0.0),
+            'valor_acrescimo': dados_aditivo.get('valor_acrescimo', 0.0),
+            'valor_supressao': dados_aditivo.get('valor_supressao', 0.0),
+            'alteracoes_qualitativas': dados_aditivo.get('alteracoes_qualitativas', '')
+        }
+        
+        contrato['aditivos'].append(novo_aditivo)
+        contrato['total_aditivos'] = len(contrato['aditivos'])
+        contrato['ultima_atualizacao'] = datetime.now().isoformat()
+        
+        # Atualiza contrato na lista
+        contratos[indice_contrato] = contrato
+        
+        # Salva de volta no JSON
+        with open(json_path, 'w', encoding='utf-8') as f:
+            json.dump(contratos, f, ensure_ascii=False, indent=2, default=str)
+        
+        return True
+        
+    except Exception as e:
+        print(f"Erro ao adicionar aditivo: {e}")
+        return False

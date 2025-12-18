@@ -336,6 +336,205 @@ def render_bloco_aditivos(contrato: dict):
             with col2:
                 if st.button(f"📥 Baixar", key=f"download_aditivo_{aditivo.get('numero', 0)}"):
                     st.info("Funcionalidade de download em desenvolvimento")
+    
+    # Botão para adicionar novo aditivo
+    st.markdown("---")
+    
+    # Verifica se é um contrato cadastrado (não mock)
+    contrato_id = contrato.get('id', '')
+    eh_contrato_cadastrado = contrato_id.startswith('PNCP_') or 'pdf_path' in contrato
+    
+    if eh_contrato_cadastrado:
+        with st.expander("➕ **Adicionar Novo Aditivo**", expanded=False):
+            render_formulario_aditivo(contrato)
+    else:
+        st.info("💡 Para adicionar aditivos, utilize a página **📂 Gestão de Contratos** para cadastrar contratos completos.")
+
+
+def render_formulario_aditivo(contrato: dict):
+    """
+    Renderiza formulário para adicionar novo aditivo a contrato existente
+    """
+    from services.contract_service import adicionar_aditivo_contrato
+    from datetime import date
+    
+    st.markdown("""
+        <p style="color: #666; margin-bottom: 1rem;">
+        Preencha os dados do novo aditivo contratual e faça upload do PDF.
+        O contrato será automaticamente atualizado com as modificações.
+        </p>
+    """, unsafe_allow_html=True)
+    
+    with st.form("form_novo_aditivo", clear_on_submit=True):
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            arquivo_aditivo = st.file_uploader(
+                "Documento PDF do Aditivo *",
+                type=['pdf'],
+                help="Faça upload do termo aditivo assinado",
+                key="upload_aditivo"
+            )
+            
+            data_aditivo = st.date_input(
+                "Data do Aditivo *",
+                help="Data de assinatura do aditivo",
+                key="data_novo_aditivo"
+            )
+            
+            tipos_modificacao = st.multiselect(
+                "Tipo(s) de Modificação *",
+                [
+                    "Prorrogação de Prazo",
+                    "Acréscimo de Valor",
+                    "Supressão de Valor",
+                    "Alteração Qualitativa",
+                    "Alteração de Dotação Orçamentária",
+                    "Outros"
+                ],
+                help="Selecione um ou mais tipos de modificação",
+                key="tipos_mod_novo"
+            )
+        
+        with col2:
+            justificativa = st.text_area(
+                "Justificativa *",
+                height=150,
+                help="Justificativa legal/técnica para o aditivo",
+                key="justificativa_novo"
+            )
+        
+        # Campos condicionais baseados no tipo
+        dados_aditivo = {
+            'tipo_modificacao': tipos_modificacao,
+            'justificativa': justificativa,
+            'prorrogacao_dias': 0,
+            'nova_data_fim': '',
+            'percentual_acrescimo': 0.0,
+            'percentual_supressao': 0.0,
+            'valor_acrescimo': 0.0,
+            'valor_supressao': 0.0,
+            'alteracoes_qualitativas': ''
+        }
+        
+        if "Prorrogação de Prazo" in tipos_modificacao:
+            st.markdown("#### ⏰ Dados da Prorrogação")
+            col_p1, col_p2 = st.columns(2)
+            with col_p1:
+                prorrogacao_dias = st.number_input(
+                    "Dias de Prorrogação",
+                    min_value=0,
+                    step=1,
+                    key="prorrog_novo"
+                )
+                dados_aditivo['prorrogacao_dias'] = prorrogacao_dias
+            
+            with col_p2:
+                nova_data_fim = st.date_input(
+                    "Nova Data de Término",
+                    key="nova_data_novo"
+                )
+                dados_aditivo['nova_data_fim'] = nova_data_fim.isoformat() if nova_data_fim else ''
+        
+        if "Acréscimo de Valor" in tipos_modificacao:
+            st.markdown("#### 💰 Dados do Acréscimo")
+            col_a1, col_a2 = st.columns(2)
+            with col_a1:
+                percentual_acrescimo = st.number_input(
+                    "Percentual de Acréscimo (%)",
+                    min_value=0.0,
+                    max_value=100.0,
+                    step=0.1,
+                    key="perc_acr_novo"
+                )
+                dados_aditivo['percentual_acrescimo'] = percentual_acrescimo
+            
+            with col_a2:
+                valor_acrescimo = st.number_input(
+                    "Valor do Acréscimo (R$)",
+                    min_value=0.0,
+                    step=1000.0,
+                    format="%.2f",
+                    key="val_acr_novo"
+                )
+                dados_aditivo['valor_acrescimo'] = float(valor_acrescimo)
+        
+        if "Supressão de Valor" in tipos_modificacao:
+            st.markdown("#### 💸 Dados da Supressão")
+            col_s1, col_s2 = st.columns(2)
+            with col_s1:
+                percentual_supressao = st.number_input(
+                    "Percentual de Supressão (%)",
+                    min_value=0.0,
+                    max_value=100.0,
+                    step=0.1,
+                    key="perc_sup_novo"
+                )
+                dados_aditivo['percentual_supressao'] = percentual_supressao
+            
+            with col_s2:
+                valor_supressao = st.number_input(
+                    "Valor da Supressão (R$)",
+                    min_value=0.0,
+                    step=1000.0,
+                    format="%.2f",
+                    key="val_sup_novo"
+                )
+                dados_aditivo['valor_supressao'] = float(valor_supressao)
+        
+        if "Alteração Qualitativa" in tipos_modificacao:
+            st.markdown("#### 📝 Alterações Qualitativas")
+            alteracoes_qualitativas = st.text_area(
+                "Descreva as alterações qualitativas",
+                height=100,
+                key="alt_qual_novo"
+            )
+            dados_aditivo['alteracoes_qualitativas'] = alteracoes_qualitativas
+        
+        # Adiciona data do aditivo
+        if data_aditivo:
+            dados_aditivo['data_aditivo'] = data_aditivo.isoformat()
+        
+        # Botões
+        col_btn1, col_btn2 = st.columns(2)
+        
+        with col_btn1:
+            submitted = st.form_submit_button("✅ Salvar Aditivo", use_container_width=True, type="primary")
+        
+        with col_btn2:
+            cancelado = st.form_submit_button("❌ Cancelar", use_container_width=True)
+        
+        if submitted:
+            # Validações
+            if not arquivo_aditivo:
+                st.error("❌ É necessário fazer upload do PDF do aditivo!")
+                return
+            
+            if not tipos_modificacao:
+                st.error("❌ Selecione pelo menos um tipo de modificação!")
+                return
+            
+            if not justificativa or not justificativa.strip():
+                st.error("❌ A justificativa é obrigatória!")
+                return
+            
+            # Salva aditivo
+            with st.spinner("Salvando aditivo..."):
+                sucesso = adicionar_aditivo_contrato(
+                    contrato['id'],
+                    arquivo_aditivo,
+                    dados_aditivo
+                )
+            
+            if sucesso:
+                st.success("✅ Aditivo adicionado com sucesso!")
+                st.info("🔄 Recarregando contrato para exibir atualização...")
+                st.rerun()
+            else:
+                st.error("❌ Erro ao salvar aditivo. Tente novamente.")
+        
+        if cancelado:
+            st.info("Operação cancelada.")
 
 
 def render_bloco_pagamentos(contrato: dict):
