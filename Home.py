@@ -804,8 +804,13 @@ def render_sidebar():
         st.caption(f"""
         **Versão:** 1.0.1 (MVP)  
         **Última atualização:** {datetime.now().strftime('%d/%m/%Y')}  
+
         **Ambiente:** Piloto
         """)
+
+
+    # Garante execução da Home ao rodar Home.py diretamente
+    main()
 
 
 def main():
