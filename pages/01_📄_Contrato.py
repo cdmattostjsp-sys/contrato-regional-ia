@@ -121,6 +121,16 @@ def render_bloco_pagamentos(contrato: dict):
     status = pagamentos.get("status", "em_dia")
     forma_pagamento = pagamentos.get("forma_pagamento", "medicao")
     
+    # Obtém informação de ISS (mesma fonte da seção Tributação)
+    tributacao = contrato.get("tributacao", {})
+    retem_iss = tributacao.get("retem_iss", False)
+    
+    # Define badge de ISS
+    if retem_iss:
+        badge_iss = '<span style="background: #28A745; color: white; padding: 0.25rem 0.7rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; margin-left: 1rem;">🟢 Retém ISS: SIM</span>'
+    else:
+        badge_iss = '<span style="background: #6C757D; color: white; padding: 0.25rem 0.7rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; margin-left: 1rem;">⚪ Retém ISS: NÃO</span>'
+    
     # Define configuração visual por status
     config_status = {
         "em_dia": {
@@ -145,9 +155,12 @@ def render_bloco_pagamentos(contrato: dict):
     st.markdown(f"""
         <div style="background: #F8F9FA; padding: 1.5rem; border-radius: 10px; 
                     margin-bottom: 1.5rem; border-left: 4px solid {config['cor']};">
-            <h3 style="margin: 0 0 1rem 0; color: #003366;">
-                💳 ATESTES E PAGAMENTOS
-            </h3>
+            <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                <h3 style="margin: 0; color: #003366;">
+                    💳 ATESTES E PAGAMENTOS
+                </h3>
+                {badge_iss}
+            </div>
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: center;">
                 <div>
                     <p style="margin: 0 0 0.5rem 0; font-size: 1rem; color: #495057;">
