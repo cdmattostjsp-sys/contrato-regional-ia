@@ -124,18 +124,21 @@ def render_bloco_pagamentos(contrato: dict):
     # Obtém informação de ISS (mesma fonte da seção Tributação)
     tributacao = contrato.get("tributacao", {})
     retem_iss = tributacao.get("retem_iss", False)
-    
-    # Badge de ISS com destaque reforçado
-    if retem_iss:
-        badge_iss = '''<div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 0.5rem;">
+    aliquota_iss = tributacao.get("aliquota_iss", 5.0)  # valor mockado padrão 5%
+
+    # Badge de ISS e Alíquota lado a lado
+    badge_iss_aliquota = f'''
+    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 2.5rem; margin-bottom: 0.5rem;">
+        <div style="display: flex; flex-direction: column; align-items: center;">
             <span style="font-size: 1rem; color: #003366; font-weight: 600; margin-bottom: 0.2rem;">Retenção de ISS</span>
-            <span style="background: #28A745; color: white; padding: 0.4rem 1.2rem; border-radius: 16px; font-size: 1.1rem; font-weight: 700; box-shadow: 0 2px 8px #28a74522; letter-spacing: 1px;">🟢 SIM</span>
-        </div>'''
-    else:
-        badge_iss = '''<div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 0.5rem;">
-            <span style="font-size: 1rem; color: #003366; font-weight: 600; margin-bottom: 0.2rem;">Retenção de ISS</span>
-            <span style="background: #6C757D; color: white; padding: 0.4rem 1.2rem; border-radius: 16px; font-size: 1.1rem; font-weight: 700; box-shadow: 0 2px 8px #6c757d22; letter-spacing: 1px;">⚪ NÃO</span>
-        </div>'''
+            <span style="background: {'#28A745' if retem_iss else '#6C757D'}; color: white; padding: 0.4rem 1.2rem; border-radius: 16px; font-size: 1.1rem; font-weight: 700; box-shadow: 0 2px 8px {'#28a74522' if retem_iss else '#6c757d22'}; letter-spacing: 1px;">{'🟢 SIM' if retem_iss else '⚪ NÃO'}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <span style="font-size: 1rem; color: #003366; font-weight: 600; margin-bottom: 0.2rem;">Alíquota de ISS</span>
+            <span style="background: #007bff; color: white; padding: 0.4rem 1.2rem; border-radius: 16px; font-size: 1.1rem; font-weight: 700; box-shadow: 0 2px 8px #007bff22; letter-spacing: 1px;">{aliquota_iss:.2f}%</span>
+        </div>
+    </div>
+    '''
     
     # Define configuração visual por status
     config_status = {
@@ -165,7 +168,7 @@ def render_bloco_pagamentos(contrato: dict):
                 <h3 style="margin: 0; color: #003366;">
                     💳 ATESTES E PAGAMENTOS
                 </h3>
-                {badge_iss}
+                {badge_iss_aliquota}
             </div>
             <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: center;">
                 <div>
