@@ -809,8 +809,6 @@ def render_sidebar():
         """)
 
 
-    # Garante execução da Home ao rodar Home.py diretamente
-    main()
 
 
 def main():
