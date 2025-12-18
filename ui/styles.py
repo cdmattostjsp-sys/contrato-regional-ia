@@ -133,6 +133,53 @@ def apply_tjsp_styles():
             box-shadow: 0 2px 8px rgba(0, 51, 102, 0.3);
         }
         
+            /* =====================================================
+               BOTÃO DE NOTIFICAÇÃO CONTRATUAL (DESTAQUE)
+               ===================================================== */
+            .notificacao-btn {
+                background: linear-gradient(90deg, var(--tjsp-dourado) 0%, var(--tjsp-azul-primario) 100%);
+                color: var(--tjsp-branco) !important;
+                border: 2px solid var(--tjsp-dourado);
+                border-radius: 8px;
+                font-size: 1.15rem !important;
+                font-weight: 700;
+                padding: 0.7rem 1.5rem !important;
+                box-shadow: 0 4px 16px rgba(184, 134, 11, 0.10);
+                display: flex;
+                align-items: center;
+                gap: 0.7rem;
+            }
+        
+            .notificacao-btn .notificacao-icon {
+                background: var(--tjsp-dourado);
+                color: var(--tjsp-branco);
+                border-radius: 50%;
+                padding: 0.35rem 0.55rem;
+                font-size: 1.5rem;
+                margin-right: 0.5rem;
+                box-shadow: 0 2px 8px rgba(184, 134, 11, 0.15);
+            }
+        
+            .notificacao-btn .notificacao-title {
+                font-size: 1.1rem;
+                font-weight: 700;
+                letter-spacing: 0.5px;
+            }
+        
+            .notificacao-btn .notificacao-desc {
+                font-size: 0.95rem;
+                font-weight: 400;
+                color: var(--tjsp-branco);
+                opacity: 0.85;
+            }
+        
+            .notificacao-btn:hover, .notificacao-btn:focus {
+                box-shadow: 0 6px 24px rgba(184, 134, 11, 0.18);
+                transform: translateY(-2px) scale(1.04);
+                cursor: pointer;
+                filter: brightness(1.08);
+            }
+        
         /* =====================================================
            MÉTRICAS
            ===================================================== */

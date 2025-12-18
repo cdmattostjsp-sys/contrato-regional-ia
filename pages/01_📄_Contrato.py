@@ -841,16 +841,24 @@ def render_acoes_documentos():
     """, unsafe_allow_html=True)
     
     col1, col2, col3 = st.columns(3)
-    
+
     with col1:
+        st.markdown(
+            '''<button class="notificacao-btn" type="button" onclick="window.location.href='/pages/03_📝_Notificações.py'">
+                <span class="notificacao-icon">🔔</span>
+                <span class="notificacao-title">Notificação Contratual</span><br>
+                <span class="notificacao-desc">Ações formais do contrato</span>
+            </button>''', unsafe_allow_html=True
+        )
+        # Microinteração e navegação (Streamlit não suporta JS direto, então manter funcionalidade original)
         if st.button("📝 Notificação Contratual", use_container_width=True, type="primary"):
             st.session_state.documento_tipo = "notificacao"
             st.switch_page("pages/03_📝_Notificações.py")
-    
+
     with col2:
         if st.button("📊 Relatório do Fiscal", use_container_width=True):
             st.info("🤖 Recurso em desenvolvimento. O copiloto gerará o relatório baseado nos dados do contrato.")
-    
+
     with col3:
         if st.button("📋 Relatório Final ao Gestor", use_container_width=True):
             st.info("🤖 Recurso em desenvolvimento. O copiloto gerará o relatório final consolidado.")
@@ -873,28 +881,39 @@ def render_contrato_detalhes(contrato: dict):
     ])
     
     with tab1:
-        col1, col2 = st.columns(2)
-        
+        col1, col2, col3 = st.columns(3)
+
         with col1:
-            st.markdown("### 💰 Informações Financeiras")
-            st.info(f"""
-            **Valor Total:** R$ {contrato['valor']:,.2f}  
-            **Tipo:** {contrato['tipo']}  
-            **Status:** {contrato['status'].upper()}
-            """)
-            
-            st.markdown("### 📅 Informações de Vigência")
-            st.info(f"""
-            **Período:** {contrato['vigencia']}  
-            **Última Atualização:** {contrato['ultima_atualizacao'].strftime('%d/%m/%Y %H:%M')}
-            """)
-        
+            st.markdown(
+                '''<button class="notificacao-btn" type="button" onclick="window.location.href='/pages/03_📝_Notificações.py'">
+                    <span class="notificacao-icon">🔔</span>
+                    <span class="notificacao-title">Notificação Contratual</span><br>
+                    <span class="notificacao-desc">Ações formais do contrato</span>
+                </button>''', unsafe_allow_html=True
+            )
+            if st.button("📝 Notificação Contratual", use_container_width=True, type="primary"):
+                st.session_state.documento_tipo = "notificacao"
+                st.switch_page("pages/03_📝_Notificações.py")
+
         with col2:
-            st.markdown("### 👥 Fiscalização")
-            st.success(f"""
-            **Fiscal Titular:** {contrato['fiscal_titular']}  
-            **Fiscal Substituto:** {contrato['fiscal_substituto']}
-            """)
+            st.markdown(
+                '''<button class="acoes-btn" type="button" style="background: var(--tjsp-azul-secundario); color: var(--tjsp-branco); border: 2px solid var(--tjsp-azul-primario); border-radius: 8px; font-size: 1.05rem; font-weight: 600; padding: 0.6rem 1.2rem; box-shadow: 0 2px 8px rgba(0,51,102,0.10); transition: all 0.3s; cursor: pointer; margin-bottom: 0.5rem;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,51,102,0.18)';this.style.transform='scale(1.03)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,51,102,0.10)';this.style.transform='scale(1)';">
+                    <span style="font-size: 1.3rem; margin-right: 0.5rem;">📊</span>
+                    Relatório do Fiscal
+                </button>''', unsafe_allow_html=True
+            )
+            if st.button("📊 Relatório do Fiscal", use_container_width=True):
+                st.info("🤖 Recurso em desenvolvimento. O copiloto gerará o relatório baseado nos dados do contrato.")
+
+        with col3:
+            st.markdown(
+                '''<button class="acoes-btn" type="button" style="background: var(--tjsp-azul-secundario); color: var(--tjsp-branco); border: 2px solid var(--tjsp-azul-primario); border-radius: 8px; font-size: 1.05rem; font-weight: 600; padding: 0.6rem 1.2rem; box-shadow: 0 2px 8px rgba(0,51,102,0.10); transition: all 0.3s; cursor: pointer; margin-bottom: 0.5rem;" onmouseover="this.style.boxShadow='0 4px 16px rgba(0,51,102,0.18)';this.style.transform='scale(1.03)';" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,51,102,0.10)';this.style.transform='scale(1)';">
+                    <span style="font-size: 1.3rem; margin-right: 0.5rem;">📋</span>
+                    Relatório Final ao Gestor
+                </button>''', unsafe_allow_html=True
+            )
+            if st.button("📋 Relatório Final ao Gestor", use_container_width=True):
+                st.info("🤖 Recurso em desenvolvimento. O copiloto gerará o relatório final consolidado.")
             
             if "pendencias" in contrato and contrato["pendencias"]:
                 st.markdown("### ⚠️ Pendências")
