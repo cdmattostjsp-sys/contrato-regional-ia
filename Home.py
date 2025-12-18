@@ -882,3 +882,11 @@ def main():
         **Última atualização:** {datetime.now().strftime('%d/%m/%Y')}  
         **Ambiente:** Piloto
         """)
+        # Executa funções de renderização diretamente ao carregar Home.py
+        render_sidebar()
+        render_header()
+        render_metrics()
+        st.markdown("---")
+        render_graficos_analytics()
+        st.markdown("---")
+        render_contracts_dashboard()
