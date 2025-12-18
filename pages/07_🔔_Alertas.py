@@ -15,6 +15,7 @@ from ui.styles import apply_tjsp_styles
 from services.session_manager import initialize_session_state
 from services.contract_service import get_todos_contratos
 from services.alert_service import calcular_alertas, get_alertas_por_tipo, get_alertas_por_categoria
+from services.email_service import get_email_service
 
 
 def render_alerta_card(alerta: dict):
@@ -124,9 +125,16 @@ def main():
         </div>
     """, unsafe_allow_html=True)
     
-    # Botão de retorno
-    if st.button("🏠 Voltar ao Dashboard", use_container_width=False):
-        st.switch_page("Home.py")
+    # Botão de retorno e configurações
+    col_nav1, col_nav2 = st.columns([6, 1])
+    
+    with col_nav1:
+        if st.button("🏠 Voltar ao Dashboard", use_container_width=False):
+            st.switch_page("Home.py")
+    
+    with col_nav2:
+        if st.button("⚙️ Configurar Emails", use_container_width=True, type="secondary"):
+            st.switch_page("pages/08_⚙️_Configurações.py")
     
     st.markdown("---")
     
@@ -134,6 +142,31 @@ def main():
     with st.spinner("Calculando alertas..."):
         contratos = get_todos_contratos()
         alertas = calcular_alertas(contratos)
+        
+        # Verifica se deve enviar notificações automáticas
+        config_email = st.session_state.get('config_email', {})
+        if config_email.get('alertas_criticos', False):
+            email_service = get_email_service()
+            alertas_criticos = [a for a in alertas if a.get('tipo') == 'critico']
+            
+            # Verifica alertas não notificados
+            alertas_ja_notificados = st.session_state.get('alertas_notificados', set())
+            
+            for alerta in alertas_criticos:
+                alerta_id = alerta.get('id')
+                if alerta_id not in alertas_ja_notificados:
+                    # Envia notificação
+                    email_principal = config_email.get('email_principal', '')
+                    if email_principal:
+                        resultado = email_service.enviar_alerta_critico(
+                            alerta=alerta,
+                            destinatarios=[email_principal] + config_email.get('emails_copia', [])
+                        )
+                        
+                        if resultado['sucesso']:
+                            # Marca como notificado
+                            alertas_ja_notificados.add(alerta_id)
+                            st.session_state.alertas_notificados = alertas_ja_notificados
     
     # Estatísticas de alertas
     contagens = get_alertas_por_tipo(alertas)
@@ -168,6 +201,42 @@ def main():
             value=len(alertas),
             delta=f"{len(contratos)} contratos"
         )
+    
+    st.markdown("---")
+    
+    # Ação de envio de emails
+    if contagens['critico'] > 0:
+        col_email1, col_email2 = st.columns([3, 1])
+        
+        with col_email1:
+            st.info(f"📧 {contagens['critico']} alertas críticos podem ser enviados por email")
+        
+        with col_email2:
+            config_email = st.session_state.get('config_email', {})
+            email_configurado = config_email.get('email_principal', '')
+            
+            if email_configurado:
+                if st.button("📤 Enviar Alertas por Email", type="primary", use_container_width=True):
+                    email_service = get_email_service()
+                    alertas_criticos = [a for a in alertas if a.get('tipo') == 'critico']
+                    
+                    with st.spinner(f"Enviando {len(alertas_criticos)} alertas..."):
+                        sucessos = 0
+                        for alerta in alertas_criticos:
+                            resultado = email_service.enviar_alerta_critico(
+                                alerta=alerta,
+                                destinatarios=[email_configurado] + config_email.get('emails_copia', [])
+                            )
+                            if resultado['sucesso']:
+                                sucessos += 1
+                        
+                        if sucessos == len(alertas_criticos):
+                            st.success(f"✅ {sucessos} emails enviados com sucesso!")
+                        else:
+                            st.warning(f"⚠️ {sucessos}/{len(alertas_criticos)} emails enviados")
+            else:
+                if st.button("⚙️ Configurar Email", use_container_width=True):
+                    st.switch_page("pages/08_⚙️_Configurações.py")
     
     st.markdown("---")
     

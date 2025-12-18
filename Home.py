@@ -12,9 +12,13 @@ Data: 2025
 """
 
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timedelta
 import sys
 from pathlib import Path
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
+import io
 
 # Adiciona o diretório raiz ao path
 sys.path.append(str(Path(__file__).parent))
@@ -25,16 +29,89 @@ from services.contract_service import get_todos_contratos
 from services.alert_service import calcular_alertas
 
 
+def exportar_para_excel(contratos):
+    """Exporta lista de contratos para Excel"""
+    # Cria DataFrame
+    dados = []
+    for c in contratos:
+        dados.append({
+            'Número': c.get('numero', ''),
+            'Fornecedor': c.get('fornecedor', ''),
+            'Tipo': c.get('tipo', ''),
+            'Status': c.get('status', ''),
+            'Valor (R$)': c.get('valor', 0),
+            'Data Início': c.get('data_inicio', ''),
+            'Data Fim': c.get('data_fim', ''),
+            'Fiscal': c.get('fiscal', ''),
+            'Objeto': c.get('objeto', '')
+        })
+    
+    df = pd.DataFrame(dados)
+    
+    # Cria arquivo Excel em memória
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, sheet_name='Contratos', index=False)
+        
+        # Acessa o workbook e worksheet
+        workbook = writer.book
+        worksheet = writer.sheets['Contratos']
+        
+        # Formata header
+        header_format = workbook.add_format({
+            'bold': True,
+            'bg_color': '#003366',
+            'font_color': 'white',
+            'border': 1
+        })
+        
+        # Aplica formato no header
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+        
+        # Ajusta largura das colunas
+        worksheet.set_column('A:A', 20)  # Número
+        worksheet.set_column('B:B', 35)  # Fornecedor
+        worksheet.set_column('C:C', 15)  # Tipo
+        worksheet.set_column('D:D', 12)  # Status
+        worksheet.set_column('E:E', 15)  # Valor
+        worksheet.set_column('F:G', 12)  # Datas
+        worksheet.set_column('H:H', 25)  # Fiscal
+        worksheet.set_column('I:I', 50)  # Objeto
+    
+    return output.getvalue()
+
+
 def render_header():
-    """Renderiza o cabeçalho institucional TJSP"""
-    st.markdown("""
-        <div class="tjsp-header">
-            <div class="tjsp-logo-container">
-                <h1>⚖️ TJSP - Gestão de Contratos Regionais</h1>
-                <p class="tjsp-subtitle">Sistema de Fiscalização e Acompanhamento - RAJ 10.1</p>
+    """Renderiza o cabeçalho institucional TJSP com botões de exportação"""
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        st.markdown("""
+            <div class="tjsp-header">
+                <div class="tjsp-logo-container">
+                    <h1>⚖️ TJSP - Gestão de Contratos Regionais</h1>
+                    <p class="tjsp-subtitle">Sistema de Fiscalização e Acompanhamento - RAJ 10.1</p>
+                </div>
             </div>
-        </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
+    
+    with col2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # Botão de exportação
+        contratos = get_todos_contratos()
+        
+        if contratos:
+            excel_data = exportar_para_excel(contratos)
+            st.download_button(
+                label="📥 Exportar Excel",
+                data=excel_data,
+                file_name=f"contratos_tjsp_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+                type="secondary"
+            )
 
 
 def render_metrics():
@@ -98,6 +175,241 @@ def render_metrics():
             value=f"{taxa_conformidade}%",
             delta=f"{contratos_ativos}/{total_contratos}"
         )
+
+
+def render_graficos_analytics():
+    """Renderiza gráficos e visualizações analíticas do dashboard"""
+    
+    st.markdown("## 📊 Analytics e Visualizações")
+    
+    # Obtém dados
+    contratos = get_todos_contratos()
+    
+    if not contratos:
+        st.info("Nenhum contrato disponível para análise.")
+        return
+    
+    # Cria abas para organizar gráficos
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Distribuição", "📅 Timeline", "💰 Fornecedores", "📈 Status"])
+    
+    # ===== TAB 1: DISTRIBUIÇÃO =====
+    with tab1:
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Gráfico de pizza: Contratos por Tipo
+            tipos = {}
+            for c in contratos:
+                tipo = c.get('tipo', 'Outros')
+                tipos[tipo] = tipos.get(tipo, 0) + 1
+            
+            fig_tipo = go.Figure(data=[go.Pie(
+                labels=list(tipos.keys()),
+                values=list(tipos.values()),
+                hole=0.4,
+                marker=dict(colors=['#003366', '#0066CC', '#66B2FF'])
+            )])
+            fig_tipo.update_layout(
+                title="Contratos por Tipo",
+                height=350,
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=-0.2)
+            )
+            st.plotly_chart(fig_tipo, use_container_width=True)
+        
+        with col2:
+            # Gráfico de pizza: Contratos por Status
+            status_map = {
+                'ativo': 'Ativos',
+                'atencao': 'Atenção',
+                'critico': 'Crítico'
+            }
+            status = {}
+            for c in contratos:
+                s = c.get('status', 'ativo')
+                label = status_map.get(s, s)
+                status[label] = status.get(label, 0) + 1
+            
+            fig_status = go.Figure(data=[go.Pie(
+                labels=list(status.keys()),
+                values=list(status.values()),
+                hole=0.4,
+                marker=dict(colors=['#28A745', '#FFC107', '#DC3545'])
+            )])
+            fig_status.update_layout(
+                title="Contratos por Status",
+                height=350,
+                showlegend=True,
+                legend=dict(orientation="h", yanchor="bottom", y=-0.2)
+            )
+            st.plotly_chart(fig_status, use_container_width=True)
+    
+    # ===== TAB 2: TIMELINE =====
+    with tab2:
+        st.markdown("### 📅 Vencimentos dos Próximos 6 Meses")
+        
+        # Filtra contratos com data_fim nos próximos 6 meses
+        hoje = datetime.now()
+        seis_meses = hoje + timedelta(days=180)
+        
+        vencimentos = []
+        for c in contratos:
+            data_fim = c.get('data_fim')
+            if data_fim:
+                if isinstance(data_fim, str):
+                    try:
+                        data_fim = datetime.fromisoformat(data_fim)
+                    except:
+                        continue
+                
+                if hoje <= data_fim <= seis_meses:
+                    dias_restantes = (data_fim - hoje).days
+                    vencimentos.append({
+                        'Contrato': c.get('numero', 'N/A'),
+                        'Data de Término': data_fim.strftime('%d/%m/%Y'),
+                        'Dias Restantes': dias_restantes,
+                        'Fornecedor': c.get('fornecedor', 'N/A'),
+                        'Valor': c.get('valor', 0)
+                    })
+        
+        if vencimentos:
+            # Ordena por dias restantes
+            vencimentos.sort(key=lambda x: x['Dias Restantes'])
+            
+            # Gráfico de barras horizontal
+            df_venc = pd.DataFrame(vencimentos[:15])  # Top 15
+            
+            fig_timeline = px.bar(
+                df_venc,
+                x='Dias Restantes',
+                y='Contrato',
+                orientation='h',
+                color='Dias Restantes',
+                color_continuous_scale=['#DC3545', '#FFC107', '#28A745'],
+                hover_data=['Fornecedor', 'Data de Término'],
+                labels={'Dias Restantes': 'Dias para Vencimento'}
+            )
+            fig_timeline.update_layout(
+                height=500,
+                xaxis_title="Dias para Vencimento",
+                yaxis_title="",
+                showlegend=False
+            )
+            st.plotly_chart(fig_timeline, use_container_width=True)
+            
+            st.caption(f"📊 {len(vencimentos)} contratos vencem nos próximos 6 meses")
+        else:
+            st.info("Nenhum contrato vence nos próximos 6 meses.")
+    
+    # ===== TAB 3: FORNECEDORES =====
+    with tab3:
+        st.markdown("### 💰 Top 10 Fornecedores por Valor Total")
+        
+        # Agrupa por fornecedor
+        fornecedores = {}
+        for c in contratos:
+            forn = c.get('fornecedor', 'N/A')
+            valor = c.get('valor', 0)
+            if forn in fornecedores:
+                fornecedores[forn]['valor'] += valor
+                fornecedores[forn]['contratos'] += 1
+            else:
+                fornecedores[forn] = {'valor': valor, 'contratos': 1}
+        
+        # Ordena e pega top 10
+        top_fornecedores = sorted(fornecedores.items(), key=lambda x: x[1]['valor'], reverse=True)[:10]
+        
+        if top_fornecedores:
+            df_forn = pd.DataFrame([
+                {
+                    'Fornecedor': f[0],
+                    'Valor Total (R$)': f[1]['valor'],
+                    'Contratos': f[1]['contratos']
+                }
+                for f in top_fornecedores
+            ])
+            
+            fig_forn = px.bar(
+                df_forn,
+                x='Valor Total (R$)',
+                y='Fornecedor',
+                orientation='h',
+                color='Contratos',
+                color_continuous_scale='Blues',
+                hover_data=['Contratos'],
+                labels={'Valor Total (R$)': 'Valor Total Contratado (R$)'}
+            )
+            fig_forn.update_layout(
+                height=450,
+                xaxis_title="Valor Total Contratado (R$)",
+                yaxis_title="",
+                yaxis={'categoryorder': 'total ascending'}
+            )
+            st.plotly_chart(fig_forn, use_container_width=True)
+            
+            # Tabela resumo
+            st.markdown("#### 📋 Detalhamento")
+            df_forn['Valor Total (R$)'] = df_forn['Valor Total (R$)'].apply(lambda x: f"R$ {x:,.2f}")
+            st.dataframe(df_forn, use_container_width=True, hide_index=True)
+        else:
+            st.info("Dados de fornecedores não disponíveis.")
+    
+    # ===== TAB 4: ANÁLISE DE STATUS =====
+    with tab4:
+        st.markdown("### 📈 Análise Detalhada por Status")
+        
+        # Métricas por status
+        col1, col2, col3 = st.columns(3)
+        
+        ativos = [c for c in contratos if c.get('status') == 'ativo']
+        atencao = [c for c in contratos if c.get('status') == 'atencao']
+        criticos = [c for c in contratos if c.get('status') == 'critico']
+        
+        with col1:
+            valor_ativos = sum(c.get('valor', 0) for c in ativos)
+            st.metric(
+                "✅ Contratos Ativos",
+                f"{len(ativos)}",
+                f"R$ {valor_ativos/1_000_000:.1f}M"
+            )
+        
+        with col2:
+            valor_atencao = sum(c.get('valor', 0) for c in atencao)
+            st.metric(
+                "⚠️ Requerem Atenção",
+                f"{len(atencao)}",
+                f"R$ {valor_atencao/1_000_000:.1f}M"
+            )
+        
+        with col3:
+            valor_criticos = sum(c.get('valor', 0) for c in criticos)
+            st.metric(
+                "🔴 Críticos",
+                f"{len(criticos)}",
+                f"R$ {valor_criticos/1_000_000:.1f}M"
+            )
+        
+        # Gráfico de evolução (mockado - preparado para dados históricos)
+        st.markdown("#### 📊 Distribuição de Valor por Status")
+        
+        df_status_valor = pd.DataFrame([
+            {'Status': 'Ativos', 'Valor (Milhões)': valor_ativos/1_000_000, 'Quantidade': len(ativos)},
+            {'Status': 'Atenção', 'Valor (Milhões)': valor_atencao/1_000_000, 'Quantidade': len(atencao)},
+            {'Status': 'Críticos', 'Valor (Milhões)': valor_criticos/1_000_000, 'Quantidade': len(criticos)}
+        ])
+        
+        fig_status_valor = px.bar(
+            df_status_valor,
+            x='Status',
+            y='Valor (Milhões)',
+            color='Status',
+            color_discrete_map={'Ativos': '#28A745', 'Atenção': '#FFC107', 'Críticos': '#DC3545'},
+            text='Quantidade',
+            labels={'Valor (Milhões)': 'Valor Total (R$ Milhões)'}
+        )
+        fig_status_valor.update_traces(texttemplate='%{text} contratos', textposition='outside')
+        fig_status_valor.update_layout(height=400, showlegend=False)
+        st.plotly_chart(fig_status_valor, use_container_width=True)
 
 
 def render_contract_card(contrato: dict):
@@ -336,12 +648,13 @@ def render_sidebar():
         st.page_link("app.py", label="🏠 Home", icon="🏠")
         st.page_link("pages/04_📖_Como_Proceder.py", label="📖 Como Proceder", icon="📖")
         st.page_link("pages/05_📚_Biblioteca.py", label="📚 Biblioteca", icon="📚")
+        st.page_link("pages/08_⚙️_Configurações.py", label="⚙️ Configurações", icon="⚙️")
         
         st.markdown("---")
         
         st.markdown("### ℹ️ Sobre")
         st.caption(f"""
-        **Versão:** 1.0.0 (MVP)  
+        **Versão:** 1.0.1 (MVP)  
         **Última atualização:** {datetime.now().strftime('%d/%m/%Y')}  
         **Ambiente:** Piloto
         """)
@@ -371,6 +684,11 @@ def main():
     
     # Renderiza métricas
     render_metrics()
+    
+    st.markdown("---")
+    
+    # Renderiza gráficos e analytics
+    render_graficos_analytics()
     
     st.markdown("---")
     
