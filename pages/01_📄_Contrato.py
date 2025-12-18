@@ -223,6 +223,80 @@ def render_bloco_pagamentos(contrato: dict):
                 """, unsafe_allow_html=True)
         
         st.info("💡 **Observação:** Dados de atestes e pagamentos são indicativos. Para informações financeiras detalhadas, consulte o SGF.")
+    
+    # Lista detalhada de pagamentos
+    with st.expander("📄 **Histórico Detalhado de Atestes**"):
+        st.markdown("### Registros de Ateste e Pagamento")
+        
+        # Dados mockados de pagamentos individuais (preparado para integração)
+        itens_pagamento = contrato.get("itens_pagamento", [
+            {"competencia": "Nov/2024", "nota_fiscal": "NF-12345", "valor": 15000.00, "status": "atestado", "data_ateste": "05/12/2024"},
+            {"competencia": "Out/2024", "nota_fiscal": "NF-12344", "valor": 15000.00, "status": "atestado", "data_ateste": "05/11/2024"},
+            {"competencia": "Set/2024", "nota_fiscal": "NF-12343", "valor": 15000.00, "status": "atestado", "data_ateste": "05/10/2024"},
+            {"competencia": "Ago/2024", "nota_fiscal": "NF-12342", "valor": 15000.00, "status": "atestado", "data_ateste": "05/09/2024"},
+            {"competencia": "Jul/2024", "nota_fiscal": "NF-12341", "valor": 15000.00, "status": "atestado", "data_ateste": "05/08/2024"},
+            {"competencia": "Jun/2024", "nota_fiscal": "NF-12340", "valor": 15000.00, "status": "atestado", "data_ateste": "05/07/2024"},
+            {"competencia": "Mai/2024", "nota_fiscal": "NF-12339", "valor": 15000.00, "status": "atestado", "data_ateste": "05/06/2024"},
+            {"competencia": "Abr/2024", "nota_fiscal": "NF-12338", "valor": 15000.00, "status": "atestado", "data_ateste": "05/05/2024"},
+            {"competencia": "Mar/2024", "nota_fiscal": "NF-12337", "valor": 15000.00, "status": "atestado", "data_ateste": "05/04/2024"},
+            {"competencia": "Fev/2024", "nota_fiscal": "Pendente", "valor": 15000.00, "status": "pendente", "data_ateste": None},
+            {"competencia": "Jan/2024", "nota_fiscal": "Pendente", "valor": 15000.00, "status": "pendente", "data_ateste": None},
+            {"competencia": "Dez/2023", "nota_fiscal": "Pendente", "valor": 15000.00, "status": "pendente", "data_ateste": None},
+        ])
+        
+        # Renderiza cada item de pagamento
+        for idx, item in enumerate(itens_pagamento, 1):
+            competencia = item.get("competencia", "N/A")
+            nota_fiscal = item.get("nota_fiscal", "N/A")
+            valor = item.get("valor", 0.0)
+            status_item = item.get("status", "pendente")
+            data_ateste = item.get("data_ateste")
+            
+            # Define cor e ícone por status
+            if status_item == "atestado":
+                cor_status = "#28A745"
+                icone_status = "✅"
+                texto_status = "Atestado"
+            else:
+                cor_status = "#FFC107"
+                icone_status = "⏳"
+                texto_status = "Pendente"
+            
+            # Card do item
+            st.markdown(f"""
+                <div style="background: white; padding: 1rem; border-radius: 8px; 
+                            margin-bottom: 0.8rem; border-left: 3px solid {cor_status};">
+                    <div style="display: grid; grid-template-columns: auto 1fr auto auto; gap: 1rem; align-items: center;">
+                        <div style="font-weight: bold; color: #003366;">
+                            {competencia}
+                        </div>
+                        <div style="color: #495057;">
+                            <strong>NF:</strong> {nota_fiscal}
+                        </div>
+                        <div style="color: #495057;">
+                            <strong>R$ {valor:,.2f}</strong>
+                        </div>
+                        <div>
+                            <span style="background: {cor_status}; color: white; padding: 0.3rem 0.8rem;
+                                        border-radius: 15px; font-size: 0.8rem; font-weight: bold;">
+                                {icone_status} {texto_status}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Informação secundária - Data do Ateste
+            if status_item == "atestado" and data_ateste:
+                st.caption(f"📅 Data do ateste: **{data_ateste}** • Previsão de pagamento: até 30 dias após o ateste")
+            else:
+                st.caption(f"📅 Data do ateste: **aguardando realização**")
+            
+            # Espaçamento entre itens
+            if idx < len(itens_pagamento):
+                st.markdown("<br>", unsafe_allow_html=True)
+        
+        st.info("💡 **Informação para fornecedores:** O prazo de pagamento é de até 30 dias após o ateste da Nota Fiscal pelo fiscal titular.")
 
 
 def render_bloco_iss(contrato: dict):
