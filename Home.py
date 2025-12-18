@@ -821,37 +821,61 @@ def main():
     # Aplica estilos institucionais TJSP
     apply_tjsp_styles()
     
-    # Inicializa session state
-    initialize_session_state()
-    
-    # Renderiza sidebar
-    render_sidebar()
-    
-    # Renderiza cabeçalho
-    render_header()
-    
-    # Renderiza métricas
-    render_metrics()
-    
-    st.markdown("---")
-    
-    # Renderiza gráficos e analytics
-    render_graficos_analytics()
-    
-    st.markdown("---")
-    
-    # Renderiza dashboard de contratos
-    render_contracts_dashboard()
-    
-    # Rodapé institucional
-    st.markdown("---")
-    st.markdown("""
-        <div class="tjsp-footer">
-            <p>© 2025 Tribunal de Justiça do Estado de São Paulo - TJSP</p>
-            <p>Projeto SAAB-Tech / Synapse.IA - Aplicativo Piloto Institucional</p>
-        </div>
-    """, unsafe_allow_html=True)
+    with st.sidebar:
+        st.markdown("### 🏛️ TJSP")
+        st.markdown("**Gestão de Contratos Regionais**")
+        st.markdown("---")
 
+        st.markdown("### 👤 Usuário")
+        usuario = st.session_state.get("usuario", "Coordenador Regional")
+        perfil = st.session_state.get("perfil", "Fiscal de Contrato")
+        fiscal_nome = st.session_state.get("fiscal_nome", usuario)
 
-if __name__ == "__main__":
-    main()
+        st.info(f"""
+        **Nome:** {usuario}  
+        **Perfil:** {perfil}  
+        **RAJ:** 10.1
+        """)
+
+        # Seletor rápido de fiscal (para testes)
+        with st.expander("🔄 Trocar Fiscal"):
+            contratos_temp = get_todos_contratos()
+            fiscais_unicos = set()
+            for c in contratos_temp:
+                if c.get('fiscal_titular'):
+                    fiscais_unicos.add(c.get('fiscal_titular'))
+                if c.get('fiscal_substituto'):
+                    fiscais_unicos.add(c.get('fiscal_substituto'))
+            fiscais_lista = sorted(list(fiscais_unicos))
+            if fiscais_lista:
+                fiscal_selecionado = st.selectbox(
+                    "Selecione o fiscal:",
+                    fiscais_lista,
+                    index=fiscais_lista.index(fiscal_nome) if fiscal_nome in fiscais_lista else 0,
+                    key="select_fiscal_sidebar"
+                )
+                if st.button("✅ Aplicar", use_container_width=True):
+                    st.session_state.fiscal_nome = fiscal_selecionado
+                    st.session_state.usuario = fiscal_selecionado
+                    st.success(f"Fiscal alterado para: {fiscal_selecionado}")
+                    st.rerun()
+
+        st.markdown("---")
+
+        # Navegação centralizada e manual, sem duplicação
+        st.markdown("### 📚 Navegação")
+        st.page_link("app.py", label="🏠 Home", icon="🏠")
+        st.page_link("pages/10_Meus_Contratos.py", label="👤 Meus Contratos", icon="👤")
+        st.page_link("pages/04_📖_Como_Proceder.py", label="📖 Como Proceder", icon="📖")
+        st.page_link("pages/05_📚_Biblioteca.py", label="📚 Biblioteca", icon="📚")
+        st.page_link("pages/08_⚙️_Configurações.py", label="⚙️ Configurações", icon="⚙️")
+        st.page_link("pages/09_🏷️_Gerenciar_Tags.py", label="🏷️ Gerenciar Tags", icon="🏷️")
+
+        st.markdown("---")
+
+        st.markdown("### ℹ️ Sobre")
+        st.caption(f"""
+        **Versão:** 1.0.1 (MVP)  
+        **Última atualização:** {datetime.now().strftime('%d/%m/%Y')}  
+        **Ambiente:** Piloto
+        """)

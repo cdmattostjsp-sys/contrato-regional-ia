@@ -1,0 +1,16 @@
+# Streamlit configuration for custom page labels
+[server]
+headless = true
+
+[theme]
+primaryColor = "#003366"
+backgroundColor = "#F5F5F5"
+secondaryBackgroundColor = "#E0E0E0"
+textColor = "#222222"
+font = "sans serif"
+
+[client]
+showSidebarNavigation = true
+
+[pages]
+home = "app.py"
