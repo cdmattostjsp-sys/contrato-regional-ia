@@ -275,7 +275,8 @@ def render_bloco_pagamentos(contrato: dict):
                 icone_status = "⏳"
                 texto_status = "Pendente"
             
-            # Card do item
+            # Card do item com data do ateste (se houver)
+            data_ateste_html = f"<div style='color: #00796B; font-size: 0.85rem; margin-top: 0.2rem;'><strong>Data do Ateste:</strong> {data_ateste}</div>" if data_ateste else ""
             st.markdown(f"""
                 <div style="background: white; padding: 1rem; border-radius: 8px; 
                             margin-bottom: 0.8rem; border-left: 3px solid {cor_status};">
@@ -296,6 +297,7 @@ def render_bloco_pagamentos(contrato: dict):
                             </span>
                         </div>
                     </div>
+                    {data_ateste_html}
                 </div>
             """, unsafe_allow_html=True)
             
