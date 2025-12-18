@@ -44,7 +44,15 @@ def render_alerta_card(alerta: dict):
     
     config = config_tipos.get(alerta.get('tipo', 'info'), config_tipos['info'])
     
-    st.markdown(f"""
+    # Extrai dados com escape de caracteres especiais
+    titulo = str(alerta.get('titulo', 'Sem título')).replace("'", "&#39;").replace('"', '&quot;')
+    descricao = str(alerta.get('descricao', 'Sem descrição')).replace("'", "&#39;").replace('"', '&quot;')
+    contrato_numero = str(alerta.get('contrato_numero', 'N/A')).replace("'", "&#39;").replace('"', '&quot;')
+    categoria = str(alerta.get('categoria', 'Geral')).replace("'", "&#39;").replace('"', '&quot;')
+    data_alerta = alerta.get('data_alerta', datetime.now())
+    data_formatada = data_alerta.strftime('%d/%m/%Y %H:%M') if isinstance(data_alerta, datetime) else str(data_alerta)
+    
+    html_card = f"""
         <div style="background: white; border-left: 5px solid {config['cor']}; 
                     padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem;
                     box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
@@ -56,27 +64,29 @@ def render_alerta_card(alerta: dict):
                     </span>
                     <span style="background: #E9ECEF; color: #495057; padding: 0.3rem 0.8rem;
                                 border-radius: 15px; font-size: 0.75rem; font-weight: bold; margin-left: 0.5rem;">
-                        {alerta.get('categoria', 'Geral')}
+                        {categoria}
                     </span>
                 </div>
                 <span style="color: #6C757D; font-size: 0.85rem;">
-                    {alerta.get('data_alerta', datetime.now()).strftime('%d/%m/%Y %H:%M')}
+                    {data_formatada}
                 </span>
             </div>
             
             <h4 style="margin: 0 0 0.5rem 0; color: {config['cor']};">
-                {alerta.get('titulo', 'Sem título')}
+                {titulo}
             </h4>
             
             <p style="margin: 0 0 1rem 0; color: #495057; line-height: 1.6;">
-                {alerta.get('descricao', 'Sem descrição')}
+                {descricao}
             </p>
             
             <p style="margin: 0; color: #6C757D; font-size: 0.9rem;">
-                <strong>Contrato:</strong> {alerta.get('contrato_numero', 'N/A')}
+                <strong>Contrato:</strong> {contrato_numero}
             </p>
         </div>
-    """, unsafe_allow_html=True)
+    """
+    
+    st.markdown(html_card, unsafe_allow_html=True)
     
     # Botões de ação
     col1, col2, col3 = st.columns(3)
