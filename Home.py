@@ -549,7 +549,7 @@ def render_contracts_dashboard():
     
     # Filtros avançados em expander
     with st.expander("🔎 Filtros Avançados", expanded=False):
-        col_f1, col_f2 = st.columns(2)
+        col_f1, col_f2, col_f3 = st.columns(3)
         
         with col_f1:
             filtro_num_contrato = st.text_input(
