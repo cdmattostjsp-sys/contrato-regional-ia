@@ -272,6 +272,80 @@ Sistema SAAB-Tech / Synapse.IA
             corpo=corpo
         )
     
+    def enviar_lembrete_vencimentos(self, contratos_vencendo: List[Dict], destinatarios: List[str]) -> Dict:
+        """
+        Envia lembrete de contratos com vencimento próximo
+        
+        Args:
+            contratos_vencendo: Lista de contratos que estão vencendo
+            destinatarios: Lista de emails para notificar
+        
+        Returns:
+            Resultado do envio
+        """
+        total_contratos = len(contratos_vencendo)
+        
+        assunto = f"⏰ LEMBRETE: {total_contratos} contrato(s) com vencimento próximo"
+        
+        corpo = f"""
+LEMBRETE DE VENCIMENTOS
+=======================
+
+Data: {datetime.now().strftime('%d/%m/%Y')}
+
+⚠️ ATENÇÃO: {total_contratos} contrato(s) com vencimento nos próximos 30 dias.
+
+CONTRATOS A VENCER:
+-------------------
+
+"""
+        
+        # Ordena por data de vencimento
+        contratos_ordenados = sorted(
+            contratos_vencendo,
+            key=lambda x: x.get('data_fim', datetime.now())
+        )
+        
+        for c in contratos_ordenados:
+            data_fim = c.get('data_fim')
+            if isinstance(data_fim, datetime):
+                dias_restantes = (data_fim - datetime.now()).days
+                data_formatada = data_fim.strftime('%d/%m/%Y')
+            else:
+                dias_restantes = 0
+                data_formatada = 'N/A'
+            
+            urgencia = '🔴' if dias_restantes <= 7 else '⚠️' if dias_restantes <= 15 else '🟡'
+            
+            corpo += f"""
+{urgencia} {c.get('numero', 'N/A')}
+   Fornecedor: {c.get('fornecedor', 'N/A')}
+   Data de Término: {data_formatada}
+   Dias Restantes: {dias_restantes} dia(s)
+   Valor: R$ {c.get('valor', 0):,.2f}
+   
+"""
+        
+        corpo += f"""
+---
+RECOMENDAÇÕES:
+• Verifique necessidade de renovação
+• Prepare documentação necessária
+• Avalie desempenho do fornecedor
+• Considere alternativas de contratação
+
+Acesse o sistema para mais detalhes e ações.
+
+TJSP - Tribunal de Justiça do Estado de São Paulo
+Sistema SAAB-Tech / Synapse.IA
+"""
+        
+        return self.enviar_email(
+            destinatarios=destinatarios,
+            assunto=assunto,
+            corpo=corpo
+        )
+    
     def enviar_notificacao_contratual(
         self,
         contrato: Dict,

@@ -27,6 +27,7 @@ from ui.styles import apply_tjsp_styles
 from services.session_manager import initialize_session_state
 from services.contract_service import get_todos_contratos
 from services.alert_service import calcular_alertas
+from services.tag_service import get_tag_service
 
 
 def exportar_para_excel(contratos):
@@ -422,6 +423,10 @@ def render_contract_card(contrato: dict):
     
     status_icon = status_colors.get(contrato.get("status", "ativo"), "⚪")
     
+    # Obtém tags do contrato
+    tag_service = get_tag_service()
+    tags_contrato = tag_service.obter_tags_do_contrato(contrato['id'])
+    
     with st.container():
         st.markdown(f"""
             <div class="contract-card">
@@ -436,7 +441,22 @@ def render_contract_card(contrato: dict):
             </div>
         """, unsafe_allow_html=True)
         
-        col1, col2, col3 = st.columns(3)
+        # Renderiza tags
+        if tags_contrato:
+            tags_html = ""
+            for tag in tags_contrato:
+                tags_html += f"""
+                <span style="background: {tag['cor']}; color: white; 
+                             padding: 0.2rem 0.5rem; border-radius: 10px; 
+                             font-size: 0.7rem; font-weight: bold;
+                             display: inline-block; margin: 0.2rem;">
+                    {tag['icone']} {tag['nome']}
+                </span>
+                """
+            st.markdown(tags_html, unsafe_allow_html=True)
+            st.markdown("<br>", unsafe_allow_html=True)
+        
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             if st.button("📄 Visualizar", key=f"view_{contrato['id']}", use_container_width=True):
                 st.session_state.contrato_selecionado = contrato
@@ -451,11 +471,67 @@ def render_contract_card(contrato: dict):
             if st.button("📝 Notificar", key=f"notify_{contrato['id']}", use_container_width=True):
                 st.session_state.contrato_selecionado = contrato
                 st.switch_page("pages/03_📝_Notificações.py")
+        
+        with col4:
+            if st.button("🏷️ Tags", key=f"tags_{contrato['id']}", use_container_width=True):
+                st.session_state.contrato_para_tag = contrato['id']
+                st.session_state.show_tag_modal = True
+                st.rerun()
+
+
+def render_tag_management_modal():
+    """Modal para gerenciar tags de um contrato"""
+    contrato_id = st.session_state.get('contrato_para_tag')
+    if not contrato_id:
+        return
+    
+    tag_service = get_tag_service()
+    
+    with st.container():
+        st.markdown("---")
+        st.markdown(f"### 🏷️ Gerenciar Tags - Contrato {contrato_id}")
+        
+        # Tags atuais
+        tags_atuais = tag_service.obter_tags_do_contrato(contrato_id)
+        
+        col_modal1, col_modal2 = st.columns([3, 1])
+        
+        with col_modal1:
+            # Seletor de tags
+            todas_tags = tag_service.obter_todas_tags()
+            tags_opcoes = {t['id']: f"{t['icone']} {t['nome']}" for t in todas_tags}
+            
+            tags_selecionadas = st.multiselect(
+                "Selecione as tags",
+                options=list(tags_opcoes.keys()),
+                default=[t['id'] for t in tags_atuais],
+                format_func=lambda x: tags_opcoes[x],
+                key="multiselect_tags"
+            )
+        
+        with col_modal2:
+            st.write("")
+            st.write("")
+            if st.button("💾 Salvar", type="primary", use_container_width=True):
+                tag_service.definir_tags_do_contrato(contrato_id, tags_selecionadas)
+                st.success("Tags atualizadas!")
+                st.session_state.show_tag_modal = False
+                st.rerun()
+            
+            if st.button("❌ Cancelar", use_container_width=True):
+                st.session_state.show_tag_modal = False
+                st.rerun()
+        
+        st.markdown("---")
 
 
 def render_contracts_dashboard():
     """Renderiza o dashboard de contratos"""
     st.markdown("## 📋 Contratos Regionais - RAJ 10.1")
+    
+    # Modal de gestão de tags (se ativo)
+    if st.session_state.get('show_tag_modal', False):
+        render_tag_management_modal()
     
     # Barra de busca geral
     busca = st.text_input(
@@ -502,9 +578,25 @@ def render_contracts_dashboard():
                 key="filtro_fiscal",
                 help="Filtra por fiscal titular do contrato"
             )
+        
+        with col_f3:
+            # Filtro por tags
+            tag_service = get_tag_service()
+            todas_tags = tag_service.obter_todas_tags()
+            tags_opcoes = {t['id']: f"{t['icone']} {t['nome']}" for t in todas_tags}
+            
+            filtro_tags = st.multiselect(
+                "Tags",
+                options=list(tags_opcoes.keys()),
+                format_func=lambda x: tags_opcoes[x],
+                key="filtro_tags",
+                help="Filtra por tags aplicadas aos contratos"
+            )
+            
+            st.caption("[🏷️ Gerenciar Tags](pages/09_🏷️_Gerenciar_Tags.py)")
     
     # Filtros básicos
-    col1, col2, col3 = st.columns([2, 2, 1])
+    col1, col2, col3, col4 = st.columns([2, 2, 2, 1])
     
     with col1:
         filtro_status = st.selectbox(
@@ -521,6 +613,16 @@ def render_contracts_dashboard():
         )
     
     with col3:
+        # Contador de tags aplicadas
+        if filtro_tags:
+            st.metric("Tags Filtradas", len(filtro_tags))
+        else:
+            st.write("")
+            st.write("")
+            if st.button("🏷️ Gerenciar Tags", use_container_width=True):
+                st.switch_page("pages/09_🏷️_Gerenciar_Tags.py")
+    
+    with col4:
         st.write("")
         st.write("")
         if st.button("🔄 Atualizar", use_container_width=True):
@@ -573,6 +675,15 @@ def render_contracts_dashboard():
         contratos_filtrados = [
             c for c in contratos_filtrados
             if c.get('fiscal_titular') == filtro_fiscal
+        ]
+    
+    # Filtro por tags
+    if filtro_tags:
+        tag_service = get_tag_service()
+        contratos_filtrados = [
+            c for c in contratos_filtrados
+            if any(tag_id in [t['id'] for t in tag_service.obter_tags_do_contrato(c['id'])] 
+                   for tag_id in filtro_tags)
         ]
     
     # Filtro por status
@@ -649,6 +760,7 @@ def render_sidebar():
         st.page_link("pages/04_📖_Como_Proceder.py", label="📖 Como Proceder", icon="📖")
         st.page_link("pages/05_📚_Biblioteca.py", label="📚 Biblioteca", icon="📚")
         st.page_link("pages/08_⚙️_Configurações.py", label="⚙️ Configurações", icon="⚙️")
+        st.page_link("pages/09_🏷️_Gerenciar_Tags.py", label="🏷️ Gerenciar Tags", icon="🏷️")
         
         st.markdown("---")
         
