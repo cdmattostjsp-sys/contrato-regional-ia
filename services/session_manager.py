@@ -28,6 +28,10 @@ def initialize_session_state():
     if "raj" not in st.session_state:
         st.session_state.raj = "10.1"
     
+    if "fiscal_nome" not in st.session_state:
+        # Nome do fiscal para filtrar "Meus Contratos"
+        st.session_state.fiscal_nome = st.session_state.get("usuario", "João Silva Santos")
+    
     # ===== CONTRATO SELECIONADO =====
     if "contrato_selecionado" not in st.session_state:
         st.session_state.contrato_selecionado = None

@@ -102,7 +102,7 @@ def render_header():
         
         # Botão Meus Contratos
         if st.button("👤 Meus Contratos", use_container_width=True, type="primary"):
-            st.switch_page("pages/10_👤_Meus_Contratos.py")
+            st.switch_page("pages/10_Meus_Contratos.py")
     
     with col3:
         st.markdown("<br>", unsafe_allow_html=True)
@@ -792,7 +792,7 @@ def render_sidebar():
         
         st.markdown("### 📚 Navegação")
         st.page_link("app.py", label="🏠 Home", icon="🏠")
-        st.page_link("pages/10_👤_Meus_Contratos.py", label="👤 Meus Contratos", icon="👤")
+        st.page_link("pages/10_Meus_Contratos.py", label="👤 Meus Contratos", icon="👤")
         st.page_link("pages/04_📖_Como_Proceder.py", label="📖 Como Proceder", icon="📖")
         st.page_link("pages/05_📚_Biblioteca.py", label="📚 Biblioteca", icon="📚")
         st.page_link("pages/08_⚙️_Configurações.py", label="⚙️ Configurações", icon="⚙️")
