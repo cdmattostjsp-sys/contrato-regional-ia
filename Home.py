@@ -22,6 +22,7 @@ sys.path.append(str(Path(__file__).parent))
 from ui.styles import apply_tjsp_styles
 from services.session_manager import initialize_session_state
 from services.contract_service import get_todos_contratos
+from services.alert_service import calcular_alertas
 
 
 def render_header():
@@ -40,6 +41,10 @@ def render_metrics():
     """Renderiza métricas gerais do dashboard calculadas dinamicamente"""
     # Obtém todos os contratos
     contratos = get_todos_contratos()
+    
+    # Calcula alertas
+    alertas = calcular_alertas(contratos)
+    alertas_criticos = len([a for a in alertas if a.get('tipo') == 'critico'])
     
     # Calcula métricas reais
     total_contratos = len(contratos)
@@ -64,12 +69,21 @@ def render_metrics():
         )
     
     with col2:
-        st.metric(
-            label="⚠️ Requerem Atenção",
-            value=f"{contratos_atencao + contratos_criticos}",
-            delta=f"{contratos_criticos} críticos",
-            delta_color="inverse" if contratos_criticos > 0 else "normal"
-        )
+        # Badge de alertas
+        if alertas_criticos > 0:
+            st.markdown(f"""
+                <div style="text-align: center; cursor: pointer;" onclick="window.location.href='pages/07_🔔_Alertas.py'">
+                    <span style="background: #DC3545; color: white; padding: 0.3rem 0.8rem;
+                                border-radius: 20px; font-size: 0.85rem; font-weight: bold;">
+                        🔔 {len(alertas)} Alertas
+                    </span>
+                </div>
+            """, unsafe_allow_html=True)
+        
+        if st.button("🔔 Ver Alertas", use_container_width=True, type="primary" if alertas_criticos > 0 else "secondary"):
+            st.switch_page("pages/07_🔔_Alertas.py")
+        
+        st.caption(f"{alertas_criticos} críticos • {len(alertas) - alertas_criticos} outros")
     
     with col3:
         st.metric(
