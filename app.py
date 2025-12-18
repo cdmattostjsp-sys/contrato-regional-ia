@@ -1,12 +1,5 @@
-"""
-Entrypoint para Streamlit Cloud
-================================
-Redireciona para Home.py seguindo padrão SAAB-Tech
-"""
 
-
-# Redireciona para Home.py, mas sem criar menus duplicados
-import Home
-
-if __name__ == "__main__":
-    Home.main()
+# Arquivo neutro: não gera interface.
+# Mantido apenas para compatibilidade técnica.
+# O deploy do Streamlit deve apontar para Home.py como entrypoint.
+pass
