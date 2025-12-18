@@ -125,11 +125,17 @@ def render_bloco_pagamentos(contrato: dict):
     tributacao = contrato.get("tributacao", {})
     retem_iss = tributacao.get("retem_iss", False)
     
-    # Define badge de ISS
+    # Badge de ISS com destaque reforçado
     if retem_iss:
-        badge_iss = '<span style="background: #28A745; color: white; padding: 0.25rem 0.7rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; margin-left: 1rem;">🟢 Retém ISS: SIM</span>'
+        badge_iss = '''<div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 1rem; color: #003366; font-weight: 600; margin-bottom: 0.2rem;">Retenção de ISS</span>
+            <span style="background: #28A745; color: white; padding: 0.4rem 1.2rem; border-radius: 16px; font-size: 1.1rem; font-weight: 700; box-shadow: 0 2px 8px #28a74522; letter-spacing: 1px;">🟢 SIM</span>
+        </div>'''
     else:
-        badge_iss = '<span style="background: #6C757D; color: white; padding: 0.25rem 0.7rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600; margin-left: 1rem;">⚪ Retém ISS: NÃO</span>'
+        badge_iss = '''<div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 1rem; color: #003366; font-weight: 600; margin-bottom: 0.2rem;">Retenção de ISS</span>
+            <span style="background: #6C757D; color: white; padding: 0.4rem 1.2rem; border-radius: 16px; font-size: 1.1rem; font-weight: 700; box-shadow: 0 2px 8px #6c757d22; letter-spacing: 1px;">⚪ NÃO</span>
+        </div>'''
     
     # Define configuração visual por status
     config_status = {
@@ -155,7 +161,7 @@ def render_bloco_pagamentos(contrato: dict):
     st.markdown(f"""
         <div style="background: #F8F9FA; padding: 1.5rem; border-radius: 10px; 
                     margin-bottom: 1.5rem; border-left: 4px solid {config['cor']};">
-            <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 1rem;">
                 <h3 style="margin: 0; color: #003366;">
                     💳 ATESTES E PAGAMENTOS
                 </h3>
