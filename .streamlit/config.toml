@@ -12,5 +12,3 @@ font = "sans serif"
 [client]
 showSidebarNavigation = true
 
-[pages]
-home = "app.py"

@@ -791,7 +791,6 @@ def render_sidebar():
         st.markdown("---")
         
         st.markdown("### 📚 Navegação")
-        st.page_link("app.py", label="🏠 Home", icon="🏠")
         st.page_link("pages/10_Meus_Contratos.py", label="👤 Meus Contratos", icon="👤")
         st.page_link("pages/04_📖_Como_Proceder.py", label="📖 Como Proceder", icon="📖")
         st.page_link("pages/05_📚_Biblioteca.py", label="📚 Biblioteca", icon="📚")
@@ -867,7 +866,6 @@ def main():
 
         # Navegação centralizada e manual, sem duplicação
         st.markdown("### 📚 Navegação")
-        st.page_link("app.py", label="🏠 Home", icon="🏠")
         st.page_link("pages/10_Meus_Contratos.py", label="👤 Meus Contratos", icon="👤")
         st.page_link("pages/04_📖_Como_Proceder.py", label="📖 Como Proceder", icon="📖")
         st.page_link("pages/05_📚_Biblioteca.py", label="📚 Biblioteca", icon="📚")
@@ -894,5 +892,5 @@ def main():
 
 
 # Executa a função principal automaticamente ao rodar Home.py
-if __name__ == "__main__" or "streamlit" in sys.argv[0]:
+if __name__ == "__main__":
     main()
