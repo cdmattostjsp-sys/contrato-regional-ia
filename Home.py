@@ -788,7 +788,6 @@ def render_sidebar():
                     "Selecione o fiscal:",
                     fiscais_lista,
                     index=fiscais_lista.index(fiscal_nome) if fiscal_nome in fiscais_lista else 0,
-                    key="select_fiscal_sidebar_home"
                 )
                 
                 if st.button("✅ Aplicar", use_container_width=True):
