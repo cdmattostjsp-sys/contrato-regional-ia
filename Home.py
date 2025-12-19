@@ -20,6 +20,9 @@ import plotly.graph_objects as go
 import pandas as pd
 import io
 
+# Flag de controle para evitar re-renderizações duplicadas da sidebar
+SIDEBAR_RENDER_FLAG = "_home_sidebar_rendered"
+
 # Adiciona o diretório raiz ao path
 sys.path.append(str(Path(__file__).parent))
 
@@ -745,6 +748,12 @@ def render_contracts_dashboard():
 
 def render_sidebar():
     """Renderiza a barra lateral com navegação e informações"""
+    # Garante que a sidebar seja renderizada apenas uma vez por execução da página,
+    # evitando criação duplicada de widgets com a mesma chave no Streamlit.
+    if st.session_state.get(SIDEBAR_RENDER_FLAG):
+        return
+    st.session_state[SIDEBAR_RENDER_FLAG] = True
+
     with st.sidebar:
         st.markdown("### 🏛️ TJSP")
         st.markdown("**Gestão de Contratos Regionais**")
@@ -779,7 +788,7 @@ def render_sidebar():
                     "Selecione o fiscal:",
                     fiscais_lista,
                     index=fiscais_lista.index(fiscal_nome) if fiscal_nome in fiscais_lista else 0,
-                    key="select_fiscal_sidebar"
+                    key="select_fiscal_sidebar_home"
                 )
                 
                 if st.button("✅ Aplicar", use_container_width=True):
@@ -819,76 +828,24 @@ def main():
         layout="wide",
         initial_sidebar_state="expanded"
     )
-    
+
+    # Inicializa estado de sessão padrão
+    initialize_session_state()
+
+    # Reseta flag de renderização da sidebar a cada execução
+    st.session_state[SIDEBAR_RENDER_FLAG] = False
+
     # Aplica estilos institucionais TJSP
     apply_tjsp_styles()
-    
-    with st.sidebar:
-        st.markdown("### 🏛️ TJSP")
-        st.markdown("**Gestão de Contratos Regionais**")
-        st.markdown("---")
 
-        st.markdown("### 👤 Usuário")
-        usuario = st.session_state.get("usuario", "Coordenador Regional")
-        perfil = st.session_state.get("perfil", "Fiscal de Contrato")
-        fiscal_nome = st.session_state.get("fiscal_nome", usuario)
-
-        st.info(f"""
-        **Nome:** {usuario}  
-        **Perfil:** {perfil}  
-        **RAJ:** 10.1
-        """)
-
-        # Seletor rápido de fiscal (para testes)
-        with st.expander("🔄 Trocar Fiscal"):
-            contratos_temp = get_todos_contratos()
-            fiscais_unicos = set()
-            for c in contratos_temp:
-                if c.get('fiscal_titular'):
-                    fiscais_unicos.add(c.get('fiscal_titular'))
-                if c.get('fiscal_substituto'):
-                    fiscais_unicos.add(c.get('fiscal_substituto'))
-            fiscais_lista = sorted(list(fiscais_unicos))
-            if fiscais_lista:
-                fiscal_selecionado = st.selectbox(
-                    "Selecione o fiscal:",
-                    fiscais_lista,
-                    index=fiscais_lista.index(fiscal_nome) if fiscal_nome in fiscais_lista else 0,
-                    key="select_fiscal_sidebar"
-                )
-                if st.button("✅ Aplicar", use_container_width=True):
-                    st.session_state.fiscal_nome = fiscal_selecionado
-                    st.session_state.usuario = fiscal_selecionado
-                    st.success(f"Fiscal alterado para: {fiscal_selecionado}")
-                    st.rerun()
-
-        st.markdown("---")
-
-        # Navegação centralizada e manual, sem duplicação
-        st.markdown("### 📚 Navegação")
-        st.page_link("pages/10_Meus_Contratos.py", label="👤 Meus Contratos", icon="👤")
-        st.page_link("pages/04_📖_Como_Proceder.py", label="📖 Como Proceder", icon="📖")
-        st.page_link("pages/05_📚_Biblioteca.py", label="📚 Biblioteca", icon="📚")
-        st.page_link("pages/08_⚙️_Configurações.py", label="⚙️ Configurações", icon="⚙️")
-        st.page_link("pages/09_🏷️_Gerenciar_Tags.py", label="🏷️ Gerenciar Tags", icon="🏷️")
-
-        st.markdown("---")
-
-        st.markdown("### ℹ️ Sobre")
-        st.caption(f"""
-        **Versão:** 1.0.1 (MVP)  
-        **Última atualização:** {datetime.now().strftime('%d/%m/%Y')}  
-        **Ambiente:** Piloto
-        """)
-        # Executa funções de renderização diretamente ao carregar Home.py
-        render_sidebar()
-        render_header()
-        render_metrics()
-        st.markdown("---")
-        render_graficos_analytics()
-        st.markdown("---")
-
-        render_contracts_dashboard()
+    # Renderiza UI
+    render_sidebar()
+    render_header()
+    render_metrics()
+    st.markdown("---")
+    render_graficos_analytics()
+    st.markdown("---")
+    render_contracts_dashboard()
 
 
 # Executa a função principal automaticamente ao rodar Home.py
