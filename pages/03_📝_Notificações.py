@@ -74,17 +74,35 @@ def main():
     with col_form:
         st.markdown("### 📋 Dados da Notificação")
         
-        tipo_notificacao = st.selectbox(
-            "Tipo de Notificação",
-            [
-                "Advertência",
-                "Solicitação de Correção",
-                "Solicitação de Documentação",
-                "Comunicado de Irregularidade",
-                "Notificação Prévia de Penalidade"
-            ],
-            key="notif_tipo"
-        )
+            # Mapeamento de tipos de notificação por categoria
+            TIPOS_NOTIFICACAO = {
+                "Gestor do Contrato": [
+                    "Notificação de Início de Vigência",
+                    "Notificação de Designação de Fiscais",
+                    "Notificação de Reajuste Contratual",
+                    "Notificação de Alteração Contratual (Aditamento)",
+                    "Notificação de Rescisão Contratual"
+                ],
+                "Fiscal do Contrato": [
+                    "Advertência",
+                    "Solicitação de Correção",
+                    "Solicitação de Documentação",
+                    "Comunicado de Irregularidade",
+                    "Notificação Prévia de Penalidade"
+                ]
+            }
+
+            # Campo de seleção da categoria da notificação
+            categoria_notificacao = st.selectbox(
+                "Categoria da Notificação",
+                list(TIPOS_NOTIFICACAO.keys())
+            )
+
+            # Campo de seleção do tipo de notificação, dinâmico conforme categoria
+            tipo_notificacao = st.selectbox(
+                "Tipo de Notificação",
+                TIPOS_NOTIFICACAO[categoria_notificacao]
+            )
         
         motivo = st.text_area(
             "Motivo da Notificação",
