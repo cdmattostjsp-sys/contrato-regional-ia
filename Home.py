@@ -889,4 +889,10 @@ def main():
         st.markdown("---")
         render_graficos_analytics()
         st.markdown("---")
+
         render_contracts_dashboard()
+
+
+# Executa a função principal automaticamente ao rodar Home.py
+if __name__ == "__main__" or "streamlit" in sys.argv[0]:
+    main()
