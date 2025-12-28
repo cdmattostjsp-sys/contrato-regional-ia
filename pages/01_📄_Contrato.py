@@ -870,14 +870,114 @@ def render_contrato_detalhes(contrato: dict):
     EVOLUÇÃO RAJ 10: Reorganizado com nova aba "Apoio ao Gestor" e dados consolidados.
     """
     
-    tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+    from services.execution_financial_service import (
+        listar_por_contrato, criar_registro, filtrar, atualizar_status
+    )
+    import pandas as pd
+    import datetime
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "📋 Dados Gerais", 
         "💰 Pagamentos & ISS",
         "📑 Aditivos",
         "👔 Apoio ao Gestor",
         "📁 Documentos", 
-        "📊 Histórico"
+        "📊 Histórico",
+        "🧾 Execução Físico-Financeira"
     ])
+        with tab7:
+            st.markdown("## 🧾 Execução Físico-Financeira")
+            contrato_id = contrato.get('id', '')
+            registros = listar_por_contrato(contrato_id)
+            # Resumo rápido
+            if registros:
+                ultimo = sorted(registros, key=lambda r: r['data_ateste'], reverse=True)[0]
+                total_nfs = len([r for r in registros if r['status_fluxo'] in ['Atestado','Pago']])
+                pendencias_iss = len([r for r in registros if r['incidencia_iss'] and not r['iss_retido']])
+                status_ultimo = ultimo['status_fluxo']
+                st.info(f"**Último ateste:** NF {ultimo['nf_numero']} em {ultimo['data_ateste']} | Status: {status_ultimo}")
+                st.success(f"**Total de NFs atestadas:** {total_nfs}")
+                st.warning(f"**Pendências de ISS:** {pendencias_iss}")
+            else:
+                st.info("Nenhum registro de execução físico-financeira para este contrato.")
+            # Filtros
+            with st.expander("🔎 Filtrar Histórico de Registros"):
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    periodo_ini = st.date_input("Data inicial", value=None)
+                with col2:
+                    periodo_fim = st.date_input("Data final", value=None)
+                with col3:
+                    status = st.selectbox("Status do fluxo", ["", "Atestado", "Encaminhado para pagamento", "Pago"])
+                filtro_ini = periodo_ini.strftime('%Y-%m-%d') if periodo_ini else None
+                filtro_fim = periodo_fim.strftime('%Y-%m-%d') if periodo_fim else None
+                filtrados = filtrar(filtro_ini, filtro_fim, status if status else None, contrato_id)
+            # Tabela de histórico
+            st.markdown("### Histórico de Registros")
+            if filtrados:
+                df = pd.DataFrame(filtrados)
+                df = df.sort_values(by='data_ateste', ascending=False)
+                st.dataframe(df[[
+                    'nf_numero','nf_data_emissao','competencia','valor_bruto','iss_retido','incidencia_iss','municipio_iss','aliquota_iss','data_ateste','responsavel','status_fluxo','observacoes'
+                ]], use_container_width=True)
+            else:
+                st.info("Nenhum registro encontrado para os filtros selecionados.")
+            st.markdown("---")
+            # Formulário de novo registro
+            with st.expander("➕ Novo Registro de Execução Físico-Financeira", expanded=True):
+                with st.form("form_execucao_financeira", clear_on_submit=True):
+                    st.markdown(f"**Contrato:** {contrato_id}")
+                    nf_numero = st.text_input("Número da Nota Fiscal *", max_chars=32)
+                    nf_data_emissao = st.date_input("Data de Emissão da NF *")
+                    competencia = st.text_input("Competência/Período *", max_chars=16)
+                    valor_bruto = st.number_input("Valor Bruto *", min_value=0.0, step=0.01)
+                    incidencia_iss = st.selectbox("Incidência de ISS?", ["Sim", "Não"])
+                    iss_retido = st.number_input("Valor ISS Retido", min_value=0.0, step=0.01)
+                    municipio_iss = st.text_input("Município do ISS", max_chars=32)
+                    aliquota_iss = st.number_input("Alíquota ISS (%)", min_value=0.0, step=0.01)
+                    data_ateste = st.date_input("Data do Ateste *")
+                    responsavel = st.text_input("Responsável pelo registro *", value=st.session_state.get('usuario_nome',''))
+                    observacoes = st.text_area("Observações")
+                    status_fluxo = st.selectbox("Status do fluxo *", ["Atestado", "Encaminhado para pagamento", "Pago"])
+                    submit = st.form_submit_button("✅ Registrar")
+                    erro = None
+                    if submit:
+                        # Validações
+                        if not nf_numero:
+                            erro = "Número da NF é obrigatório."
+                        elif not competencia:
+                            erro = "Competência é obrigatória."
+                        elif not valor_bruto or valor_bruto <= 0:
+                            erro = "Valor bruto deve ser maior que zero."
+                        elif not data_ateste:
+                            erro = "Data do ateste é obrigatória."
+                        elif not responsavel:
+                            erro = "Responsável é obrigatório."
+                        # Duplicidade
+                        elif any(r['nf_numero']==nf_numero for r in registros):
+                            erro = "Já existe registro para esta NF neste contrato."
+                        if erro:
+                            st.error(f"❌ {erro}")
+                        else:
+                            registro = {
+                                'contrato_id': contrato_id,
+                                'nf_numero': nf_numero,
+                                'nf_data_emissao': nf_data_emissao.strftime('%Y-%m-%d'),
+                                'competencia': competencia,
+                                'valor_bruto': valor_bruto,
+                                'iss_retido': iss_retido,
+                                'incidencia_iss': incidencia_iss=="Sim",
+                                'municipio_iss': municipio_iss,
+                                'aliquota_iss': aliquota_iss,
+                                'data_ateste': data_ateste.strftime('%Y-%m-%d'),
+                                'responsavel': responsavel,
+                                'observacoes': observacoes,
+                                'status_fluxo': status_fluxo
+                            }
+                            res = criar_registro(registro)
+                            if res:
+                                st.success("Registro incluído com sucesso!")
+                            else:
+                                st.error("❌ Já existe registro para esta NF neste contrato.")
     
     with tab1:
         col1, col2, col3 = st.columns(3)
