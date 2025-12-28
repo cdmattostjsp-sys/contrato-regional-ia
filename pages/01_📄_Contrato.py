@@ -36,19 +36,6 @@ def render_contrato_header(contrato: dict):
         </div>
     """, unsafe_allow_html=True)
 
-            st.markdown("---")
-
-            # Botões de navegação
-            col1, col2, col3, col4 = st.columns(4)
-
-            with col1:
-                if st.button("🏠 Dashboard", use_container_width=True):
-                    st.switch_page("Home.py")
-
-            with col2:
-                if st.button("💬 Copiloto", use_container_width=True):
-                    st.switch_page("pages/02_💬_Copiloto.py")
-
             with col3:
                 if st.button("📝 Notificar", use_container_width=True):
                     st.switch_page("pages/03_📝_Notificações.py")
