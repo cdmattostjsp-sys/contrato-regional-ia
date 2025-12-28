@@ -22,42 +22,19 @@ def render_contrato_header(contrato: dict):
     EVOLUÇÃO RAJ 10: Cabeçalho simplificado, foco no contrato como objeto central.
     """
     status_colors = {
-
+        "ativo": ("🟢", "#28A745"),
+        "atencao": ("🟡", "#FFC107"),
+        "critico": ("🔴", "#DC3545")
+    }
+    icon, color = status_colors.get(contrato.get("status", "ativo"), ("⚪", "#666"))
+    st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #003366 0%, #0066CC 100%); 
+                    padding: 2rem; border-radius: 10px; margin-bottom: 1rem; color: white;">
+            <h1>{icon} {contrato['numero']}</h1>
+            <p style="font-size: 1.2rem; margin: 0.5rem 0;">{contrato['objeto']}</p>
+            <p style="opacity: 0.9;"><strong>Fornecedor:</strong> {contrato['fornecedor']}</p>
         </div>
-            st.set_page_config(
-                page_title="TJSP - Detalhes do Contrato",
-                page_icon="📄",
-                layout="wide"
-            )
-
-            apply_tjsp_styles()
-            initialize_session_state()
-
-            # Verifica se há contrato selecionado
-            if not st.session_state.contrato_selecionado:
-                st.warning("⚠️ Nenhum contrato selecionado. Retorne ao dashboard.")
-                if st.button("🏠 Voltar ao Dashboard"):
-                    st.switch_page("Home.py")
-                return
-
-            # Obtém detalhes completos do contrato
-            contrato = get_contrato_detalhes(st.session_state.contrato_selecionado["id"])
-
-            if not contrato:
-                st.error("❌ Erro ao carregar detalhes do contrato.")
-                return
-
-            # Renderiza cabeçalho
-            render_contrato_header(contrato)
-
-            # 🚨 BLOCO DE VIGÊNCIA - PRIORIDADE ALTA (Feedback RAJ 10)
-            render_bloco_vigencia(contrato)
-
-            # 💳 BLOCO DE ATESTES E PAGAMENTOS (Feedback RAJ 10)
-            render_bloco_pagamentos(contrato)
-
-            # Ações Rápidas de Documentos
-            render_acoes_documentos()
+    """, unsafe_allow_html=True)
 
             st.markdown("---")
 
