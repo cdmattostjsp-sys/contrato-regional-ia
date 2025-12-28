@@ -36,18 +36,6 @@ def render_contrato_header(contrato: dict):
         </div>
     """, unsafe_allow_html=True)
 
-            with col3:
-                if st.button("📝 Notificar", use_container_width=True):
-                    st.switch_page("pages/03_📝_Notificações.py")
-
-            with col4:
-                if st.button("📖 Como Proceder", use_container_width=True):
-                    st.switch_page("pages/04_📖_Como_Proceder.py")
-
-            st.markdown("---")
-
-            # Renderiza detalhes
-            render_contrato_detalhes(contrato)
     """, unsafe_allow_html=True)
 
 
@@ -795,16 +783,15 @@ def render_acoes_documentos():
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.markdown(
-            '''<button class="notificacao-btn" type="button" onclick="window.location.href='/pages/03_📝_Notificações.py'">
-                <span class="notificacao-icon">🔔</span>
-                <span class="notificacao-title">Notificação Contratual</span><br>
-                <span class="notificacao-desc">Ações formais do contrato</span>
-            </button>''', unsafe_allow_html=True
-        )
-        if st.button("Abrir Notificação Contratual", use_container_width=True, key="notificacao_btn_funcional_aba_contrato"):
-            st.session_state.documento_tipo = "notificacao"
-            st.switch_page("pages/03_📝_Notificações.py")
+        st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #003366 0%, #0066CC 100%); 
+                        padding: 2rem; border-radius: 10px; margin-bottom: 1rem; color: white;">
+                <h1>{icon} {contrato['numero']}</h1>
+                <p style="font-size: 1.2rem; margin: 0.5rem 0;">{contrato['objeto']}</p>
+                <p style="opacity: 0.9;"><strong>Fornecedor:</strong> {contrato['fornecedor']}</p>
+            </div>
+        """, unsafe_allow_html=True)
+
 
     with col2:
         if st.button("Abrir Relatório do Fiscal", use_container_width=True, key="relatorio_fiscal_btn_funcional_aba_contrato"):
