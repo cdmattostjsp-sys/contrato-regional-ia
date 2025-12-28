@@ -22,80 +22,68 @@ def render_contrato_header(contrato: dict):
     EVOLUÇÃO RAJ 10: Cabeçalho simplificado, foco no contrato como objeto central.
     """
     status_colors = {
-        "ativo": ("🟢", "#28A745"),
-        "atencao": ("🟡", "#FFC107"),
-        "critico": ("🔴", "#DC3545")
-    }
-    
-    icon, color = status_colors.get(contrato.get("status", "ativo"), ("⚪", "#666"))
-    
-    st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #003366 0%, #0066CC 100%); 
-                    padding: 2rem; border-radius: 10px; margin-bottom: 1rem; color: white;">
-            <h1>{icon} {contrato['numero']}</h1>
-            <p style="font-size: 1.2rem; margin: 0.5rem 0;">{contrato['objeto']}</p>
-            <p style="opacity: 0.9;"><strong>Fornecedor:</strong> {contrato['fornecedor']}</p>
-        </div>
-    """, unsafe_allow_html=True)
 
-
-def render_bloco_vigencia(contrato: dict):
-    """
-    BLOCO DE VIGÊNCIA - PRIORIDADE ALTA
-    ====================================
-    Feedback RAJ 10: Exibir vigência no TOPO com semáforo visual.
-    
-    Lógica de semáforo:
-    🟢 Verde: > 120 dias restantes
-    🟡 Amarelo: 60-120 dias restantes  
-    🔴 Vermelho: < 60 dias restantes
-    """
-    vigencia = contrato.get("vigencia_detalhada", {})
-    
-    dias_restantes = vigencia.get("dias_restantes", 0)
-    data_inicio = vigencia.get("data_inicio")
-    data_fim = vigencia.get("data_fim")
-    status_semaforo = vigencia.get("status_semaforo", "verde")
-    
-    # Define cores do semáforo
-    cores_semaforo = {
-        "verde": {"cor": "#28A745", "icone": "🟢", "texto": "Vigência Regular"},
-        "amarelo": {"cor": "#FFC107", "icone": "🟡", "texto": "Atenção: Vigência Próxima do Fim"},
-        "vermelho": {"cor": "#DC3545", "icone": "🔴", "texto": "Crítico: Vigência Terminando"}
-    }
-    
-    config = cores_semaforo.get(status_semaforo, cores_semaforo["verde"])
-    
-    st.markdown(f"""
-        <div style="background: {config['cor']}; padding: 1.5rem; border-radius: 10px; 
-                    margin-bottom: 1.5rem; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-            <h2 style="margin: 0 0 1rem 0; font-size: 1.5rem;">
-                {config['icone']} VIGÊNCIA DO CONTRATO
-            </h2>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
-                <div>
-                    <p style="opacity: 0.9; margin: 0; font-size: 0.9rem;">Data Inicial</p>
-                    <p style="margin: 0.3rem 0 0 0; font-size: 1.3rem; font-weight: bold;">
-                        {data_inicio.strftime('%d/%m/%Y') if data_inicio else '-'}
-                    </p>
-                </div>
-                <div>
-                    <p style="opacity: 0.9; margin: 0; font-size: 0.9rem;">Data Final</p>
-                    <p style="margin: 0.3rem 0 0 0; font-size: 1.3rem; font-weight: bold;">
-                        {data_fim.strftime('%d/%m/%Y') if data_fim else '-'}
-                    </p>
-                </div>
-                <div>
-                    <p style="opacity: 0.9; margin: 0; font-size: 0.9rem;">Dias Restantes</p>
-                    <p style="margin: 0.3rem 0 0 0; font-size: 1.3rem; font-weight: bold;">
-                        {dias_restantes} dias
-                    </p>
-                </div>
-            </div>
-            <p style="margin: 1rem 0 0 0; font-size: 1rem; font-weight: 500; opacity: 0.95;">
-                {config['texto']}
-            </p>
         </div>
+            st.set_page_config(
+                page_title="TJSP - Detalhes do Contrato",
+                page_icon="📄",
+                layout="wide"
+            )
+
+            apply_tjsp_styles()
+            initialize_session_state()
+
+            # Verifica se há contrato selecionado
+            if not st.session_state.contrato_selecionado:
+                st.warning("⚠️ Nenhum contrato selecionado. Retorne ao dashboard.")
+                if st.button("🏠 Voltar ao Dashboard"):
+                    st.switch_page("Home.py")
+                return
+
+            # Obtém detalhes completos do contrato
+            contrato = get_contrato_detalhes(st.session_state.contrato_selecionado["id"])
+
+            if not contrato:
+                st.error("❌ Erro ao carregar detalhes do contrato.")
+                return
+
+            # Renderiza cabeçalho
+            render_contrato_header(contrato)
+
+            # 🚨 BLOCO DE VIGÊNCIA - PRIORIDADE ALTA (Feedback RAJ 10)
+            render_bloco_vigencia(contrato)
+
+            # 💳 BLOCO DE ATESTES E PAGAMENTOS (Feedback RAJ 10)
+            render_bloco_pagamentos(contrato)
+
+            # Ações Rápidas de Documentos
+            render_acoes_documentos()
+
+            st.markdown("---")
+
+            # Botões de navegação
+            col1, col2, col3, col4 = st.columns(4)
+
+            with col1:
+                if st.button("🏠 Dashboard", use_container_width=True):
+                    st.switch_page("Home.py")
+
+            with col2:
+                if st.button("💬 Copiloto", use_container_width=True):
+                    st.switch_page("pages/02_💬_Copiloto.py")
+
+            with col3:
+                if st.button("📝 Notificar", use_container_width=True):
+                    st.switch_page("pages/03_📝_Notificações.py")
+
+            with col4:
+                if st.button("📖 Como Proceder", use_container_width=True):
+                    st.switch_page("pages/04_📖_Como_Proceder.py")
+
+            st.markdown("---")
+
+            # Renderiza detalhes
+            render_contrato_detalhes(contrato)
     """, unsafe_allow_html=True)
 
 
