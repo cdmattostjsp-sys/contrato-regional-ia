@@ -814,18 +814,18 @@ def render_contrato_detalhes(contrato: dict):
 
 
 def main():
-        # Bloco de abas (tabs) do contrato
-        import datetime
-        tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-            "📋 Dados Gerais", 
-            "💰 Pagamentos & ISS",
-            "📑 Aditivos",
-            "👔 Apoio ao Gestor",
-            "📁 Documentos", 
-            "📊 Histórico",
-            "🧾 Execução Físico-Financeira"
-        ])
-        # ...código das abas (copiar o bloco removido acima para cá, ajustando a indentação para dentro da função main)...
+    # Bloco de abas (tabs) do contrato
+    import datetime
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        "📋 Dados Gerais", 
+        "💰 Pagamentos & ISS",
+        "📑 Aditivos",
+        "👔 Apoio ao Gestor",
+        "📁 Documentos", 
+        "📊 Histórico",
+        "🧾 Execução Físico-Financeira"
+    ])
+    # ...código das abas (copiar o bloco removido acima para cá, ajustando a indentação para dentro da função main)...
     st.set_page_config(
         page_title="TJSP - Detalhes do Contrato",
         page_icon="📄",
