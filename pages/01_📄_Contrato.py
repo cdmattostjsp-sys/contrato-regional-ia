@@ -36,8 +36,6 @@ def render_contrato_header(contrato: dict):
         </div>
     """, unsafe_allow_html=True)
 
-    """, unsafe_allow_html=True)
-
 
 def render_bloco_pagamentos(contrato: dict):
     """
