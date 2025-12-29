@@ -748,6 +748,51 @@ def render_contrato_detalhes(contrato: dict):
     import pandas as pd
 
 
+def render_bloco_dados_gerais(contrato: dict):
+    st.markdown("""
+    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+        <button onclick="window.location.href='Home.py'" style="padding: 0.7rem 1.2rem; font-size: 1rem; border-radius: 8px; border: none; background: #003366; color: white; cursor: pointer;">🏠 Dashboard</button>
+        <button onclick="window.location.href='pages/02_💬_Copiloto.py'" style="padding: 0.7rem 1.2rem; font-size: 1rem; border-radius: 8px; border: none; background: #0066CC; color: white; cursor: pointer;">💬 Copiloto</button>
+        <button onclick="window.location.href='pages/03_📝_Notificações.py'" style="padding: 0.7rem 1.2rem; font-size: 1rem; border-radius: 8px; border: none; background: #28A745; color: white; cursor: pointer;">📝 Notificar</button>
+        <button onclick="window.location.href='pages/04_📖_Como_Proceder.py'" style="padding: 0.7rem 1.2rem; font-size: 1rem; border-radius: 8px; border: none; background: #FFC107; color: #003366; cursor: pointer;">📖 Como Proceder</button>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown("""
+    <div style="background: #F8F9FA; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #003366;">
+        <h3>📌 Resumo do Contrato</h3>
+        <ul style="font-size: 1.1rem;">
+            <li><strong>Número:</strong> {numero}</li>
+            <li><strong>Objeto:</strong> {objeto}</li>
+            <li><strong>Fornecedor:</strong> {fornecedor}</li>
+            <li><strong>Unidade/RAJ:</strong> {unidade}</li>
+            <li><strong>Status:</strong> {status}</li>
+            <li><strong>Vigência:</strong> {vigencia}</li>
+        </ul>
+    </div>
+    """.format(
+        numero=contrato.get('numero', ''),
+        objeto=contrato.get('objeto', ''),
+        fornecedor=contrato.get('fornecedor', ''),
+        unidade=contrato.get('unidade', ''),
+        status=contrato.get('status', ''),
+        vigencia=contrato.get('vigencia', '')
+    ), unsafe_allow_html=True)
+    st.markdown("### ⚠️ Pendências")
+    st.info("Nenhuma pendência registrada.")
+
+def render_bloco_apoio_gestor(contrato: dict):
+    st.info("Conteúdo de Apoio ao Gestor em desenvolvimento.")
+
+def render_bloco_documentos(contrato: dict):
+    st.info("Conteúdo de Documentos em desenvolvimento.")
+
+def render_bloco_historico(contrato: dict):
+    st.info("Conteúdo de Histórico em desenvolvimento.")
+
+def render_bloco_execucao_fisico_financeira(contrato: dict):
+    st.info("Conteúdo de Execução Físico-Financeira em desenvolvimento.")
+
+
 def main():
     st.set_page_config(
         page_title="TJSP - Detalhes do Contrato",
