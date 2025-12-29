@@ -1,8 +1,3 @@
-def render_bloco_vigencia(contrato: dict):
-    """
-    Wrapper para bloco de vigência. Chama bloco de ISS (substituto temporário).
-    """
-    render_bloco_iss(contrato)
 """
 Página de Visualização de Contrato
 ===================================
@@ -355,7 +350,7 @@ def render_bloco_aditivos(contrato: dict):
                 </div>
                 <div>
                     <p style="margin: 0; font-size: 0.9rem; color: #666;">Valor do Contrato</p>
-                    <p style="margin: 0.3rem 0 0 0; font-size: 1.1rem; font-weight: bold; color: #003366;">
+                    <p style="margin: 0.3rem 0 0 0; font-size: 1.1rem; font-weight: bold, color: #003366;">
                         R$ {valor_original:,.2f} → R$ {valor_atual:,.2f}
                     </p>
                     <p style="margin: 0.2rem 0 0 0; font-size: 0.85rem; color: {'#28A745' if valor_atual >= valor_original else '#DC3545'};">
@@ -650,7 +645,7 @@ def render_formulario_aditivo(contrato: dict):
                 dados_aditivo['valor_supressao'] = float(valor_supressao)
         
         if "Alteração Qualitativa" in tipos_modificacao:
-            st.markdown("#### 📝 Alterações Qualitativas")
+            st.markdown("#### 📝 Alterações Qualitivas")
             alteracoes_qualitativas = st.text_area(
                 "Descreva as alterações qualitativas",
                 height=100,
@@ -702,8 +697,6 @@ def render_formulario_aditivo(contrato: dict):
         
         if cancelado:
             st.info("Operação cancelada.")
-
-
 
 
 def render_acoes_documentos(contrato: dict):
@@ -758,7 +751,7 @@ def render_contrato_detalhes(contrato: dict):
 def main():
     # Bloco de abas (tabs) do contrato
     import datetime
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+    tab_dados, tab_pag, tab_aditivos, tab_gestor, tab_docs, tab_hist, tab_exec = st.tabs([
         "📋 Dados Gerais", 
         "💰 Pagamentos & ISS",
         "📑 Aditivos",
@@ -827,7 +820,42 @@ def main():
     st.markdown("---")
     
     # Renderiza detalhes
-    render_contrato_detalhes(contrato)
+    with tab_dados:
+        if 'render_bloco_dados_gerais' in globals():
+            render_bloco_dados_gerais(contrato)
+        else:
+            st.info("Conteúdo de Dados Gerais em desenvolvimento.")
+    with tab_pag:
+        render_bloco_pagamentos(contrato)
+        if 'render_bloco_iss' in globals():
+            render_bloco_iss(contrato)
+        else:
+            st.info("Conteúdo de ISS em desenvolvimento.")
+    with tab_aditivos:
+        render_bloco_aditivos(contrato)
+    with tab_gestor:
+        if 'render_bloco_apoio_gestor' in globals():
+            render_bloco_apoio_gestor(contrato)
+        else:
+            st.info("Conteúdo de Apoio ao Gestor em desenvolvimento.")
+    with tab_docs:
+        render_acoes_documentos(contrato)
+        if 'render_bloco_documentos' in globals():
+            render_bloco_documentos(contrato)
+        else:
+            st.info("Conteúdo de Documentos em desenvolvimento.")
+    with tab_hist:
+        if 'render_bloco_historico' in globals():
+            render_bloco_historico(contrato)
+        else:
+            st.info("Conteúdo de Histórico em desenvolvimento.")
+    with tab_exec:
+        if 'render_bloco_execucao_fisico_financeira' in globals():
+            render_bloco_execucao_fisico_financeira(contrato)
+        else:
+            st.info("Conteúdo de Execução Físico-Financeira em desenvolvimento.")
+
+    # Remove renderizações duplicadas fora das abas
 
 
 if __name__ == "__main__":
