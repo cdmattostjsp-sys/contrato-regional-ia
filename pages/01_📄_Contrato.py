@@ -1,9 +1,4 @@
-from components.contratos_ui import filtrar_contratos, render_lista_contratos
-"""
-Página de Visualização de Contrato
-===================================
-Exibe detalhes completos de um contrato selecionado.
-"""
+
 
 import streamlit as st
 import sys
