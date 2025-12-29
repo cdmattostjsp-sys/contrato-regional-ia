@@ -747,7 +747,60 @@ def render_bloco_dados_gerais(contrato: dict):
     st.info("Nenhuma pendência registrada.")
 
 def render_bloco_apoio_gestor(contrato: dict):
-    st.info("Conteúdo de Apoio ao Gestor em desenvolvimento.")
+    st.markdown("""
+        <div style=\"background: #FFF3CD; border-left: 4px solid #FFC107; padding: 1rem;\"
+            border-radius: 5px; margin-bottom: 1.5rem;\">
+            <h3 style=\"color: #856404; margin: 0 0 0.5rem 0;\">
+                👔 APOIO AO GESTOR - SUPORTE NORMATIVO
+            </h3>
+            <p style=\"color: #856404; margin: 0; font-size: 0.9rem;\">
+                ⚠️ Informações orientativas baseadas em legislação e cláusulas contratuais.<br>
+                <strong>Não substitui análise jurídica.</strong>
+            </p>
+        </div>
+    """, unsafe_allow_html=True)
+
+    info_trabalhista = contrato.get("info_trabalhista", {})
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.markdown("### 📖 Informações Trabalhistas")
+        possui_mao_obra = info_trabalhista.get("possui_mao_obra_residente", False)
+        aplica_cc = info_trabalhista.get("aplica_convencao_coletiva", False)
+        if possui_mao_obra:
+            st.success("✅ Contrato com mão de obra residente")
+        else:
+            st.info("ℹ️ Contrato sem mão de obra residente")
+        if aplica_cc:
+            st.info(f"""
+            **Categoria:** {info_trabalhista.get('categoria_profissional', 'Não informada')}
+            **Sindicato:** {info_trabalhista.get('sindicato', 'Não informado')}
+            """)
+            st.warning("⚠️ Aplicável: Acordo/Convenção Coletiva de Trabalho")
+
+    with col2:
+        st.markdown("### 📚 Base Normativa")
+        with st.expander("📕 CLT - Consolidação das Leis do Trabalho"):
+            st.write("""
+            - **Art. 58**: Jornada de trabalho (8h diárias, 44h semanais)
+            - **Art. 71**: Intervalos para repouso e alimentação
+            - **Art. 457**: Composição do salário
+            - **Art. 468**: Alteração das condições de trabalho
+            """)
+        with st.expander("📘 Normativas Correlatas"):
+            st.write("""
+            - **IN SEGES/ME nº 5/2017**: Contratação de serviços com dedicação exclusiva
+            - **Lei nº 8.666/93**: Licitações e Contratos Administrativos
+            - **IN TJSP nº 12/2025**: Manual de Contratos TJSP
+            """)
+
+    st.markdown("---")
+    st.markdown("### 💬 Tire Dúvidas com o Copiloto")
+    st.write("O Copiloto pode responder questões sobre legislação trabalhista aplicável a este contrato.")
+    if st.button("💬 Abrir Copiloto para Consulta Normativa", width="stretch", type="primary"):
+        st.session_state.copilot_contexto = "normativo"
+        st.switch_page("pages/02_💬_Copiloto.py")
 
 def render_bloco_documentos(contrato: dict):
     st.info("Conteúdo de Documentos em desenvolvimento.")
