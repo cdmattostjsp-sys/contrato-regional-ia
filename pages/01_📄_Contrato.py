@@ -1,3 +1,8 @@
+def render_bloco_vigencia(contrato: dict):
+    """
+    Wrapper para bloco de vigência. Chama bloco de ISS (substituto temporário).
+    """
+    render_bloco_iss(contrato)
 """
 Página de Visualização de Contrato
 ===================================
@@ -699,70 +704,6 @@ def render_formulario_aditivo(contrato: dict):
             st.info("Operação cancelada.")
 
 
-def render_bloco_pagamentos(contrato: dict):
-    """
-    BLOCO DE ATESTES E PAGAMENTOS
-    ==============================
-    Feedback RAJ 10: Visão complementar aos dados financeiros do SGF.
-    Exibe histórico de pagamentos com status de ateste.
-    """
-    pagamentos = contrato.get("pagamentos", [])
-    
-    st.markdown("""
-        <h3 style="color: #003366; margin: 0 0 1rem 0;">
-            📋 ATESTES E PAGAMENTOS
-        </h3>
-    """, unsafe_allow_html=True)
-    
-    if not pagamentos:
-        st.info("Nenhum pagamento registrado ainda.")
-        return
-    
-    # Tabela de pagamentos
-    for i, pag in enumerate(pagamentos):
-        status_cor = "#28A745" if pag["status"] == "Atestado" else "#FFC107"
-        status_icone = "✅" if pag["status"] == "Atestado" else "⏳"
-        
-        st.markdown(f"""
-            <div style="background: white; border: 1px solid #DEE2E6; border-radius: 8px; 
-                        padding: 1rem; margin-bottom: 0.8rem; border-left: 4px solid {status_cor};">
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 0.8rem;">
-                    <div>
-                        <p style="margin: 0; font-size: 0.8rem; color: #6C757D;">Competência</p>
-                        <p style="margin: 0.2rem 0 0 0; font-weight: bold; color: #212529;">{pag['competencia']}</p>
-                    </div>
-                    <div>
-                        <p style="margin: 0; font-size: 0.8rem; color: #6C757D;">Nota Fiscal</p>
-                        <p style="margin: 0.2rem 0 0 0; font-weight: bold; color: #212529;">{pag['nota_fiscal']}</p>
-                    </div>
-                    <div>
-                        <p style="margin: 0; font-size: 0.8rem; color: #6C757D;">Valor</p>
-                        <p style="margin: 0.2rem 0 0 0; font-weight: bold; color: #212529;">R$ {pag['valor']:,.2f}</p>
-                    </div>
-                    <div>
-                        <p style="margin: 0; font-size: 0.8rem; color: #6C757D;">Status</p>
-                        <p style="margin: 0.2rem 0 0 0; font-weight: bold; color: {status_cor};">
-                            {status_icone} {pag['status']}
-                        </p>
-                    </div>
-                </div>
-        """, unsafe_allow_html=True)
-        
-        if pag["status"] == "Atestado":
-            data_ateste_fmt = pag['data_ateste'].strftime('%d/%m/%Y') if pag['data_ateste'] else '-'
-            st.markdown(f"""
-                <div style="background: #F8F9FA; padding: 0.6rem; border-radius: 5px; font-size: 0.85rem;">
-                    <p style="margin: 0.2rem 0; color: #495057;">
-                        <strong>Unidade:</strong> {pag['unidade_ateste']}
-                    </p>
-                    <p style="margin: 0.2rem 0; color: #495057;">
-                        <strong>Data do Ateste:</strong> {data_ateste_fmt} | 
-                        <strong>Responsável:</strong> {pag['responsavel_ateste']}
-                    </p>
-                </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("</div>", unsafe_allow_html=True)
 
 
 def render_acoes_documentos():
