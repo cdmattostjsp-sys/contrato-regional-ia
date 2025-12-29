@@ -87,71 +87,28 @@ def exportar_para_excel(contratos):
 
 
 def render_header():
-        """Topbar compacta institucional (sem segunda faixa e sem botões gigantes)"""
-
-        colL, colR = st.columns([7, 3], gap="small")
-
-        with colL:
-                st.markdown(
-                        """
-                        <div style="
-                                background:#003366;
-                                padding:0.85rem 1.25rem;
-                                border-radius:12px;
-                                display:flex;
-                                align-items:center;
-                                justify-content:space-between;
-                        ">
-                            <div style="display:flex; flex-direction:column; gap:0.15rem;">
-                                <div style="display:flex; align-items:baseline; gap:0.6rem; flex-wrap:wrap;">
-                                    <span style="font-size:1.15rem; font-weight:700; color:#FFFFFF;">
-                                        TJSP – Gestão de Contratos Regionais
-                                    </span>
-                                    <span style="
-                                        background:#FFFFFF;
-                                        color:#003366;
-                                        font-size:0.78rem;
-                                        font-weight:700;
-                                        padding:0.15rem 0.55rem;
-                                        border-radius:8px;
-                                    ">
-                                        RAJ 10.1
-                                    </span>
-                                </div>
-                                <span style="font-size:0.92rem; color:#DDE6F2;">
-                                    Sistema de Fiscalização e Acompanhamento
-                                </span>
-                            </div>
-                        </div>
-                        """,
-                        unsafe_allow_html=True
-                )
-
-                # build discreto (fora da barra, sem “gritar”)
-                st.caption(f"build: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
-
-        with colR:
-                # Ações compactas (sem stretch)
-                r1, r2 = st.columns([1, 1], gap="small")
-
-                with r1:
-                        # opcional: atalho discreto (bem menor que antes)
-                        if st.button("Ir para contratos", key="btn_ir_contratos", width="content"):
-                                st.session_state["scroll_meus_contratos"] = True
-
-                with r2:
-                        contratos = get_todos_contratos()
-                        if contratos:
-                                excel_data = exportar_para_excel(contratos)
-                                st.download_button(
-                                        label="Exportar Excel",
-                                        data=excel_data,
-                                        file_name=f"contratos_tjsp_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                                        width="content",
-                                        type="secondary",
-                                        key="btn_exportar_excel_header"
-                                )
+    """Cabeçalho minimalista institucional (full width), sem RAJ e sem build."""
+    st.markdown(
+        """
+        <div style="
+            width: 100%;
+            background: #003366;
+            padding: 1.1rem 1.6rem;
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        ">
+            <div style="font-size: 1.35rem; font-weight: 800; color: #ffffff; letter-spacing: 0.01em;">
+                TJSP – Gestão de Contratos Regionais
+            </div>
+            <div style="font-size: 0.98rem; color: #e0e6ef; font-weight: 400;">
+                Sistema de Fiscalização e Acompanhamento
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
 
 
 def render_metrics():
@@ -176,15 +133,15 @@ def render_metrics():
     # Taxa de conformidade (contratos sem pendências)
     taxa_conformidade = int((contratos_ativos / total_contratos * 100)) if total_contratos > 0 else 0
     
-    col1, col2, col3, col4 = st.columns(4)
-    
+    col1, col2, col3, col4, col5 = st.columns([1.3, 1.6, 1.3, 1.1, 1.2])
+
     with col1:
         st.metric(
             label="📋 Total de Contratos",
             value=f"{total_contratos}",
             delta=f"{contratos_ativos} ativos"
         )
-    
+
     with col2:
         # Badge de alertas
         if alertas_criticos > 0:
@@ -201,14 +158,14 @@ def render_metrics():
             st.switch_page("pages/07_🔔_Alertas.py")
         
         st.caption(f"{alertas_criticos} críticos • {len(alertas) - alertas_criticos} outros")
-    
+
     with col3:
         st.metric(
             label="💰 Valor Total",
             value=f"R$ {valor_total/1_000_000:.1f}M",
             delta=f"{total_contratos} contratos"
         )
-    
+
     with col4:
         st.metric(
             label="📊 Contratos Ativos",
@@ -216,11 +173,26 @@ def render_metrics():
             delta=f"{contratos_ativos}/{total_contratos}"
         )
 
+    with col5:
+        st.markdown("<div style='height: 1.85rem'></div>", unsafe_allow_html=True)
+        contratos = get_todos_contratos()
+        if contratos:
+            excel_data = exportar_para_excel(contratos)
+            st.download_button(
+                label="⬇️ Exportar Excel",
+                data=excel_data,
+                file_name=f"contratos_tjsp_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                width="stretch",
+                type="secondary",
+                key="btn_exportar_excel_kpi"
+            )
+
 
 def render_graficos_analytics():
     """Renderiza gráficos e visualizações analíticas do dashboard"""
     
-    st.markdown("## 📊 Visão Executiva e Análises")
+    # ...excluído subtítulo, apenas dashboards abaixo...
     
     # Obtém dados
     contratos = get_todos_contratos()
@@ -850,7 +822,6 @@ def main():
     render_sidebar()
     render_header()
     # Scroll para "meus contratos" se solicitado
-    import streamlit.components.v1 as components
     if st.session_state.get("scroll_meus_contratos"):
         components.html(
             """
