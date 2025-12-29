@@ -7,6 +7,7 @@ Exibe detalhes completos de um contrato selecionado.
 import streamlit as st
 import sys
 from pathlib import Path
+import textwrap
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -42,29 +43,25 @@ def render_bloco_pagamentos(contrato: dict):
     BLOCO DE ATESTES E PAGAMENTOS
     ==============================
     Feedback RAJ 10: Indicador simples de atestes e pagamentos.
-    
     Objetivo: Permitir visualização rápida do status de pagamentos
     sem detalhamento financeiro complexo.
     """
-    # Dados mockados (preparado para integração futura)
     pagamentos = contrato.get("pagamentos_resumo", {
         "total_previstos": 12,
         "total_realizados": 9,
-        "status": "em_dia",  # em_dia, parcial, pendente
-        "forma_pagamento": "medicao"  # integral, medicao
+        "status": "em_dia",
+        "forma_pagamento": "medicao"
     })
-    
     total_previstos = pagamentos.get("total_previstos", 12)
     total_realizados = pagamentos.get("total_realizados", 9)
     status = pagamentos.get("status", "em_dia")
     forma_pagamento = pagamentos.get("forma_pagamento", "medicao")
-    
+
     # Obtém informação de ISS (mesma fonte da seção Tributação)
     tributacao = contrato.get("tributacao", {})
     retem_iss = tributacao.get("retem_iss", False)
-    aliquota_iss = tributacao.get("aliquota_iss", 5.0)  # valor mockado padrão 5%
+    aliquota_iss = tributacao.get("aliquota_iss", 5.0)
 
-    # Badge de ISS e Alíquota lado a lado
     badge_iss_aliquota = f'''
     <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 2.5rem; margin-bottom: 0.5rem;">
         <div style="display: flex; flex-direction: column; align-items: center;">
@@ -77,63 +74,30 @@ def render_bloco_pagamentos(contrato: dict):
         </div>
     </div>
     '''
-    
-    # Define configuração visual por status
-    config_status = {
-        "em_dia": {
-            "cor": "#28A745",
-            "icone": "✅",
-            "texto": "Pagamentos em Dia"
-        },
-        "parcial": {
-            "cor": "#FFC107",
-            "icone": "⚠️",
-            "texto": "Pagamento Parcial"
-        },
-        "pendente": {
-            "cor": "#DC3545",
-            "icone": "⏳",
-            "texto": "Pendência de Ateste ou Pagamento"
-        }
-    }
-    
-    config = config_status.get(status, config_status["em_dia"])
-    
-    st.markdown(f"""
-        <div style="background: #F8F9FA; padding: 1.5rem; border-radius: 10px; 
-                    margin-bottom: 1.5rem; border-left: 4px solid {config['cor']};">
-            <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 1rem;">
-                <h3 style="margin: 0; color: #003366;">
-                    💳 ATESTES E PAGAMENTOS
-                </h3>
-                {badge_iss_aliquota}
-            </div>
-            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: center;">
-                <div>
-                    <p style="margin: 0 0 0.5rem 0; font-size: 1rem; color: #495057;">
-                        <strong>Status:</strong> 
-                        <span style="color: {config['cor']}; font-weight: 600;">
-                            {config['icone']} {config['texto']}
-                        </span>
-                    </p>
-                    <p style="margin: 0; font-size: 0.95rem; color: #6C757D;">
-                        {total_realizados} pagamentos realizados de {total_previstos} previstos
-                    </p>
-                </div>
-                <div style="text-align: center;">
-                    <div style="background: white; padding: 1rem; border-radius: 8px; border: 2px solid {config['cor']};">
-                        <p style="margin: 0; font-size: 2rem; font-weight: bold; color: {config['cor']};">
-                            {total_realizados}/{total_previstos}
-                        </p>
-                        <p style="margin: 0.3rem 0 0 0; font-size: 0.85rem; color: #6C757D;">
-                            Pagamentos
-                        </p>
-                    </div>
-                </div>
-            </div>
+    st.markdown(badge_iss_aliquota, unsafe_allow_html=True)
+
+    # Renderização do bloco de status de pagamentos
+    html_status = textwrap.dedent(f"""
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; align-items: center;">
+      <div>
+        <p style="margin: 0 0 0.5rem 0; font-size: 1rem; color: #495057;">
+          <strong>Status:</strong>
+          <span style="color: #28A745; font-weight: 600;">✅ Pagamentos em Dia</span>
+        </p>
+        <p style="margin: 0; font-size: 0.95rem; color: #6C757D;">
+          {total_realizados} pagamentos realizados de {total_previstos} previstos
+        </p>
+      </div>
+      <div style="text-align: center;">
+        <div style="background: white; padding: 1rem; border-radius: 8px; border: 2px solid #28A745;">
+          <p style="margin: 0; font-size: 2rem; font-weight: bold; color: #28A745;">{total_realizados}/{total_previstos}</p>
+          <p style="margin: 0.3rem 0 0 0; font-size: 0.85rem; color: #6C757D;">Pagamentos</p>
         </div>
-    """, unsafe_allow_html=True)
-    
+      </div>
+    </div>
+    """).strip()
+    st.markdown(html_status, unsafe_allow_html=True)
+
     # Submenu expansível - Forma de Pagamento
     with st.expander("📋 **Detalhes da Forma de Pagamento**"):
         st.markdown("### Forma de Pagamento")
