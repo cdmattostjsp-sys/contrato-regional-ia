@@ -30,6 +30,7 @@ from services.session_manager import initialize_session_state
 from services.contract_service import get_todos_contratos
 from services.alert_service import calcular_alertas
 from services.tag_service import get_tag_service
+from components.contratos_ui import filtrar_contratos, render_lista_contratos
 
 
 def exportar_para_excel(contratos):
@@ -688,6 +689,7 @@ def render_contracts_dashboard():
     
     # Filtro por tags
     if filtro_tags:
+        render_lista_contratos(contratos_filtrados)
         tag_service = get_tag_service()
         contratos_filtrados = [
             c for c in contratos_filtrados

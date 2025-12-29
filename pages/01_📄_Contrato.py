@@ -1,3 +1,4 @@
+from components.contratos_ui import filtrar_contratos, render_lista_contratos
 """
 Página de Visualização de Contrato
 ===================================
@@ -821,12 +822,152 @@ def main():
     apply_tjsp_styles()
     initialize_session_state()
 
-    # Verifica se há contrato selecionado
+
+    def render_central_consulta_contratos():
+        st.markdown("## 🔎 Central de Consulta de Contratos")
+        st.info("Use a busca e filtros para localizar um contrato e abrir os detalhes.")
+        busca = st.text_input(
+            "🔍 Buscar contrato",
+            placeholder="Digite número, objeto, fornecedor ou palavra-chave...",
+            key="busca_central_contrato"
+        )
+        with st.expander("🔎 Filtros Avançados", expanded=False):
+            col_f1, col_f2, col_f3 = st.columns(3)
+            with col_f1:
+                filtro_num_contrato = st.text_input(
+                    "Número do Contrato",
+                    placeholder="Ex: 2024/00070406",
+                    key="filtro_num_contrato_central",
+                    help="Filtra por número exato ou parcial do contrato"
+                )
+                filtro_num_processo = st.text_input(
+                    "Número do Processo",
+                    placeholder="Ex: 2024/00070406",
+                    key="filtro_num_processo_central",
+                    help="Filtra por número exato ou parcial do processo"
+                )
+            with col_f2:
+                from services.contract_service import get_todos_contratos
+                contratos_temp = get_todos_contratos()
+                fornecedores = sorted(list(set([c.get('fornecedor', '') for c in contratos_temp if c.get('fornecedor')])))
+                filtro_fornecedor = st.selectbox(
+                    "Fornecedor/Empresa",
+                    ["Todos"] + fornecedores,
+                    key="filtro_fornecedor_central",
+                    help="Filtra por empresa contratada"
+                )
+                fiscais = sorted(list(set([c.get('fiscal_titular', '') for c in contratos_temp if c.get('fiscal_titular')])))
+                filtro_fiscal = st.selectbox(
+                    "Fiscal/Gestor",
+                    ["Todos"] + fiscais,
+                    key="filtro_fiscal_central",
+                    help="Filtra por fiscal titular do contrato"
+                )
+            with col_f3:
+                from services.tag_service import get_tag_service
+                tag_service = get_tag_service()
+                todas_tags = tag_service.obter_todas_tags()
+                tags_opcoes = {t['id']: f"{t['icone']} {t['nome']}" for t in todas_tags}
+                filtro_tags = st.multiselect(
+                    "Tags",
+                    options=list(tags_opcoes.keys()),
+                    format_func=lambda x: tags_opcoes[x],
+                    key="filtro_tags_central",
+                    help="Filtra por tags aplicadas aos contratos"
+                )
+                st.caption("[🏷️ Gerenciar Tags](pages/09_🏷️_Gerenciar_Tags.py)")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            filtro_status = st.selectbox(
+                "Status",
+                ["Todos", "Ativos", "Atenção", "Crítico"],
+                key="filtro_status_central"
+            )
+        with col2:
+            filtro_tipo = st.selectbox(
+                "Tipo de Contrato",
+                ["Todos", "Serviços", "Fornecimento", "Obras"],
+                key="filtro_tipo_central"
+            )
+        with col3:
+            st.write("")
+            st.write("")
+            if st.button("🔄 Atualizar", use_container_width=True, key="btn_atualizar_central"):
+                st.rerun()
+        st.markdown("---")
+        from services.contract_service import get_todos_contratos
+        contratos = get_todos_contratos()
+        contratos_filtrados = filtrar_contratos(
+            contratos,
+            busca=busca,
+            filtro_num_contrato=filtro_num_contrato,
+            filtro_num_processo=filtro_num_processo,
+            filtro_fornecedor=filtro_fornecedor,
+            filtro_fiscal=filtro_fiscal,
+            filtro_tags=filtro_tags,
+            filtro_status=filtro_status,
+            filtro_tipo=filtro_tipo
+        )
+        st.markdown("### Resultados da Busca")
+        def abrir_callback(contrato):
+            st.session_state["contrato_selecionado"] = contrato
+            st.rerun()
+        render_lista_contratos(contratos_filtrados, abrir_callback=abrir_callback)
+        st.markdown("---")
+        colh1, colh2, colh3 = st.columns(3)
+        with colh1:
+            if st.button("🏠 Ir para Home", key="btn_home_central"):
+                st.switch_page("Home.py")
+        with colh2:
+            if st.button("📚 Biblioteca", key="btn_biblio_central"):
+                st.switch_page("pages/05_📚_Biblioteca.py")
+        with colh3:
+            if st.button("⚙️ Configurações", key="btn_config_central"):
+                st.switch_page("pages/08_⚙️_Configurações.py")
+
+    # Fluxo híbrido
     if not st.session_state.get("contrato_selecionado"):
-        st.warning("⚠️ Nenhum contrato selecionado. Retorne ao dashboard.")
-        if st.button("🏠 Voltar ao Dashboard"):
-            st.switch_page("Home.py")
+        render_central_consulta_contratos()
         return
+
+    contrato = get_contrato_detalhes(st.session_state.contrato_selecionado["id"])
+    if not contrato:
+        st.error("❌ Erro ao carregar detalhes do contrato.")
+        return
+
+    # Botão para trocar contrato
+    with st.container():
+        coltroca, colvazio = st.columns([1,8])
+        with coltroca:
+            if st.button("🔁 Trocar contrato", key="btn_trocar_contrato"):
+                st.session_state.pop("contrato_selecionado", None)
+                st.rerun()
+
+    render_contrato_header(contrato)
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+        "📋 Dados Gerais", 
+        "💰 Pagamentos & ISS",
+        "📑 Aditivos",
+        "👔 Apoio ao Gestor",
+        "📁 Documentos", 
+        "📊 Histórico",
+        "🧾 Execução Físico-Financeira"
+    ])
+    with tab1:
+        render_bloco_dados_gerais(contrato)
+    with tab2:
+        render_bloco_pagamentos(contrato)
+        render_bloco_iss(contrato)
+    with tab3:
+        render_bloco_aditivos(contrato)
+    with tab4:
+        render_bloco_apoio_gestor(contrato)
+    with tab5:
+        render_bloco_documentos(contrato)
+    with tab6:
+        render_bloco_historico(contrato)
+    with tab7:
+        render_bloco_execucao_fisico_financeira(contrato)
 
     contrato = get_contrato_detalhes(st.session_state.contrato_selecionado["id"])
     if not contrato:
