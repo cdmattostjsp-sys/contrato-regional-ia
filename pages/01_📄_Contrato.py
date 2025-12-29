@@ -969,39 +969,6 @@ def main():
     with tab7:
         render_bloco_execucao_fisico_financeira(contrato)
 
-    contrato = get_contrato_detalhes(st.session_state.contrato_selecionado["id"])
-    if not contrato:
-        st.error("❌ Erro ao carregar detalhes do contrato.")
-        return
-
-    render_contrato_header(contrato)
-
-    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
-        "📋 Dados Gerais", 
-        "💰 Pagamentos & ISS",
-        "📑 Aditivos",
-        "👔 Apoio ao Gestor",
-        "📁 Documentos", 
-        "📊 Histórico",
-        "🧾 Execução Físico-Financeira"
-    ])
-
-    with tab1:
-        render_bloco_dados_gerais(contrato)
-    with tab2:
-        render_bloco_pagamentos(contrato)
-        render_bloco_iss(contrato)
-    with tab3:
-        render_bloco_aditivos(contrato)
-    with tab4:
-        render_bloco_apoio_gestor(contrato)
-    with tab5:
-        render_bloco_documentos(contrato)
-    with tab6:
-        render_bloco_historico(contrato)
-    with tab7:
-        render_bloco_execucao_fisico_financeira(contrato)
-
 
 if __name__ == "__main__":
     main()
