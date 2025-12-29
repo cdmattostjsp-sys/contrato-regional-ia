@@ -64,9 +64,9 @@ def main():
                     padding: 2rem; border-radius: 10px; margin-bottom: 2rem; color: white;">
             <h1>🤖 Copilot de Contrato</h1>
             <p style="font-size: 1.1rem; margin: 0.5rem 0;">
-            Contexto: <strong>{contrato['numero']}</strong>
+            Contexto: <strong>{contrato.get('numero', '(a preencher)')}</strong>
             </p>
-            <p style="opacity: 0.9;">{contrato['objeto']}</p>
+            <p style="opacity: 0.9;">{contrato.get('objeto', '(a preencher)')}</p>
         </div>
     """, unsafe_allow_html=True)
     
