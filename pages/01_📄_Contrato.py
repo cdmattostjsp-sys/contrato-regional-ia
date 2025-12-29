@@ -824,8 +824,8 @@ def main():
 
 
     def render_central_consulta_contratos():
-        st.markdown("## 🔎 Central de Consulta de Contratos")
-        st.info("Use a busca e filtros para localizar um contrato e abrir os detalhes.")
+        st.subheader("Consulta de Contratos")
+        st.caption("Use a busca e os filtros para localizar um contrato e abrir os detalhes.")
         busca = st.text_input(
             "🔍 Buscar contrato",
             placeholder="Digite número, objeto, fornecedor ou palavra-chave...",
