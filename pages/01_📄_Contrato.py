@@ -1,4 +1,5 @@
 
+from components.contratos_ui import filtrar_contratos, render_lista_contratos
 
 import streamlit as st
 import sys
