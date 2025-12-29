@@ -6,6 +6,7 @@ Geração assistida de notificações contratuais por IA.
 
 import streamlit as st
 import sys
+from services.notificacao_templates import pick_template_id, build_context, render_notification_text
 from pathlib import Path
 from datetime import datetime
 
@@ -90,7 +91,6 @@ def main():
                 "Notificação Prévia de Penalidade": "previa_penalidade"
             }
         }
-
         categoria_notificacao = st.selectbox(
             "Categoria da Notificação",
             list(TIPOS_NOTIFICACAO.keys())
@@ -98,11 +98,6 @@ def main():
         tipo_notificacao_legivel = st.selectbox(
             "Tipo de Notificação",
             list(TIPOS_NOTIFICACAO[categoria_notificacao].keys())
-        )
-        modelo_texto = st.selectbox(
-            "Modelo do texto",
-            ["Ofício/Comunicado", "Notificação Extrajudicial"],
-            key="notif_modelo"
         )
         motivo = st.text_area(
             "Motivo da Notificação",
@@ -155,9 +150,11 @@ def main():
             "motivo": motivo,
             "prazo": prazo,
             "fundamentacao": fundamentacao,
-            # Adicione outros campos se existirem, como email institucional
         }
-        texto_final = montar_texto_notificacao(modelo_texto, contrato, form_data)
+        # Seleção automática de template para Gestor do Contrato
+        template_id = pick_template_id(categoria_notificacao, tipo_notificacao_legivel)
+        ctx = build_context(contrato, form_data)
+        texto_final = render_notification_text(template_id, ctx)
         st.markdown(
             """
             <div class="contract-card">
