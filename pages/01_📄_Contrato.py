@@ -749,9 +749,29 @@ def render_contrato_detalhes(contrato: dict):
 
 
 def main():
-    # Bloco de abas (tabs) do contrato
-    import datetime
-    tab_dados, tab_pag, tab_aditivos, tab_gestor, tab_docs, tab_hist, tab_exec = st.tabs([
+    st.set_page_config(
+        page_title="TJSP - Detalhes do Contrato",
+        page_icon="📄",
+        layout="wide"
+    )
+    apply_tjsp_styles()
+    initialize_session_state()
+
+    # Verifica se há contrato selecionado
+    if not st.session_state.get("contrato_selecionado"):
+        st.warning("⚠️ Nenhum contrato selecionado. Retorne ao dashboard.")
+        if st.button("🏠 Voltar ao Dashboard"):
+            st.switch_page("Home.py")
+        return
+
+    contrato = get_contrato_detalhes(st.session_state.contrato_selecionado["id"])
+    if not contrato:
+        st.error("❌ Erro ao carregar detalhes do contrato.")
+        return
+
+    render_contrato_header(contrato)
+
+    tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "📋 Dados Gerais", 
         "💰 Pagamentos & ISS",
         "📑 Aditivos",
@@ -760,102 +780,22 @@ def main():
         "📊 Histórico",
         "🧾 Execução Físico-Financeira"
     ])
-    # ...código das abas (copiar o bloco removido acima para cá, ajustando a indentação para dentro da função main)...
-    st.set_page_config(
-        page_title="TJSP - Detalhes do Contrato",
-        page_icon="📄",
-        layout="wide"
-    )
-    
-    apply_tjsp_styles()
-    initialize_session_state()
-    
-    # Verifica se há contrato selecionado
-    if not st.session_state.contrato_selecionado:
-        st.warning("⚠️ Nenhum contrato selecionado. Retorne ao dashboard.")
-        if st.button("🏠 Voltar ao Dashboard"):
-            st.switch_page("Home.py")
-        return
-    
-    # Obtém detalhes completos do contrato
-    contrato = get_contrato_detalhes(st.session_state.contrato_selecionado["id"])
-    
-    if not contrato:
-        st.error("❌ Erro ao carregar detalhes do contrato.")
-        return
-    
-    # Renderiza cabeçalho
-    render_contrato_header(contrato)
-    
-    # 🚨 BLOCO DE VIGÊNCIA - PRIORIDADE ALTA (Feedback RAJ 10)
-    render_bloco_vigencia(contrato)
-    
-    # 💳 BLOCO DE ATESTES E PAGAMENTOS (Feedback RAJ 10)
-    render_bloco_pagamentos(contrato)
-    
-    # Ações Rápidas de Documentos
-    render_acoes_documentos(contrato)
-    
-    st.markdown("---")
-    
-    # Botões de navegação
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        if st.button("🏠 Dashboard", use_container_width=True):
-            st.switch_page("Home.py")
-    
-    with col2:
-        if st.button("💬 Copiloto", use_container_width=True):
-            st.switch_page("pages/02_💬_Copiloto.py")
-    
-    with col3:
-        if st.button("📝 Notificar", use_container_width=True):
-            st.switch_page("pages/03_📝_Notificações.py")
-    
-    with col4:
-        if st.button("📖 Como Proceder", use_container_width=True):
-            st.switch_page("pages/04_📖_Como_Proceder.py")
-    
-    st.markdown("---")
-    
-    # Renderiza detalhes
-    with tab_dados:
-        if 'render_bloco_dados_gerais' in globals():
-            render_bloco_dados_gerais(contrato)
-        else:
-            st.info("Conteúdo de Dados Gerais em desenvolvimento.")
-    with tab_pag:
-        render_bloco_pagamentos(contrato)
-        if 'render_bloco_iss' in globals():
-            render_bloco_iss(contrato)
-        else:
-            st.info("Conteúdo de ISS em desenvolvimento.")
-    with tab_aditivos:
-        render_bloco_aditivos(contrato)
-    with tab_gestor:
-        if 'render_bloco_apoio_gestor' in globals():
-            render_bloco_apoio_gestor(contrato)
-        else:
-            st.info("Conteúdo de Apoio ao Gestor em desenvolvimento.")
-    with tab_docs:
-        render_acoes_documentos(contrato)
-        if 'render_bloco_documentos' in globals():
-            render_bloco_documentos(contrato)
-        else:
-            st.info("Conteúdo de Documentos em desenvolvimento.")
-    with tab_hist:
-        if 'render_bloco_historico' in globals():
-            render_bloco_historico(contrato)
-        else:
-            st.info("Conteúdo de Histórico em desenvolvimento.")
-    with tab_exec:
-        if 'render_bloco_execucao_fisico_financeira' in globals():
-            render_bloco_execucao_fisico_financeira(contrato)
-        else:
-            st.info("Conteúdo de Execução Físico-Financeira em desenvolvimento.")
 
-    # Remove renderizações duplicadas fora das abas
+    with tab1:
+        render_bloco_dados_gerais(contrato)
+    with tab2:
+        render_bloco_pagamentos(contrato)
+        render_bloco_iss(contrato)
+    with tab3:
+        render_bloco_aditivos(contrato)
+    with tab4:
+        render_bloco_apoio_gestor(contrato)
+    with tab5:
+        render_bloco_documentos(contrato)
+    with tab6:
+        render_bloco_historico(contrato)
+    with tab7:
+        render_bloco_execucao_fisico_financeira(contrato)
 
 
 if __name__ == "__main__":
