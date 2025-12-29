@@ -87,39 +87,71 @@ def exportar_para_excel(contratos):
 
 
 def render_header():
-    """Renderiza cabeçalho compacto institucional TJSP com toolbar de ações"""
-    # Cabeçalho institucional super compacto
-    st.markdown(
-        """
-        <div style="background: #003366; padding: 0.7rem 1.2rem 0.7rem 1.2rem; border-radius: 13px; display: flex; align-items: center; justify-content: space-between; min-height: 0;">
-            <div style="display: flex; align-items: center; gap: 0.7rem;">
-                <span style="font-size: 1.09rem; font-weight: 700; color: #fff; letter-spacing: 0.01em;">TJSP – Gestão de Contratos Regionais</span>
-                <span style="background: #fff; color: #003366; font-size: 0.78rem; font-weight: 600; padding: 0.11rem 0.55rem; border-radius: 7px; margin-left: 0.15rem;">RAJ 10.1</span>
-            </div>
-            <span style="font-size: 0.89rem; color: #e0e6ef; font-weight: 400; margin-left: 1.2rem;">Sistema de Fiscalização e Acompanhamento</span>
-            <span style="font-size: 0.72rem; color: #b3c6e2; font-weight: 400; margin-left: 1.2rem;">build: {}</span>
-        </div>
-        """.format(datetime.now().strftime('%Y-%m-%d %H:%M')), unsafe_allow_html=True
-    )
-    # Toolbar institucional enxuta
-    toolbar_col1, toolbar_col2 = st.columns(2, gap="small")
-    with toolbar_col1:
-        if st.button("Meus Contratos", width="stretch", type="primary", key="btn_meus_contratos_header"):
-            st.experimental_set_query_params(ancora="meus-contratos")
-            st.rerun()
-    with toolbar_col2:
-        contratos = get_todos_contratos()
-        if contratos:
-            excel_data = exportar_para_excel(contratos)
-            st.download_button(
-                label="Exportar Excel",
-                data=excel_data,
-                file_name=f"contratos_tjsp_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                width="stretch",
-                type="secondary",
-                key="btn_exportar_excel_header"
-            )
+        """Topbar compacta institucional (sem segunda faixa e sem botões gigantes)"""
+
+        colL, colR = st.columns([7, 3], gap="small")
+
+        with colL:
+                st.markdown(
+                        """
+                        <div style="
+                                background:#003366;
+                                padding:0.85rem 1.25rem;
+                                border-radius:12px;
+                                display:flex;
+                                align-items:center;
+                                justify-content:space-between;
+                        ">
+                            <div style="display:flex; flex-direction:column; gap:0.15rem;">
+                                <div style="display:flex; align-items:baseline; gap:0.6rem; flex-wrap:wrap;">
+                                    <span style="font-size:1.15rem; font-weight:700; color:#FFFFFF;">
+                                        TJSP – Gestão de Contratos Regionais
+                                    </span>
+                                    <span style="
+                                        background:#FFFFFF;
+                                        color:#003366;
+                                        font-size:0.78rem;
+                                        font-weight:700;
+                                        padding:0.15rem 0.55rem;
+                                        border-radius:8px;
+                                    ">
+                                        RAJ 10.1
+                                    </span>
+                                </div>
+                                <span style="font-size:0.92rem; color:#DDE6F2;">
+                                    Sistema de Fiscalização e Acompanhamento
+                                </span>
+                            </div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                )
+
+                # build discreto (fora da barra, sem “gritar”)
+                st.caption(f"build: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
+
+        with colR:
+                # Ações compactas (sem stretch)
+                r1, r2 = st.columns([1, 1], gap="small")
+
+                with r1:
+                        # opcional: atalho discreto (bem menor que antes)
+                        if st.button("Ir para contratos", key="btn_ir_contratos", width="content"):
+                                st.session_state["scroll_meus_contratos"] = True
+
+                with r2:
+                        contratos = get_todos_contratos()
+                        if contratos:
+                                excel_data = exportar_para_excel(contratos)
+                                st.download_button(
+                                        label="Exportar Excel",
+                                        data=excel_data,
+                                        file_name=f"contratos_tjsp_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                                        width="content",
+                                        type="secondary",
+                                        key="btn_exportar_excel_header"
+                                )
 
 
 def render_metrics():
@@ -817,10 +849,25 @@ def main():
     apply_tjsp_styles()
     render_sidebar()
     render_header()
+    # Scroll para "meus contratos" se solicitado
+    import streamlit.components.v1 as components
+    if st.session_state.get("scroll_meus_contratos"):
+        components.html(
+            """
+            <script>
+              const el = window.parent.document.querySelector('#meus_contratos');
+              if (el) { el.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+            </script>
+            """,
+            height=0
+        )
+        st.session_state["scroll_meus_contratos"] = False
     render_metrics()
     st.markdown("---")
     render_graficos_analytics()
     st.markdown("---")
+    # Marcador para scroll
+    st.markdown('<div id="meus_contratos"></div>', unsafe_allow_html=True)
     render_contracts_dashboard()
 
 # Executa a função principal automaticamente ao rodar Home.py
