@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 
+
 # 1. Constantes de IDs de template
 GESTOR_INICIO_VIGENCIA = "GESTOR_INICIO_VIGENCIA"
 GESTOR_DESIGNACAO_FISCAIS = "GESTOR_DESIGNACAO_FISCAIS"
@@ -8,6 +9,14 @@ GESTOR_REAJUSTE = "GESTOR_REAJUSTE"
 GESTOR_ADITAMENTO = "GESTOR_ADITAMENTO"
 GESTOR_RESCISAO = "GESTOR_RESCISAO"
 DEFAULT_GESTOR = "DEFAULT_GESTOR"
+
+# Fiscal do Contrato
+FISCAL_ADVERTENCIA = "FISCAL_ADVERTENCIA"
+FISCAL_SOLIC_CORRECAO = "FISCAL_SOLIC_CORRECAO"
+FISCAL_SOLIC_DOCUMENTACAO = "FISCAL_SOLIC_DOCUMENTACAO"
+FISCAL_COMUNICADO_IRREGULARIDADE = "FISCAL_COMUNICADO_IRREGULARIDADE"
+FISCAL_NOTIF_PREVIA_PENALIDADE = "FISCAL_NOTIF_PREVIA_PENALIDADE"
+DEFAULT_FISCAL = "DEFAULT_FISCAL"
 
 # 2. Mapa de seleção de template
 TEMPLATE_MAP = {
@@ -17,11 +26,132 @@ TEMPLATE_MAP = {
         "Notificação de Reajuste Contratual": GESTOR_REAJUSTE,
         "Notificação de Alteração Contratual (Aditamento)": GESTOR_ADITAMENTO,
         "Notificação de Rescisão Contratual": GESTOR_RESCISAO,
+    },
+    "Fiscal do Contrato": {
+        "Advertência": FISCAL_ADVERTENCIA,
+        "Solicitação de Correção": FISCAL_SOLIC_CORRECAO,
+        "Solicitação de Documentação": FISCAL_SOLIC_DOCUMENTACAO,
+        "Comunicado de Irregularidade": FISCAL_COMUNICADO_IRREGULARIDADE,
+        "Notificação Prévia de Penalidade": FISCAL_NOTIF_PREVIA_PENALIDADE,
     }
 }
 
 # 3. Catálogo de templates
 TEMPLATES = {
+        # FISCAL: ADVERTÊNCIA
+        FISCAL_ADVERTENCIA: '''À {contratada_nome} – CNPJ {contratada_cnpj}
+    Endereço: {contratada_endereco}
+    Assunto: Advertência / Orientação de ajuste – Contrato nº {contrato_numero}
+    {local_data}
+
+    Prezado(a) Senhor(a),
+
+    CONSIDERANDO o Contrato nº {contrato_numero}, cujo objeto é “{contrato_objeto}”;
+    CONSIDERANDO a necessidade de assegurar a conformidade da execução contratual e a manutenção do padrão esperado;
+    CONSIDERANDO o registro da seguinte ocorrência: {motivo};
+
+    FICA A CONTRATADA ADVERTIDA para que adote as medidas necessárias à imediata correção/adequação da execução, prevenindo reincidências e assegurando o fiel cumprimento das obrigações pactuadas.
+
+    Caso entenda necessário, a CONTRATADA poderá apresentar esclarecimentos no prazo de {prazo_dias_uteis} dias úteis, contados do recebimento.
+
+    {fundamentacao}
+
+    Atenciosamente,
+    {assinatura}
+    ''',
+        # FISCAL: SOLICITAÇÃO DE CORREÇÃO
+        FISCAL_SOLIC_CORRECAO: '''À {contratada_nome} – CNPJ {contratada_cnpj}
+    Endereço: {contratada_endereco}
+    Assunto: Solicitação de correção/adequação – Contrato nº {contrato_numero}
+    {local_data}
+
+    Prezado(a) Senhor(a),
+
+    CONSIDERANDO o Contrato nº {contrato_numero}, relativo a “{contrato_objeto}”;
+    CONSIDERANDO a obrigação da CONTRATADA de manter a execução regular e conforme especificações/rotinas pactuadas;
+    CONSIDERANDO a ocorrência registrada: {motivo};
+
+    DETERMINA-SE que a CONTRATADA promova a correção/adequação do item apontado, com apresentação de evidências de regularização (relatório, fotos, checklist, documentos ou outros meios idôneos), no prazo de {prazo_dias_uteis} dias úteis.
+
+    Se houver impedimento ou necessidade de alinhamento operacional, a CONTRATADA deve informar formalmente, justificando e propondo plano de correção no mesmo prazo.
+
+    {fundamentacao}
+
+    Atenciosamente,
+    {assinatura}
+    ''',
+        # FISCAL: SOLICITAÇÃO DE DOCUMENTAÇÃO
+        FISCAL_SOLIC_DOCUMENTACAO: '''À {contratada_nome} – CNPJ {contratada_cnpj}
+    Endereço: {contratada_endereco}
+    Assunto: Solicitação de documentação – Contrato nº {contrato_numero}
+    {local_data}
+
+    Prezado(a) Senhor(a),
+
+    CONSIDERANDO o Contrato nº {contrato_numero} e a necessidade de instrução e controle da fiscalização;
+    CONSIDERANDO a exigência de comprovação documental pertinente ao acompanhamento da execução;
+
+    SOLICITA-SE o encaminhamento da seguinte documentação/informação, relacionada ao contrato em referência:
+    {motivo}
+
+    O envio deverá ocorrer no prazo de {prazo_dias_uteis} dias úteis, contados do recebimento, preferencialmente por meio do canal formal de comunicação definido pela unidade.
+
+    A ausência de apresentação no prazo poderá ensejar registro de não conformidade e adoção de providências administrativas cabíveis, conforme contrato e normativos aplicáveis.
+
+    {fundamentacao}
+
+    Atenciosamente,
+    {assinatura}
+    ''',
+        # FISCAL: COMUNICADO DE IRREGULARIDADE
+        FISCAL_COMUNICADO_IRREGULARIDADE: '''À {contratada_nome} – CNPJ {contratada_cnpj}
+    Endereço: {contratada_endereco}
+    Assunto: Comunicado de irregularidade / Não conformidade – Contrato nº {contrato_numero}
+    {local_data}
+
+    Prezado(a) Senhor(a),
+
+    CONSIDERANDO o Contrato nº {contrato_numero}, cujo objeto é “{contrato_objeto}”;
+    CONSIDERANDO o dever de fiscalização e registro de ocorrências durante a execução;
+    CONSIDERANDO a constatação da seguinte irregularidade/não conformidade: {motivo};
+
+    COMUNICA-SE à CONTRATADA o registro formal da ocorrência, para ciência e adoção imediata das medidas de regularização.
+
+    A CONTRATADA deverá:
+
+    Regularizar a situação no prazo de {prazo_dias_uteis} dias úteis; e
+
+    Apresentar resposta formal com evidências/justificativas e medidas preventivas para evitar reincidência.
+
+    O não atendimento poderá ensejar escalonamento ao Gestor do Contrato para deliberação sobre medidas administrativas, sem prejuízo de outras providências previstas no contrato.
+
+    {fundamentacao}
+
+    Atenciosamente,
+    {assinatura}
+    ''',
+        # FISCAL: NOTIFICAÇÃO PRÉVIA DE PENALIDADE
+        FISCAL_NOTIF_PREVIA_PENALIDADE: '''À {contratada_nome} – CNPJ {contratada_cnpj}
+    Endereço: {contratada_endereco}
+    Assunto: Notificação prévia de penalidade – Contrato nº {contrato_numero}
+    {local_data}
+
+    Prezado(a) Senhor(a),
+
+    CONSIDERANDO o Contrato nº {contrato_numero}, relativo a “{contrato_objeto}”;
+    CONSIDERANDO o histórico/registro de ocorrências e/ou descumprimentos: {motivo};
+    CONSIDERANDO a necessidade de assegurar contraditório e manifestação prévia antes de eventual encaminhamento para aplicação de sanção;
+
+    NOTIFICA-SE PREVIAMENTE a CONTRATADA para que, no prazo de {prazo_dias_uteis} dias úteis, apresente manifestação formal, com justificativas, documentos e evidências pertinentes, sobre os fatos apontados.
+
+    Findo o prazo, e à vista dos elementos disponíveis, o caso poderá ser encaminhado ao Gestor do Contrato/autoridade competente para avaliação de medidas administrativas e eventuais sanções previstas contratualmente e na legislação aplicável.
+
+    {fundamentacao}
+
+    Atenciosamente,
+    {assinatura}
+    ''',
+        DEFAULT_FISCAL: '''Assunto: Notificação – Contrato nº {contrato_numero}\n{local_data}\n\nPrezado(a),\n\nEsta é uma notificação referente ao contrato informado.\n\nAtenciosamente,\n{assinatura}\n''',
     GESTOR_INICIO_VIGENCIA: '''À {contratada_nome} – CNPJ {contratada_cnpj}
 Endereço: {contratada_endereco}
 Assunto: Comunicação de início de vigência – Contrato nº {contrato_numero}
@@ -137,11 +267,15 @@ class SafeDict(dict):
         return "(a preencher)"
 
 def pick_template_id(categoria: str, tipo: str) -> str:
-    """Seleciona o template_id correto para Gestor do Contrato."""
+    """Seleciona o template_id correto para Gestor ou Fiscal do Contrato."""
     if not categoria or not tipo:
         return None
     cat_map = TEMPLATE_MAP.get(categoria, {})
-    return cat_map.get(tipo, DEFAULT_GESTOR if categoria == "Gestor do Contrato" else None)
+    if categoria == "Gestor do Contrato":
+        return cat_map.get(tipo, DEFAULT_GESTOR)
+    elif categoria == "Fiscal do Contrato":
+        return cat_map.get(tipo, DEFAULT_FISCAL)
+    return None
 
 def build_context(contrato: dict, form_data: dict) -> dict:
     """Extrai dados do contrato e do formulário para preencher o template."""
