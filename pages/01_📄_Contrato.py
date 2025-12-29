@@ -749,34 +749,36 @@ def render_contrato_detalhes(contrato: dict):
 
 
 def render_bloco_dados_gerais(contrato: dict):
-    st.markdown("""
-    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
-        <button onclick="window.location.href='Home.py'" style="padding: 0.7rem 1.2rem; font-size: 1rem; border-radius: 8px; border: none; background: #003366; color: white; cursor: pointer;">🏠 Dashboard</button>
-        <button onclick="window.location.href='pages/02_💬_Copiloto.py'" style="padding: 0.7rem 1.2rem; font-size: 1rem; border-radius: 8px; border: none; background: #0066CC; color: white; cursor: pointer;">💬 Copiloto</button>
-        <button onclick="window.location.href='pages/03_📝_Notificações.py'" style="padding: 0.7rem 1.2rem; font-size: 1rem; border-radius: 8px; border: none; background: #28A745; color: white; cursor: pointer;">📝 Notificar</button>
-        <button onclick="window.location.href='pages/04_📖_Como_Proceder.py'" style="padding: 0.7rem 1.2rem; font-size: 1rem; border-radius: 8px; border: none; background: #FFC107; color: #003366; cursor: pointer;">📖 Como Proceder</button>
-    </div>
-    """, unsafe_allow_html=True)
-    st.markdown("""
-    <div style="background: #F8F9FA; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border-left: 4px solid #003366;">
-        <h3>📌 Resumo do Contrato</h3>
-        <ul style="font-size: 1.1rem;">
-            <li><strong>Número:</strong> {numero}</li>
-            <li><strong>Objeto:</strong> {objeto}</li>
-            <li><strong>Fornecedor:</strong> {fornecedor}</li>
-            <li><strong>Unidade/RAJ:</strong> {unidade}</li>
-            <li><strong>Status:</strong> {status}</li>
-            <li><strong>Vigência:</strong> {vigencia}</li>
-        </ul>
-    </div>
-    """.format(
-        numero=contrato.get('numero', ''),
-        objeto=contrato.get('objeto', ''),
-        fornecedor=contrato.get('fornecedor', ''),
-        unidade=contrato.get('unidade', ''),
-        status=contrato.get('status', ''),
-        vigencia=contrato.get('vigencia', '')
-    ), unsafe_allow_html=True)
+    st.markdown("### 🔘 Ações rápidas")
+
+    c1, c2, c3, c4 = st.columns(4)
+    kid = str(contrato.get("id", contrato.get("numero", "sem_id")))
+
+    with c1:
+        if st.button("🏠 Dashboard", width="stretch", key=f"btn_dash_{kid}"):
+            st.switch_page("Home.py")
+
+    with c2:
+        if st.button("💬 Copiloto", width="stretch", key=f"btn_cop_{kid}"):
+            st.switch_page("pages/02_💬_Copiloto.py")
+
+    with c3:
+        if st.button("📝 Notificar", width="stretch", key=f"btn_notif_{kid}"):
+            st.session_state["contrato_selecionado"] = {"id": contrato.get("id"), "numero": contrato.get("numero")}
+            st.switch_page("pages/03_📝_Notificações.py")
+
+    with c4:
+        if st.button("📖 Como Proceder", width="stretch", key=f"btn_como_{kid}"):
+            st.switch_page("pages/04_📖_Como_Proceder.py")
+
+    st.markdown("---")
+    st.markdown("### 📌 Resumo do Contrato")
+    st.write(f"**Número:** {contrato.get('numero','')}")
+    st.write(f"**Objeto:** {contrato.get('objeto','')}")
+    st.write(f"**Fornecedor:** {contrato.get('fornecedor','')}")
+    st.write(f"**Unidade/RAJ:** {contrato.get('unidade','')}")
+    st.write(f"**Status:** {contrato.get('status','')}")
+    st.write(f"**Vigência:** {contrato.get('vigencia','')}")
     st.markdown("### ⚠️ Pendências")
     st.info("Nenhuma pendência registrada.")
 
