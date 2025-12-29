@@ -87,41 +87,38 @@ def exportar_para_excel(contratos):
 
 
 def render_header():
-    """Renderiza o cabeçalho institucional TJSP com botões de exportação"""
-    col1, col2, col3 = st.columns([2, 1, 1])
-    
-    with col1:
-        st.markdown("""
-            <div class="tjsp-header">
-                <div class="tjsp-logo-container">
-                    <h1>⚖️ TJSP - Gestão de Contratos Regionais</h1>
-                    <p class="tjsp-subtitle">Sistema de Fiscalização e Acompanhamento - RAJ 10.1</p>
-                </div>
+    """Renderiza cabeçalho compacto institucional TJSP com toolbar de ações"""
+    # Cabeçalho institucional super compacto
+    st.markdown(
+        """
+        <div style="background: #003366; padding: 0.7rem 1.2rem 0.7rem 1.2rem; border-radius: 13px; display: flex; align-items: center; justify-content: space-between; min-height: 0;">
+            <div style="display: flex; align-items: center; gap: 0.7rem;">
+                <span style="font-size: 1.09rem; font-weight: 700; color: #fff; letter-spacing: 0.01em;">TJSP – Gestão de Contratos Regionais</span>
+                <span style="background: #fff; color: #003366; font-size: 0.78rem; font-weight: 600; padding: 0.11rem 0.55rem; border-radius: 7px; margin-left: 0.15rem;">RAJ 10.1</span>
             </div>
-        """, unsafe_allow_html=True)
-    
-    with col2:
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Botão Meus Contratos
-        if st.button("👤 Meus Contratos", use_container_width=True, type="primary"):
-            st.switch_page("pages/10_Meus_Contratos.py")
-    
-    with col3:
-        st.markdown("<br>", unsafe_allow_html=True)
-        
-        # Botão de exportação
+            <span style="font-size: 0.89rem; color: #e0e6ef; font-weight: 400; margin-left: 1.2rem;">Sistema de Fiscalização e Acompanhamento</span>
+            <span style="font-size: 0.72rem; color: #b3c6e2; font-weight: 400; margin-left: 1.2rem;">build: {}</span>
+        </div>
+        """.format(datetime.now().strftime('%Y-%m-%d %H:%M')), unsafe_allow_html=True
+    )
+    # Toolbar institucional enxuta
+    toolbar_col1, toolbar_col2 = st.columns(2, gap="small")
+    with toolbar_col1:
+        if st.button("Meus Contratos", width="stretch", type="primary", key="btn_meus_contratos_header"):
+            st.experimental_set_query_params(ancora="meus-contratos")
+            st.rerun()
+    with toolbar_col2:
         contratos = get_todos_contratos()
-        
         if contratos:
             excel_data = exportar_para_excel(contratos)
             st.download_button(
-                label="📥 Exportar Excel",
+                label="Exportar Excel",
                 data=excel_data,
                 file_name=f"contratos_tjsp_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True,
-                type="secondary"
+                width="stretch",
+                type="secondary",
+                key="btn_exportar_excel_header"
             )
 
 
@@ -537,7 +534,8 @@ def render_tag_management_modal():
 
 def render_contracts_dashboard():
     """Renderiza o dashboard de contratos"""
-    st.markdown("## 📋 Contratos Regionais - RAJ 10.1")
+    st.subheader("Contratos")
+    st.caption("RAJ 10.1")
     
     # Modal de gestão de tags (se ativo)
     if st.session_state.get('show_tag_modal', False):
