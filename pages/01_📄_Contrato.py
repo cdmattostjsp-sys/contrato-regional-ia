@@ -706,13 +706,14 @@ def render_formulario_aditivo(contrato: dict):
 
 
 
-def render_acoes_documentos():
+def render_acoes_documentos(contrato: dict):
     """
     AÇÕES RÁPIDAS DE DOCUMENTOS
     ============================
     Feedback RAJ 10: Botão fixo "Gerar Documento" com opções padronizadas.
     O conteúdo é gerado pelo copilot baseado no contrato.
     """
+    icon = "📄"
     st.markdown("""
         <h3 style="color: #003366; margin: 1.5rem 0 1rem 0;">
             📄 AÇÕES RÁPIDAS - DOCUMENTOS
@@ -800,7 +801,7 @@ def main():
     render_bloco_pagamentos(contrato)
     
     # Ações Rápidas de Documentos
-    render_acoes_documentos()
+    render_acoes_documentos(contrato)
     
     st.markdown("---")
     
