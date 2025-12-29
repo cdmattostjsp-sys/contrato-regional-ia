@@ -74,7 +74,6 @@ def main():
     
     with col_form:
         st.markdown("### 📋 Dados da Notificação")
-        # Mapeamento de tipos de notificação por categoria e chaves técnicas
         TIPOS_NOTIFICACAO = {
             "Gestor do Contrato": {
                 "Notificação de Início de Vigência": "inicio_vigencia",
@@ -92,30 +91,25 @@ def main():
             }
         }
 
-
-        # Campo de seleção da categoria da notificação
         categoria_notificacao = st.selectbox(
             "Categoria da Notificação",
             list(TIPOS_NOTIFICACAO.keys())
         )
-
-        # Campo de seleção do tipo de notificação, dinâmico conforme categoria
         tipo_notificacao_legivel = st.selectbox(
             "Tipo de Notificação",
             list(TIPOS_NOTIFICACAO[categoria_notificacao].keys())
         )
-
-        # Mapeamento de perfil
-        perfil = "gestor" if categoria_notificacao == "Gestor do Contrato" else "fiscal"
-        tipo_tecnico = TIPOS_NOTIFICACAO[categoria_notificacao][tipo_notificacao_legivel]
-        
+        modelo_texto = st.selectbox(
+            "Modelo do texto",
+            ["Ofício/Comunicado", "Notificação Extrajudicial"],
+            key="notif_modelo"
+        )
         motivo = st.text_area(
             "Motivo da Notificação",
             placeholder="Descreva o motivo da notificação de forma clara e objetiva...",
             height=100,
             key="notif_motivo"
         )
-        
         prazo = st.number_input(
             "Prazo para Resposta (dias úteis)",
             min_value=1,
@@ -123,41 +117,30 @@ def main():
             value=5,
             key="notif_prazo"
         )
-        
         fundamentacao = st.text_area(
             "Fundamentação Legal (opcional)",
             placeholder="Ex: Cláusula 7ª do contrato, Lei 8.666/93, etc.",
             height=80,
             key="notif_fundamentacao"
         )
-        
         col_btn1, col_btn2 = st.columns(2)
-        
         with col_btn1:
             if st.button("🤖 Gerar com IA", type="primary", use_container_width=True):
                 if not motivo:
                     st.error("⚠️ Por favor, descreva o motivo da notificação.")
                 else:
                     with st.spinner("Gerando notificação..."):
-                        # Prepara dados para o agente
                         st.session_state.notificacao_campos_ai = {
-                            "tipo": tipo_notificacao,
+                            "tipo": tipo_notificacao_legivel,
                             "motivo": motivo,
                             "prazo": prazo,
                             "fundamentacao": fundamentacao,
-                            "destinatario": contrato["fornecedor"]
+                            "destinatario": contrato.get("fornecedor", "")
                         }
-                        
-                        # Gera notificação
-                        notificacao_gerada = gerar_notificacao_contratual(
-                            contrato=contrato,
-                            dados_notificacao=st.session_state.notificacao_campos_ai
-                        )
-                        
+                        notificacao_gerada = "(Funcionalidade IA em desenvolvimento)"
                         st.session_state.notificacao_buffer = notificacao_gerada
                         add_log("INFO", f"Notificação gerada para contrato {contrato['id']}")
                         st.rerun()
-        
         with col_btn2:
             if st.button("🗑️ Limpar", use_container_width=True):
                 reset_notificacao()
@@ -165,58 +148,133 @@ def main():
     
     with col_preview:
         st.markdown("### 👁️ Pré-visualização")
-
-        # Pré-visualização baseada em template oficial, sem IA
-        try:
-            template = get_template(perfil, tipo_tecnico)
-            corpo_base = template["corpo"]
-            # Preencher campos do formulário nos placeholders do template
-            campos = {
-                "descricao_fatica": motivo,
-                "prazo": prazo,
-                "contrato": contrato.get("numero", ""),
-                "contratada": contrato.get("fornecedor", ""),
-                "data_inicio": contrato.get("data_inicio", ""),
-                "fiscais": contrato.get("fiscais", ""),
-                "periodo": contrato.get("periodo", ""),
-                "indice": contrato.get("indice", ""),
-                "data_vigencia": contrato.get("data_vigencia", ""),
-                "objeto_alteracao": contrato.get("objeto_alteracao", ""),
-                "motivo_rescisao": motivo,
-                "data_efetivacao": contrato.get("data_efetivacao", "")
-            }
-            # Substituição simples dos placeholders
-            corpo_final = corpo_base
-            for k, v in campos.items():
-                corpo_final = corpo_final.replace(f"{{{k}}}", str(v) if v is not None else "")
-
-            st.markdown(
-                """
-                <div class="contract-card">
-                    <div style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 0.9rem;">
-                """, unsafe_allow_html=True)
-            st.markdown(corpo_final)
-            st.markdown("</div></div>", unsafe_allow_html=True)
-
-            # Botões de ação
-            col_act1, col_act2, col_act3 = st.columns(3)
-            with col_act1:
-                if st.button("📥 Baixar DOCX", use_container_width=True):
-                    st.info("Funcionalidade em desenvolvimento")
-            with col_act2:
-                if st.button("📧 Enviar", use_container_width=True):
-                    st.info("Funcionalidade em desenvolvimento")
-            with col_act3:
-                if st.button("✏️ Editar", use_container_width=True):
-                    st.info("Funcionalidade em desenvolvimento")
-        except Exception as e:
-            st.info(
-                """
-                📝 A notificação gerada aparecerá aqui.
-                
-                Preencha os campos ao lado para pré-visualizar o texto base do template oficial.
-                """
-            )
+        # Monta dicionário de campos do formulário
+        form_data = {
+            "categoria": categoria_notificacao,
+            "tipo": tipo_notificacao_legivel,
+            "motivo": motivo,
+            "prazo": prazo,
+            "fundamentacao": fundamentacao,
+            # Adicione outros campos se existirem, como email institucional
+        }
+        texto_final = montar_texto_notificacao(modelo_texto, contrato, form_data)
+        st.markdown(
+            """
+            <div class="contract-card">
+                <div style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 0.9rem;">
+            """, unsafe_allow_html=True)
+        st.markdown(texto_final)
+        st.markdown("</div></div>", unsafe_allow_html=True)
+        # Botões de ação
+        col_act1, col_act2, col_act3 = st.columns(3)
+        with col_act1:
+            if st.button("📥 Baixar DOCX", use_container_width=True):
+                st.info("Funcionalidade em desenvolvimento")
+        with col_act2:
+            if st.button("📧 Enviar", use_container_width=True):
+                st.info("Funcionalidade em desenvolvimento")
+        with col_act3:
+            if st.button("✏️ Editar", use_container_width=True):
+                st.info("Funcionalidade em desenvolvimento")
+def montar_texto_notificacao(modelo: str, contrato: dict, form: dict) -> str:
+    """
+    Gera o corpo textual da notificação conforme modelo institucional.
+    modelo: 'Ofício/Comunicado' ou 'Notificação Extrajudicial'
+    contrato: dict com dados do contrato selecionado
+    form: dict com campos do formulário preenchidos pelo usuário
+    """
+    from datetime import datetime
+    def get(v, default="(a preencher)"):
+        return v if v else default
+    def format_data_extenso(dt=None):
+        meses = [
+            "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+            "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"
+        ]
+        dt = dt or datetime.now()
+        return f"{dt.day} de {meses[dt.month-1]} de {dt.year}"
+    numero = get(contrato.get("numero"))
+    objeto = get(contrato.get("objeto"))
+    fornecedor = contrato.get("fornecedor")
+    cnpj = contrato.get("cnpj", None)
+    endereco = contrato.get("endereco", None)
+    unidade = contrato.get("unidade", None)
+    data_inicio = contrato.get("data_inicio", None)
+    if isinstance(data_inicio, datetime):
+        data_inicio_fmt = data_inicio.strftime("%d/%m/%Y")
+    elif data_inicio:
+        data_inicio_fmt = str(data_inicio)
+    else:
+        data_inicio_fmt = None
+    categoria = get(form.get("categoria"))
+    tipo = get(form.get("tipo"))
+    motivo = get(form.get("motivo"))
+    prazo = get(form.get("prazo"))
+    fundamentacao = form.get("fundamentacao", None)
+    email = form.get("email", None)
+    local_data = f"São Paulo, {format_data_extenso()}"
+    if modelo == "Ofício/Comunicado":
+        cabecalho = f"OFÍCIO/COMUNICADO Nº (a preencher) – {unidade or '(a preencher)'}\n{local_data}\n"
+        destinatario = ""
+        if fornecedor:
+            destinatario = f"À {fornecedor}"
+            if cnpj:
+                destinatario += f" | CNPJ: {cnpj}"
+            if endereco:
+                destinatario += f" | Endereço: {endereco}"
+            destinatario += "\n"
+        assunto = f"Assunto: Notificação referente ao Contrato nº {numero} – {objeto}\n"
+        corpo = (
+            f"1. Do Objeto da Notificação\n"
+            f"{tipo}: {motivo}\n\n"
+            f"2. Das Exigências/Providências Necessárias\n"
+            f"Solicitamos as providências necessárias no prazo de {prazo} dias úteis, conforme previsto contratualmente."
+        )
+        if fundamentacao:
+            corpo += f"\n\nFundamentação legal: {fundamentacao}"
+        corpo += (
+            f"\n\n3. Das Consequências\n"
+            f"O não atendimento poderá ensejar a aplicação das sanções previstas no contrato e na legislação vigente.\n"
+            f"\n4. Do Prazo\n"
+            f"O prazo para resposta é de {prazo} dias úteis, contados a partir do recebimento desta comunicação.\n"
+        )
+        fecho = "Solicitamos posicionamento formal dentro do prazo estabelecido."
+        if email:
+            fecho += f" Dúvidas podem ser encaminhadas para {email}."
+        assinatura = "\n\nAtenciosamente,\n(Assinatura e identificação do responsável)\n"
+        return "\n".join([cabecalho, destinatario, assunto, corpo, fecho, assinatura])
+    elif modelo == "Notificação Extrajudicial":
+        destinatario = f"À {fornecedor or '(a preencher)'}"
+        if cnpj:
+            destinatario += f" | CNPJ: {cnpj}"
+        if endereco:
+            destinatario += f" | Endereço: {endereco}"
+        destinatario += "\n"
+        considerandos = [
+            f"CONSIDERANDO o Contrato nº {numero} firmado para {objeto};",
+            f"CONSIDERANDO a obrigação da contratada de cumprir integralmente as cláusulas contratuais;",
+        ]
+        if motivo:
+            considerandos.append(f"CONSIDERANDO o seguinte fato: {motivo};")
+        if fundamentacao:
+            considerandos.append(f"CONSIDERANDO a fundamentação legal: {fundamentacao};")
+        considerandos.append("CONSIDERANDO a necessidade de garantir a regularidade da execução contratual;")
+        resolve = (
+            f"RESOLVE: NOTIFICAR a empresa acima para que, no prazo de {prazo} dias úteis, adote as providências necessárias, sob pena de aplicação das medidas administrativas cabíveis."
+        )
+        fecho = "O não atendimento poderá ensejar sanções previstas em contrato e legislação."
+        assinatura = "\n\nAtenciosamente,\n(Assinatura e identificação do responsável)\n"
+        return "\n".join([
+            destinatario,
+            *considerandos,
+            "",
+            resolve,
+            "",
+            fecho,
+            assinatura
+        ])
+    else:
+        return "Modelo de notificação não reconhecido."
 
 
 if __name__ == "__main__":
