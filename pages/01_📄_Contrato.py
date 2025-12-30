@@ -807,6 +807,35 @@ def render_bloco_documentos(contrato: dict):
         </h3>
     """, unsafe_allow_html=True)
 
+
+    # Formulário de upload de documentos (sempre visível)
+    st.markdown("---")
+    st.markdown("#### 📤 Cadastrar Novo Documento")
+    with st.form(key="form_upload_documento"):
+        nome_doc = st.text_input("Nome do Documento", placeholder="Ex: Edital, Termo de Referência, etc.")
+        arquivo_doc = st.file_uploader("Selecione o arquivo (PDF)", type=["pdf"], key="upload_novo_documento")
+        submitted = st.form_submit_button("Salvar Documento")
+        if submitted:
+            if not nome_doc:
+                st.warning("Informe o nome do documento.")
+            elif not arquivo_doc:
+                st.warning("Selecione um arquivo PDF.")
+            else:
+                # Salvar arquivo no diretório do contrato
+                import os
+                contrato_id = contrato.get("id")
+                pasta_destino = f"knowledge/contratos/{contrato_id}"
+                os.makedirs(pasta_destino, exist_ok=True)
+                caminho_arquivo = os.path.join(pasta_destino, arquivo_doc.name)
+                with open(caminho_arquivo, "wb") as f:
+                    f.write(arquivo_doc.getbuffer())
+                # Atualizar lista de documentos (não persiste em JSON ainda)
+                if "outros_documentos" not in contrato:
+                    contrato["outros_documentos"] = []
+                contrato["outros_documentos"].append({"nome": nome_doc, "path": caminho_arquivo})
+                st.success(f"Documento '{nome_doc}' cadastrado com sucesso!")
+                st.rerun()
+
     # Contrato principal
     pdf_principal = contrato.get('pdf_filename')
     pdf_principal_path = contrato.get('pdf_path')
