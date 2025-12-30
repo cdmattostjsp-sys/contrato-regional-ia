@@ -791,13 +791,6 @@ def render_sidebar():
                     st.success(f"Fiscal alterado para: {fiscal_selecionado}")
                     st.rerun()
         st.markdown("---")
-        st.markdown("### 📚 Navegação")
-        st.page_link("pages/10_Meus_Contratos.py", label="👤 Meus Contratos", icon="👤")
-        st.page_link("pages/04_📖_Como_Proceder.py", label="📖 Como Proceder", icon="📖")
-        st.page_link("pages/05_📚_Biblioteca.py", label="📚 Biblioteca", icon="📚")
-        st.page_link("pages/08_⚙️_Configurações.py", label="⚙️ Configurações", icon="⚙️")
-        st.page_link("pages/09_🏷️_Gerenciar_Tags.py", label="🏷️ Gerenciar Tags", icon="🏷️")
-        st.markdown("---")
         st.markdown("### ℹ️ Sobre")
         st.caption(f"""
         **Versão:** 1.0.1 (MVP)  
