@@ -98,6 +98,7 @@ def render_header():
             display: flex;
             flex-direction: column;
             gap: 0.25rem;
+            margin-bottom: 20px;
         ">
             <div style="font-size: 1.35rem; font-weight: 800; color: #ffffff; letter-spacing: 0.01em;">
                 TJSP – Gestão de Contratos Regionais
