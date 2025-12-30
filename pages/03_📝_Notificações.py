@@ -84,10 +84,7 @@ def main():
         if st.button("📖 Como Proceder", use_container_width=True):
             st.switch_page("pages/04_📖_Como_Proceder.py")
     
-        contrato = ensure_contrato_context(key_prefix="notificacoes")
-        if not contrato:
-            return
-        render_context_bar(contrato, key_prefix="notificacoes")
+        # ...apenas render_module_banner e campos do formulário...
         render_module_banner("Contrato – Notificações", contrato.get("objeto", ""))
         prazo = st.number_input(
             "Prazo para Resposta (dias úteis)",
