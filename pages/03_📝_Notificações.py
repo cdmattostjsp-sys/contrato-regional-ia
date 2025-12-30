@@ -89,43 +89,11 @@ def main():
         if st.button("📖 Como Proceder", use_container_width=True):
             st.switch_page("pages/04_📖_Como_Proceder.py")
     
-    st.markdown("---")
-    
-    # Formulário de notificação
-    col_form, col_preview = st.columns([1, 1])
-    
-    with col_form:
-        st.markdown("### 📋 Dados da Notificação")
-        TIPOS_NOTIFICACAO = {
-            "Gestor do Contrato": {
-                "Notificação de Início de Vigência": "inicio_vigencia",
-                "Notificação de Designação de Fiscais": "designacao_fiscais",
-                "Notificação de Reajuste Contratual": "reajuste",
-                "Notificação de Alteração Contratual (Aditamento)": "alteracao_contratual",
-                "Notificação de Rescisão Contratual": "rescisao"
-            },
-            "Fiscal do Contrato": {
-                "Advertência": "advertencia",
-                "Solicitação de Correção": "solicitacao_correcao",
-                "Solicitação de Documentação": "solicitacao_documentacao",
-                "Comunicado de Irregularidade": "comunicado_irregularidade",
-                "Notificação Prévia de Penalidade": "previa_penalidade"
-            }
-        }
-        categoria_notificacao = st.selectbox(
-            "Categoria da Notificação",
-            list(TIPOS_NOTIFICACAO.keys())
-        )
-        tipo_notificacao_legivel = st.selectbox(
-            "Tipo de Notificação",
-            list(TIPOS_NOTIFICACAO[categoria_notificacao].keys())
-        )
-        motivo = st.text_area(
-            "Motivo da Notificação",
-            placeholder="Descreva o motivo da notificação de forma clara e objetiva...",
-            height=100,
-            key="notif_motivo"
-        )
+        contrato = ensure_contrato_context(key_prefix="notificacoes")
+        if not contrato:
+            return
+        render_context_bar(contrato, key_prefix="notificacoes")
+        render_module_banner("Contrato – Notificações", contrato.get("objeto", ""))
         prazo = st.number_input(
             "Prazo para Resposta (dias úteis)",
             min_value=1,

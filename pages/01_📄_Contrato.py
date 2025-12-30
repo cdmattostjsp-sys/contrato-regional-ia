@@ -921,25 +921,11 @@ def main():
             if st.button("⚙️ Configurações", key="btn_config_central"):
                 st.switch_page("pages/08_⚙️_Configurações.py")
 
-    # Fluxo híbrido
-    if not st.session_state.get("contrato_selecionado"):
-        render_central_consulta_contratos()
-        return
-
-    contrato = get_contrato_detalhes(st.session_state.contrato_selecionado["id"])
+    contrato = ensure_contrato_context(key_prefix="contrato")
     if not contrato:
-        st.error("❌ Erro ao carregar detalhes do contrato.")
         return
-
-    # Botão para trocar contrato
-    with st.container():
-        coltroca, colvazio = st.columns([1,8])
-        with coltroca:
-            if st.button("🔁 Trocar contrato", key="btn_trocar_contrato"):
-                st.session_state.pop("contrato_selecionado", None)
-                st.rerun()
-
-    render_contrato_header(contrato)
+    render_context_bar(contrato, key_prefix="contrato")
+    render_module_banner("Contrato – Detalhes e Acompanhamento", contrato.get("objeto", ""))
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "📋 Dados Gerais", 
         "💰 Pagamentos & ISS",

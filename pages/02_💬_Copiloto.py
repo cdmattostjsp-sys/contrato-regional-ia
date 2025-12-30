@@ -84,26 +84,11 @@ def main():
             <p style="font-size: 1.1rem; margin: 0.5rem 0;">
             Contexto: <strong>{contrato.get('numero', '(a preencher)')}</strong>
             </p>
-            <p style="opacity: 0.9;">{contrato.get('objeto', '(a preencher)')}</p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    # Botões de navegação
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        if st.button("🏠 Dashboard", use_container_width=True):
-            st.switch_page("pages/Home.py")
-    
-    with col2:
-        if st.button("📄 Ver Contrato", use_container_width=True):
-            st.switch_page("pages/01_📄_Contrato.py")
-    
-    with col3:
-        if st.button("🗑️ Limpar Chat", use_container_width=True):
-            reset_chat_history()
-            st.rerun()
-    
+                contrato = ensure_contrato_context(key_prefix="copiloto")
+                if not contrato:
+                    return
+                render_context_bar(contrato, key_prefix="copiloto")
+                render_module_banner("Contrato – Assistente (Copiloto)", contrato.get("objeto", ""))
     with col4:
         if st.button("📖 Como Proceder", use_container_width=True):
             st.switch_page("pages/04_📖_Como_Proceder.py")
