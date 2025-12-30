@@ -200,34 +200,41 @@ def main():
 
         # Botões de ação (mantidos)
         col_act1, col_act2, col_act3 = st.columns(3)
-        from services.docx_service import build_notificacao_docx_bytes
+        DOCX_OK = True
+        try:
+            from services.docx_service import build_notificacao_docx_bytes
+        except ModuleNotFoundError:
+            DOCX_OK = False
         from datetime import datetime
         with col_act1:
-            dt = datetime.now()
-            file_name = (
-                f"notificacao_{categoria_notificacao}_{tipo_notificacao_legivel}_"
-                f"{contrato.get('numero','sem_numero')}_{dt.strftime('%Y%m%d_%H%M')}.docx"
-            ).replace(" ", "_")
+            if DOCX_OK:
+                dt = datetime.now()
+                file_name = (
+                    f"notificacao_{categoria_notificacao}_{tipo_notificacao_legivel}_"
+                    f"{contrato.get('numero','sem_numero')}_{dt.strftime('%Y%m%d_%H%M')}.docx"
+                ).replace(" ", "_")
 
-            docx_bytes = build_notificacao_docx_bytes(
-                texto=texto_final,
-                titulo=f"Notificação – {tipo_notificacao_legivel}",
-                contrato_numero=str(contrato.get("numero", "")),
-                fornecedor=str(contrato.get("fornecedor", "")),
-                categoria=categoria_notificacao,
-                tipo=tipo_notificacao_legivel,
-                cidade="São Paulo",
-                dt=dt,
-            )
+                docx_bytes = build_notificacao_docx_bytes(
+                    texto=texto_final,
+                    titulo=f"Notificação – {tipo_notificacao_legivel}",
+                    contrato_numero=str(contrato.get("numero", "")),
+                    fornecedor=str(contrato.get("fornecedor", "")),
+                    categoria=categoria_notificacao,
+                    tipo=tipo_notificacao_legivel,
+                    cidade="São Paulo",
+                    dt=dt,
+                )
 
-            st.download_button(
-                label="📥 Baixar DOCX",
-                data=docx_bytes,
-                file_name=file_name,
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                use_container_width=True,
-                key="btn_baixar_docx_notificacao"
-            )
+                st.download_button(
+                    label="📥 Baixar DOCX",
+                    data=docx_bytes,
+                    file_name=file_name,
+                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    use_container_width=True,
+                    key="btn_baixar_docx_notificacao"
+                )
+            else:
+                st.warning("A funcionalidade de download em DOCX está indisponível. Instale a dependência 'python-docx' para habilitar.")
         with col_act2:
             if st.button("📧 Enviar", use_container_width=True):
                 st.info("Funcionalidade em desenvolvimento")
