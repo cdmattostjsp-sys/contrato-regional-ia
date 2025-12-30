@@ -84,20 +84,32 @@ def main():
             <p style="font-size: 1.1rem; margin: 0.5rem 0;">
             Contexto: <strong>{contrato.get('numero', '(a preencher)')}</strong>
             </p>
-                contrato = ensure_contrato_context(key_prefix="copiloto")
-                if not contrato:
-                    return
-                render_context_bar(contrato, key_prefix="copiloto")
-                render_module_banner("Contrato – Assistente (Copiloto)", contrato.get("objeto", ""))
+        </div>
+    """, unsafe_allow_html=True)
+
+    # Renderiza contexto e banner
+    # (Funções utilitárias, se existirem)
+    try:
+        from components.contratos_ui import ensure_contrato_context, render_context_bar, render_module_banner
+        contrato_ctx = ensure_contrato_context(key_prefix="copiloto")
+        if not contrato_ctx:
+            return
+        render_context_bar(contrato_ctx, key_prefix="copiloto")
+        render_module_banner("Contrato – Assistente (Copiloto)", contrato_ctx.get("objeto", ""))
+    except ImportError:
+        pass
+
+    # Botão de navegação (corrigido, sem col4)
+    col1, col2, col3, col4 = st.columns(4)
     with col4:
         if st.button("📖 Como Proceder", use_container_width=True):
             st.switch_page("pages/04_📖_Como_Proceder.py")
-    
+
     st.markdown("---")
-    
+
     # Área de chat
     st.markdown("### 💬 Conversa")
-    
+
     # Instruções
     with st.expander("ℹ️ Como usar o Copiloto"):
         st.info("""
