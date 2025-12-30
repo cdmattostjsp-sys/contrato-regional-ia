@@ -46,17 +46,35 @@ def main():
     apply_tjsp_styles()
     initialize_session_state()
     
-    # Verifica se há contrato selecionado
-    if not st.session_state.contrato_selecionado:
-        st.warning("⚠️ Nenhum contrato selecionado. Retorne ao dashboard.")
-        if st.button("🏠 Voltar ao Dashboard"):
-            # Limpa sessão e redireciona
-            st.session_state.clear()
-            initialize_session_state()
+    # Seleção interna de contrato
+    from components.contrato_selector import render_contrato_selector
+    from services.contract_service import get_todos_contratos
+    if (
+        not st.session_state.get("contrato_selecionado") 
+        or st.session_state.get("modo_selecao_contrato")
+    ):
+        contratos = get_todos_contratos()
+        selecionado = render_contrato_selector(
+            contratos,
+            titulo="Central de Consulta de Contratos",
+            help_text="Selecione um contrato para usar o Copiloto.",
+            key_prefix="copiloto"
+        )
+        if selecionado:
+            st.session_state["contrato_selecionado"] = {"id": selecionado["id"], "numero": selecionado["numero"], "fornecedor": selecionado.get("fornecedor", "")}
+            st.session_state["modo_selecao_contrato"] = False
             st.rerun()
         return
-    
-    contrato = st.session_state.contrato_selecionado
+    contrato = st.session_state["contrato_selecionado"]
+    # Faixa de contrato selecionado + botão trocar
+    with st.container():
+        col_a, col_b = st.columns([8,2])
+        with col_a:
+            st.success(f"Contrato selecionado: Nº {contrato.get('numero','')} — Fornecedor: {contrato.get('fornecedor','')}")
+        with col_b:
+            if st.button("Trocar contrato", key="copiloto_trocar_contrato"):
+                st.session_state["modo_selecao_contrato"] = True
+                st.rerun()
     
     # Cabeçalho
     st.markdown(f"""
