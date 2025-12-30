@@ -2,6 +2,7 @@
 from components.contratos_ui import filtrar_contratos, render_lista_contratos
 
 import streamlit as st
+from components.layout_header import ensure_contrato_context, render_context_bar, render_module_banner
 import sys
 from pathlib import Path
 import textwrap
