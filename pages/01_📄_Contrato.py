@@ -801,7 +801,79 @@ def render_bloco_apoio_gestor(contrato: dict):
         st.switch_page("pages/02_💬_Copiloto.py")
 
 def render_bloco_documentos(contrato: dict):
-    st.info("Conteúdo de Documentos em desenvolvimento.")
+    st.markdown("""
+        <h3 style='color: #003366; margin: 0 0 1rem 0;'>
+            📁 Documentos do Contrato
+        </h3>
+    """, unsafe_allow_html=True)
+
+    # Contrato principal
+    pdf_principal = contrato.get('pdf_filename')
+    pdf_principal_path = contrato.get('pdf_path')
+    if pdf_principal and pdf_principal_path:
+        st.markdown(f"""
+            <div style='margin-bottom: 1rem;'>
+                <strong>📄 Contrato Principal:</strong> {pdf_principal}
+            </div>
+        """, unsafe_allow_html=True)
+        with open(pdf_principal_path, 'rb') as f:
+            st.download_button(
+                label="📥 Baixar Contrato Principal",
+                data=f.read(),
+                file_name=pdf_principal,
+                mime="application/pdf",
+                use_container_width=True,
+                key="btn_baixar_contrato_principal"
+            )
+    else:
+        st.info("Contrato principal não anexado.")
+
+    # Aditivos
+    aditivos = contrato.get('aditivos', [])
+    if aditivos:
+        st.markdown("<strong>📑 Termos Aditivos:</strong>", unsafe_allow_html=True)
+        for aditivo in aditivos:
+            nome = aditivo.get('nome_original', aditivo.get('filename'))
+            path = aditivo.get('path')
+            numero = aditivo.get('numero', '')
+            st.write(f"• Aditivo {numero:02d}: {nome}")
+            if path:
+                with open(path, 'rb') as f:
+                    st.download_button(
+                        label=f"📥 Baixar Aditivo {numero:02d}",
+                        data=f.read(),
+                        file_name=nome,
+                        mime="application/pdf",
+                        use_container_width=True,
+                        key=f"btn_baixar_aditivo_{numero}"
+                    )
+            else:
+                st.warning("Arquivo do aditivo não encontrado.")
+    else:
+        st.info("Nenhum aditivo cadastrado.")
+
+    # Outros documentos (exemplo: edital, termos)
+    outros_docs = contrato.get('outros_documentos', [])
+    if outros_docs:
+        st.markdown("<strong>📂 Outros Documentos:</strong>", unsafe_allow_html=True)
+        for doc in outros_docs:
+            nome = doc.get('nome')
+            path = doc.get('path')
+            st.write(f"• {nome}")
+            if path:
+                with open(path, 'rb') as f:
+                    st.download_button(
+                        label=f"📥 Baixar {nome}",
+                        data=f.read(),
+                        file_name=nome,
+                        mime="application/pdf",
+                        use_container_width=True,
+                        key=f"btn_baixar_outro_{nome}"
+                    )
+            else:
+                st.warning("Arquivo não encontrado.")
+    else:
+        st.info("Nenhum outro documento cadastrado.")
 
 def render_bloco_historico(contrato: dict):
     st.info("Conteúdo de Histórico em desenvolvimento.")
