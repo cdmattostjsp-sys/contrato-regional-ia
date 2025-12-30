@@ -15,7 +15,9 @@ sys.path.append(str(Path(__file__).parent.parent))
 from ui.styles import apply_tjsp_styles
 from services.session_manager import initialize_session_state, reset_notificacao, add_log
 
+
 from agents.notificacoes.registry import get_template
+from components.layout_header import ensure_contrato_context, render_context_bar, render_module_banner
 
 
 def main():
