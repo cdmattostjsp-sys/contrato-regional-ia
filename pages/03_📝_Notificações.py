@@ -51,14 +51,7 @@ def main():
         return
     contrato = st.session_state["contrato_selecionado"]
     # Faixa de contrato selecionado + botão trocar
-    with st.container():
-        col_a, col_b = st.columns([8,2])
-        with col_a:
-            st.success(f"Contrato selecionado: Nº {contrato.get('numero','')} — Fornecedor: {contrato.get('fornecedor','')}")
-        with col_b:
-            if st.button("Trocar contrato", key="notificacoes_trocar_contrato"):
-                st.session_state["modo_selecao_contrato"] = True
-                st.rerun()
+    render_context_bar(contrato, key_prefix="notificacoes")
     
     # Cabeçalho
     st.markdown(f"""
