@@ -163,7 +163,8 @@ def main():
                 st.rerun()
     
     with col_preview:
-        st.markdown("### 👁️ Pré-visualização")
+        st.markdown("### Pré-visualização")  # institucional, sem emoji
+
         # Monta dicionário de campos do formulário
         form_data = {
             "categoria": categoria_notificacao,
@@ -172,18 +173,32 @@ def main():
             "prazo": prazo,
             "fundamentacao": fundamentacao,
         }
-        # Seleção automática de template para Gestor do Contrato
+
         template_id = pick_template_id(categoria_notificacao, tipo_notificacao_legivel)
         ctx = build_context(contrato, form_data)
         texto_final = render_notification_text(template_id, ctx)
-        st.markdown(
-            """
-            <div class="contract-card">
-                <div style="white-space: pre-wrap; font-family: 'Courier New', monospace; font-size: 0.9rem;">
-            """, unsafe_allow_html=True)
-        st.markdown(texto_final)
-        st.markdown("</div></div>", unsafe_allow_html=True)
-        # Botões de ação
+
+        preview_height = 720  # ajustar conforme necessário
+        with st.container(height=preview_height):
+            st.markdown(
+                f"""
+                <div style="
+                    background: #ffffff;
+                    padding: 1.2rem 1.2rem;
+                    border-radius: 12px;
+                    border: 1px solid rgba(0,0,0,.08);
+                    box-shadow: 0 2px 10px rgba(0,0,0,.04);
+                    white-space: pre-wrap;
+                    line-height: 1.45;
+                    font-size: 0.98rem;
+                ">
+                {texto_final}
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
+
+        # Botões de ação (mantidos)
         col_act1, col_act2, col_act3 = st.columns(3)
         with col_act1:
             if st.button("📥 Baixar DOCX", use_container_width=True):
