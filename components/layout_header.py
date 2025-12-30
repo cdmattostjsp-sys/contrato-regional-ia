@@ -43,7 +43,7 @@ def render_context_bar(contrato: dict, key_prefix: str):
     """
     col_a, col_b = st.columns([8,2])
     with col_a:
-        st.markdown(f"<div style='background:#1b5e20;padding:0.7rem 1.2rem;border-radius:8px;color:#fff;font-weight:500;font-size:1.08rem;'>Contrato selecionado: Nº {contrato.get('numero','')} — Fornecedor: {contrato.get('fornecedor','')}</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='background:#b9f6ca;padding:0.7rem 1.2rem;border-radius:8px;color:#222;font-weight:500;font-size:1.08rem;'>Contrato selecionado: Nº {contrato.get('numero','')} — Fornecedor: {contrato.get('fornecedor','')}</div>", unsafe_allow_html=True)
     with col_b:
         if st.button("Trocar contrato", key=f"{key_prefix}_trocar_contrato", use_container_width=True):
             st.session_state["modo_selecao_contrato"] = True

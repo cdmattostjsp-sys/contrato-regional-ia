@@ -53,6 +53,7 @@ def main():
     # Faixa de contrato selecionado + botão trocar
     render_context_bar(contrato, key_prefix="notificacoes")
     
+
     # Cabeçalho
     st.markdown(f"""
         <div style="background: linear-gradient(135deg, #003366 0%, #0066CC 100%); 
@@ -64,65 +65,83 @@ def main():
             <p style="opacity: 0.9;">{contrato.get('objeto', '(a preencher)')}</p>
         </div>
     """, unsafe_allow_html=True)
-    
+
     # Botões de navegação
     col1, col2, col3, col4 = st.columns(4)
-    
     with col1:
         if st.button("🏠 Dashboard", use_container_width=True):
             st.switch_page("Home.py")
-    
     with col2:
         if st.button("📄 Ver Contrato", use_container_width=True):
             st.switch_page("pages/01_📄_Contrato.py")
-    
     with col3:
         if st.button("💬 Copiloto", use_container_width=True):
             st.switch_page("pages/02_💬_Copiloto.py")
-    
     with col4:
         if st.button("📖 Como Proceder", use_container_width=True):
             st.switch_page("pages/04_📖_Como_Proceder.py")
+
+    # --- SELEÇÃO DE PERFIL E TIPO DE NOTIFICAÇÃO ---
+    from services.notificacao_templates import TEMPLATE_MAP
+    perfil_opcoes = list(TEMPLATE_MAP.keys())
+    categoria_notificacao = st.radio(
+        "Perfil do Responsável pela Notificação",
+        perfil_opcoes,
+        horizontal=True,
+        key="perfil_notificacao"
+    )
+    tipo_opcoes = list(TEMPLATE_MAP[categoria_notificacao].keys())
+    tipo_notificacao_legivel = st.selectbox(
+        "Tipo de Notificação",
+        tipo_opcoes,
+        key="tipo_notificacao"
+    )
+
+    motivo = st.text_area(
+        "Motivo da Notificação",
+        placeholder="Descreva o motivo da notificação...",
+        height=80,
+        key="notif_motivo"
+    )
+    prazo = st.number_input(
+        "Prazo para Resposta (dias úteis)",
+        min_value=1,
+        max_value=30,
+        value=5,
+        key="notif_prazo"
+    )
+    fundamentacao = st.text_area(
+        "Fundamentação Legal (opcional)",
+        placeholder="Ex: Cláusula 7ª do contrato, Lei 8.666/93, etc.",
+        height=80,
+        key="notif_fundamentacao"
+    )
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("🤖 Gerar com IA", type="primary", use_container_width=True):
+            if not motivo:
+                st.error("⚠️ Por favor, descreva o motivo da notificação.")
+            else:
+                with st.spinner("Gerando notificação..."):
+                    st.session_state.notificacao_campos_ai = {
+                        "tipo": tipo_notificacao_legivel,
+                        "motivo": motivo,
+                        "prazo": prazo,
+                        "fundamentacao": fundamentacao,
+                        "destinatario": contrato.get("fornecedor", "")
+                    }
+                    notificacao_gerada = "(Funcionalidade IA em desenvolvimento)"
+                    st.session_state.notificacao_buffer = notificacao_gerada
+                    add_log("INFO", f"Notificação gerada para contrato {contrato['id']}")
+                    st.rerun()
+    with col_btn2:
+        if st.button("🗑️ Limpar", use_container_width=True):
+            reset_notificacao()
+            st.rerun()
     
-        # ...apenas render_module_banner e campos do formulário...
-        render_module_banner("Contrato – Notificações", contrato.get("objeto", ""))
-        prazo = st.number_input(
-            "Prazo para Resposta (dias úteis)",
-            min_value=1,
-            max_value=30,
-            value=5,
-            key="notif_prazo"
-        )
-        fundamentacao = st.text_area(
-            "Fundamentação Legal (opcional)",
-            placeholder="Ex: Cláusula 7ª do contrato, Lei 8.666/93, etc.",
-            height=80,
-            key="notif_fundamentacao"
-        )
-        col_btn1, col_btn2 = st.columns(2)
-        with col_btn1:
-            if st.button("🤖 Gerar com IA", type="primary", use_container_width=True):
-                if not motivo:
-                    st.error("⚠️ Por favor, descreva o motivo da notificação.")
-                else:
-                    with st.spinner("Gerando notificação..."):
-                        st.session_state.notificacao_campos_ai = {
-                            "tipo": tipo_notificacao_legivel,
-                            "motivo": motivo,
-                            "prazo": prazo,
-                            "fundamentacao": fundamentacao,
-                            "destinatario": contrato.get("fornecedor", "")
-                        }
-                        notificacao_gerada = "(Funcionalidade IA em desenvolvimento)"
-                        st.session_state.notificacao_buffer = notificacao_gerada
-                        add_log("INFO", f"Notificação gerada para contrato {contrato['id']}")
-                        st.rerun()
-        with col_btn2:
-            if st.button("🗑️ Limpar", use_container_width=True):
-                reset_notificacao()
-                st.rerun()
-    
-    with col_preview:
+
+    # Pré-visualização da notificação
+    with st.container():
         st.markdown("### Pré-visualização")  # institucional, sem emoji
 
         # Monta dicionário de campos do formulário
