@@ -285,7 +285,7 @@ def main():
     
     if not alertas_filtrados:
         st.success("✅ Nenhum alerta encontrado com os filtros aplicados!")
-        st.balloons()
+        # st.balloons() removido para manter perfil institucional TJSP
     else:
         if len(alertas_filtrados) != len(alertas):
             st.info(f"📊 Exibindo **{len(alertas_filtrados)}** de {len(alertas)} alertas")

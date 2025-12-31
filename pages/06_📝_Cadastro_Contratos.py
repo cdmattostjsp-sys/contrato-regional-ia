@@ -406,7 +406,7 @@ def main():
                         if arquivos_aditivos and len(arquivos_aditivos) > 0:
                             st.success(f"📑 **{len(arquivos_aditivos)} aditivo(s)** anexado(s) com sucesso!")
                         
-                        st.balloons()
+                        # st.balloons() removido para manter perfil institucional TJSP
                         st.info(f"**ID gerado:** {contrato_id}")
                     except Exception as e:
                         st.error(f"❌ Erro ao salvar contrato: {str(e)}")
