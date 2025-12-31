@@ -11,11 +11,13 @@ from datetime import datetime
 
 sys.path.append(str(Path(__file__).parent.parent))
 
+
 from ui.styles import apply_tjsp_styles
 from services.session_manager import initialize_session_state
 from services.contract_service import get_todos_contratos
 from services.alert_service import calcular_alertas, get_alertas_por_tipo, get_alertas_por_categoria
 from services.email_service import get_email_service
+from components.layout_header import render_module_banner
 
 
 def render_alerta_card(alerta: dict):
