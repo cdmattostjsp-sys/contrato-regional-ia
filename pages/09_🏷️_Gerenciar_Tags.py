@@ -44,16 +44,12 @@ def main():
     
     tag_service = get_tag_service()
     
-    # Cabeçalho
-    st.markdown("""
-        <div style="background: linear-gradient(135deg, #003366 0%, #0066CC 100%); 
-                    padding: 2rem; border-radius: 10px; margin-bottom: 2rem; color: white;">
-            <h1>🏷️ Gerenciamento de Tags</h1>
-            <p style="font-size: 1.1rem; opacity: 0.9;">
-            Organize e categorize contratos com tags personalizadas
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Cabeçalho padronizado institucional
+    from components.layout_header import render_module_banner
+    render_module_banner(
+        title="Gerenciamento de Tags",
+        subtitle="Organize e categorize contratos com tags personalizadas"
+    )
     
     # Navegação
     col_nav1, col_nav2 = st.columns([6, 1])

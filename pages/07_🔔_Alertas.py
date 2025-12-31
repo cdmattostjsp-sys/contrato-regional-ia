@@ -117,13 +117,11 @@ def main():
     apply_tjsp_styles()
     initialize_session_state()
     
-    # Cabeçalho
-    st.markdown("""
-        <div class="tjsp-header">
-            <h1>🔔 Alertas Contratuais</h1>
-            <p class="tjsp-subtitle">Sistema Automático de Monitoramento e Alertas</p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Cabeçalho padronizado institucional
+    render_module_banner(
+        title="Alertas Contratuais",
+        subtitle="Sistema Automático de Monitoramento e Alertas"
+    )
     
     # Botão de retorno e configurações
     col_nav1, col_nav2 = st.columns([6, 1])

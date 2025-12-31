@@ -54,17 +54,11 @@ def main():
     render_context_bar(contrato, key_prefix="notificacoes")
     
 
-    # Cabeçalho
-    st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #003366 0%, #0066CC 100%); 
-                    padding: 2rem; border-radius: 10px; margin-bottom: 2rem; color: white;">
-            <h1>📝 Geração de Notificações Contratuais</h1>
-            <p style="font-size: 1.1rem; margin: 0.5rem 0;">
-            Contrato: <strong>{contrato.get('numero', '(a preencher)')}</strong>
-            </p>
-            <p style="opacity: 0.9;">{contrato.get('objeto', '(a preencher)')}</p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Cabeçalho padronizado institucional
+    render_module_banner(
+        title="Geração de Notificações Contratuais",
+        subtitle=f"Contrato: {contrato.get('numero', '(a preencher)')} — {contrato.get('objeto', '(a preencher)')}"
+    )
 
     # Botões de navegação
     col1, col2, col3, col4 = st.columns(4)

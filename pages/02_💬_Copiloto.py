@@ -76,16 +76,11 @@ def main():
                 st.session_state["modo_selecao_contrato"] = True
                 st.rerun()
     
-    # Cabeçalho
-    st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #003366 0%, #0066CC 100%); 
-                    padding: 2rem; border-radius: 10px; margin-bottom: 2rem; color: white;">
-            <h1>🤖 Copilot de Contrato</h1>
-            <p style="font-size: 1.1rem; margin: 0.5rem 0;">
-            Contexto: <strong>{contrato.get('numero', '(a preencher)')}</strong>
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Cabeçalho padronizado institucional
+    render_module_banner(
+        title="Copilot de Contrato",
+        subtitle=f"Contexto: {contrato.get('numero', '(a preencher)')}"
+    )
 
     # Renderiza contexto e banner
     # (Funções utilitárias, se existirem)
