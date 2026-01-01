@@ -381,17 +381,12 @@ def main():
     perfil = st.session_state.get("perfil", "Fiscal de Contrato")
     fiscal_nome = st.session_state.get("fiscal_nome", usuario)
     
-    # Cabeçalho personalizado
-    st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #003366 0%, #0066CC 100%); 
-                    padding: 2rem; border-radius: 10px; margin-bottom: 2rem; color: white;">
-            <h1>👤 Meus Contratos</h1>
-            <p style="font-size: 1.2rem; margin: 0.5rem 0;">
-            <strong>{usuario}</strong> • {perfil}
-            </p>
-            <p style="opacity: 0.9;">Dashboard Personalizado - RAJ 10.1</p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Cabeçalho padronizado institucional
+    from components.layout_header import render_module_banner
+    render_module_banner(
+        title="Meus Contratos",
+        subtitle=f"{usuario} • {perfil} — Dashboard Personalizado - RAJ 10.1"
+    )
     
     # Navegação
     col_nav1, col_nav2, col_nav3 = st.columns([4, 1, 1])
