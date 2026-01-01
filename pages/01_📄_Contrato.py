@@ -906,8 +906,7 @@ def render_bloco_documentos(contrato: dict):
     else:
         st.info("Nenhum outro documento cadastrado.")
 
-def render_bloco_historico(contrato: dict):
-    st.info("Conteúdo de Histórico em desenvolvimento.")
+from components.historico import render_bloco_historico
 
 def render_bloco_execucao_fisico_financeira(contrato: dict):
     st.info("Conteúdo de Execução Físico-Financeira em desenvolvimento.")
