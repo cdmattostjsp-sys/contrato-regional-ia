@@ -50,12 +50,14 @@ O contrato **{contrato['numero']}** possui a seguinte vigência:
     
     # === PERGUNTAS SOBRE VALOR ===
     elif any(palavra in pergunta_lower for palavra in ["valor", "preço", "quanto", "custo", "orçamento"]):
+        valor = contrato.get('valor')
+        valor_str = f"R$ {valor:,.2f}" if isinstance(valor, (int, float)) and valor is not None else "(valor não informado)"
         return f"""
 💰 **Informações Financeiras**
 
-O **{contrato['numero']}** possui:
-- **Valor total:** R$ {contrato['valor']:,.2f}
-- **Tipo de contratação:** {contrato['tipo']}
+O **{contrato.get('numero', '(nº não informado)')}** possui:
+- **Valor total:** {valor_str}
+- **Tipo de contratação:** {contrato.get('tipo', '(tipo não informado)')}
 
 ℹ️ *Fonte: Cláusula 3ª do contrato - Do Valor*
 """
@@ -241,19 +243,21 @@ def extrair_contexto_contrato(contrato: Dict) -> str:
     Returns:
         String formatada com contexto do contrato
     """
+    valor = contrato.get('valor')
+    valor_str = f"R$ {valor:,.2f}" if isinstance(valor, (int, float)) and valor is not None else "(valor não informado)"
     contexto = f"""
 CONTEXTO DO CONTRATO:
 ====================
-Número: {contrato['numero']}
-Tipo: {contrato['tipo']}
-Fornecedor: {contrato['fornecedor']}
-Objeto: {contrato['objeto']}
-Vigência: {contrato['vigencia']}
-Valor: R$ {contrato['valor']:,.2f}
-Status: {contrato['status']}
-Fiscal Titular: {contrato['fiscal_titular']}
-Fiscal Substituto: {contrato['fiscal_substituto']}
-Última Atualização: {contrato['ultima_atualizacao'].strftime('%d/%m/%Y %H:%M')}
+Número: {contrato.get('numero', '(nº não informado)')}
+Tipo: {contrato.get('tipo', '(tipo não informado)')}
+Fornecedor: {contrato.get('fornecedor', '(fornecedor não informado)')}
+Objeto: {contrato.get('objeto', '(objeto não informado)')}
+Vigência: {contrato.get('vigencia', '(vigência não informada)')}
+Valor: {valor_str}
+Status: {contrato.get('status', '(status não informado)')}
+Fiscal Titular: {contrato.get('fiscal_titular', '(fiscal titular não informado)')}
+Fiscal Substituto: {contrato.get('fiscal_substituto', '(fiscal substituto não informado)')}
+Última Atualização: {contrato.get('ultima_atualizacao').strftime('%d/%m/%Y %H:%M') if contrato.get('ultima_atualizacao') else '(data não informada)'}
 """
     
     if "pendencias" in contrato and contrato["pendencias"]:
