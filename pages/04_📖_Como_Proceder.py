@@ -24,16 +24,12 @@ def main():
     apply_tjsp_styles()
     initialize_session_state()
     
-    # Cabeçalho
-    st.markdown("""
-        <div style="background: linear-gradient(135deg, #003366 0%, #0066CC 100%); 
-                    padding: 2rem; border-radius: 10px; margin-bottom: 2rem; color: white;">
-            <h1>📖 Como Proceder - Orientações ao Fiscal</h1>
-            <p style="font-size: 1.1rem; opacity: 0.9;">
-            Guia institucional de procedimentos para fiscalização de contratos
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Cabeçalho padronizado institucional
+    from components.layout_header import render_module_banner
+    render_module_banner(
+        title="Como Proceder - Orientações ao Fiscal",
+        subtitle="Guia institucional de procedimentos para fiscalização de contratos"
+    )
     
     # Botão de navegação
     if st.button("🏠 Voltar ao Dashboard", use_container_width=False):
