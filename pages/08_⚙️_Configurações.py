@@ -28,16 +28,12 @@ def main():
     apply_tjsp_styles()
     initialize_session_state()
     
-    # Cabeçalho
-    st.markdown("""
-        <div style="background: linear-gradient(135deg, #003366 0%, #0066CC 100%); 
-                    padding: 2rem; border-radius: 10px; margin-bottom: 2rem; color: white;">
-            <h1>⚙️ Configurações do Sistema</h1>
-            <p style="font-size: 1.1rem; opacity: 0.9;">
-            Notificações por Email e Preferências
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Cabeçalho padronizado institucional
+    from components.layout_header import render_module_banner
+    render_module_banner(
+        title="Configurações do Sistema",
+        subtitle="Notificações por Email e Preferências"
+    )
     
     # Tabs de configurações
     tab1, tab2, tab3 = st.tabs(["📧 Notificações Email", "🧪 Testar Email", "📊 Histórico"])
