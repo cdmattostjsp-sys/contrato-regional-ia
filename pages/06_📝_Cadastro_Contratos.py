@@ -129,13 +129,12 @@ def main():
     apply_tjsp_styles()
     initialize_session_state()
     
-    # Cabeçalho
-    st.markdown("""
-        <div class="tjsp-header">
-            <h1>📝 Cadastro de Contratos</h1>
-            <p class="tjsp-subtitle">Cadastro e Upload de Contratos em PDF</p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Cabeçalho padronizado institucional
+    from components.layout_header import render_module_banner
+    render_module_banner(
+        title="Cadastro de Contratos",
+        subtitle="Cadastro e Upload de Contratos em PDF"
+    )
     
     # Botão de retorno
     if st.button("🏠 Voltar ao Dashboard", use_container_width=False):
