@@ -13,7 +13,10 @@ from datetime import datetime
 sys.path.append(str(Path(__file__).parent.parent))
 
 from ui.styles import apply_tjsp_styles
+
 from services.session_manager import initialize_session_state, reset_notificacao, add_log
+# Importa o serviço de histórico
+from services.history_service import log_event
 
 
 from agents.notificacoes.registry import get_template
@@ -126,6 +129,21 @@ def main():
                     }
                     notificacao_gerada = "(Funcionalidade IA em desenvolvimento)"
                     st.session_state.notificacao_buffer = notificacao_gerada
+                    # Log de evento de geração de notificação
+                    log_event(
+                        contrato,
+                        event_type="NOTIFICACAO_GERADA",
+                        title="Notificação gerada",
+                        details=f"{categoria_notificacao} - {tipo_notificacao_legivel} | prazo {prazo} dias úteis",
+                        source="Notificações",
+                        metadata={
+                            "categoria": categoria_notificacao,
+                            "tipo": tipo_notificacao_legivel,
+                            "prazo": prazo,
+                            "fundamentacao": fundamentacao,
+                            "tamanho_texto": len(notificacao_gerada) if notificacao_gerada else 0
+                        }
+                    )
                     add_log("INFO", f"Notificação gerada para contrato {contrato['id']}")
                     st.rerun()
     with col_btn2:
@@ -196,6 +214,21 @@ def main():
                     tipo=tipo_notificacao_legivel,
                     cidade="São Paulo",
                     dt=dt,
+                )
+
+                # Log de evento de exportação DOCX
+                log_event(
+                    contrato,
+                    event_type="NOTIFICACAO_EXPORTADA_DOCX",
+                    title="DOCX exportado",
+                    details="Usuário exportou a notificação em DOCX.",
+                    source="Notificações",
+                    metadata={
+                        "categoria": categoria_notificacao,
+                        "tipo": tipo_notificacao_legivel,
+                        "prazo": prazo,
+                        "tamanho_texto": len(texto_final) if texto_final else 0
+                    }
                 )
 
                 st.download_button(
