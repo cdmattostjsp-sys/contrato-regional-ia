@@ -11,9 +11,11 @@ from datetime import datetime
 
 sys.path.append(str(Path(__file__).parent.parent))
 
+
 from ui.styles import apply_tjsp_styles
 from services.session_manager import initialize_session_state, reset_chat_history, add_log
 from agents.copilot_agent import processar_pergunta_copilot
+from components.layout_header import ensure_contrato_context, render_context_bar, render_module_banner
 
 
 def render_chat_message(role: str, content: str, timestamp: datetime):
@@ -66,33 +68,15 @@ def main():
             st.rerun()
         return
     contrato = st.session_state["contrato_selecionado"]
-    # Faixa de contrato selecionado + botão trocar
-    with st.container():
-        col_a, col_b = st.columns([8,2])
-        with col_a:
-            st.success(f"Contrato selecionado: Nº {contrato.get('numero','')} — Fornecedor: {contrato.get('fornecedor','')}")
-        with col_b:
-            if st.button("Trocar contrato", key="copiloto_trocar_contrato"):
-                st.session_state["modo_selecao_contrato"] = True
-                st.rerun()
-    
-    # Cabeçalho padronizado institucional
+    # Faixa de contrato selecionado + botão trocar e cabeçalho institucional
+    contrato_ctx = ensure_contrato_context(key_prefix="copiloto")
+    if not contrato_ctx:
+        return
+    render_context_bar(contrato_ctx, key_prefix="copiloto")
     render_module_banner(
         title="Copilot de Contrato",
-        subtitle=f"Contexto: {contrato.get('numero', '(a preencher)')}"
+        subtitle=f"Contexto: {contrato_ctx.get('numero', '(a preencher)')} — {contrato_ctx.get('objeto', '(a preencher)')}"
     )
-
-    # Renderiza contexto e banner
-    # (Funções utilitárias, se existirem)
-    try:
-        from components.contratos_ui import ensure_contrato_context, render_context_bar, render_module_banner
-        contrato_ctx = ensure_contrato_context(key_prefix="copiloto")
-        if not contrato_ctx:
-            return
-        render_context_bar(contrato_ctx, key_prefix="copiloto")
-        render_module_banner("Contrato – Assistente (Copiloto)", contrato_ctx.get("objeto", ""))
-    except ImportError:
-        pass
 
     # Botão de navegação (corrigido, sem col4)
     col1, col2, col3, col4 = st.columns(4)
