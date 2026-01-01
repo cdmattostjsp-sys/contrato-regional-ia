@@ -69,7 +69,7 @@ def main():
     st.markdown("---")
     
     # Tabs
-    tab1, tab2, tab3 = st.tabs(["📄 Documentos", "⚖️ Referências Legais", "🔍 Busca (Em Breve)"])
+    tab1, tab2, tab3 = st.tabs(["📄 Documentos", "⚖️ Referências Legais", "🔍 Busca"])
     
     with tab1:
         st.markdown("## 📄 Documentos Disponíveis")
@@ -209,56 +209,48 @@ def main():
                     st.markdown("---")
     
     with tab3:
+        from services.library_index_service import build_or_update_index, get_index_status
+        from services.library_search_service import search_library
         st.markdown("## 🔍 Busca nos Manuais")
-        
-        st.info("""
-        ### 🚧 Funcionalidade em Desenvolvimento
-        
-        A busca automática nos manuais será implementada em breve!
-        """)
-        
-        # Interface de busca (mockup)
-        st.text_input(
-            "Digite o termo que deseja buscar nos manuais:",
-            placeholder="Ex: fiscalização, penalidades, atestação...",
-            disabled=True,
-            key="busca_manual"
-        )
-        
-        col1, col2, col3 = st.columns([1, 1, 3])
-        
-        with col1:
-            st.button("🔍 Buscar", disabled=True, use_container_width=True)
-        
-        with col2:
-            st.button("🗑️ Limpar", disabled=True, use_container_width=True)
-        
+        status = get_index_status()
+        st.info(f"**Status do índice:** {status['n_docs']} documentos, {status['n_pages']} páginas, última indexação: {status['last_indexed']}")
+        if st.button("🔄 Atualizar índice", use_container_width=True):
+            with st.spinner("Indexando documentos..."):
+                build_or_update_index()
+            st.success("Índice atualizado!")
+            st.experimental_rerun()
         st.markdown("---")
-        
+        with st.form("form_busca_biblioteca"):
+            query = st.text_input("Digite o termo que deseja buscar nos manuais:", placeholder="Ex: fiscalização, penalidades, atestação...", key="busca_manual")
+            col1, col2 = st.columns([1, 1])
+            with col1:
+                categoria = st.selectbox("Categoria", ["Todas", "Manuais Institucionais", "Cadernos Técnicos", "Outros"])
+            with col2:
+                tipo = st.selectbox("Tipo", ["Todos", "Manual Institucional TJSP", "Instrução Normativa", "Manual de Boas Práticas", "Documento Institucional"])
+            submitted = st.form_submit_button("🔍 Buscar")
+        results = []
+        if submitted and query:
+            cat = None if categoria == "Todas" else categoria
+            t = None if tipo == "Todos" else tipo
+            with st.spinner("Buscando nos documentos..."):
+                results = search_library(query, category=cat, doc_type=t, limit=20)
+        if results:
+            st.markdown(f"### Resultados ({len(results)})")
+            for r in results:
+                badge = "<span style='color:#fff;background:#888;padding:2px 8px;border-radius:8px;font-size:0.8em;'>Digitalizado</span>" if r["is_scanned"] else ""
+                st.markdown(f"""
+                <div style='border:1px solid #eee;border-radius:8px;padding:1em;margin-bottom:1em;'>
+                <b>{r['title']}</b> <span style='color:#888;font-size:0.9em;'>({r['category']} / {r['doc_type']})</span> {badge}<br>
+                <b>Página:</b> {r['page_no']}<br>
+                <b>Trecho:</b> <span style='background:#f8f8f8;'>{r['snippet']}</span>
+                </div>
+                """, unsafe_allow_html=True)
+        elif submitted:
+            st.warning("Nenhum resultado encontrado.")
+        st.markdown("---")
         with st.expander("📋 Recursos Planejados"):
             st.markdown("""
-            ### Recursos da Busca (Futuros)
-            
-            ✨ **Busca por palavra-chave**
-            - Pesquisa em todos os documentos simultaneamente
-            - Destacar trechos relevantes
-            - Indicar página e documento de origem
-            
-            🎯 **Busca contextual**
-            - Busca por tipo de contrato
-            - Filtro por documento (Manual TJSP, Instrução Normativa, etc.)
-            - Busca em seções específicas
-            
-            🤖 **Busca inteligente com IA**
-            - Busca semântica (significado, não apenas palavras)
-            - Respostas geradas automaticamente
-            - Citações e referências automáticas
-            
-            📊 **Resultados enriquecidos**
-            - Resumo do trecho encontrado
-            - Links para documentos completos
-            - Histórico de buscas
-            - Buscas frequentes
+            ### Recursos futuros: busca semântica, integração IA, citações automáticas, OCR sob demanda.
             """)
     
     # Rodapé

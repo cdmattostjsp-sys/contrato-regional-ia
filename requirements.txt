@@ -6,3 +6,7 @@ numpy>=1.26.0
 openpyxl
 plotly>=5.18.0
 xlsxwriter>=3.1.0
+
+# Para extração de texto de PDF e busca fuzzy
+pymupdf>=1.23.0
+rapidfuzz>=3.6.1
