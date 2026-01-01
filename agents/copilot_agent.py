@@ -121,7 +121,7 @@ O contrato **{contrato['numero']}** possui as seguintes pendências:
 
 O contrato **{contrato['numero']}** não possui pendências registradas no momento.
 
-Status: **{contrato['status'].upper()}**
+Status: **{contrato.get('status', 'indefinido').upper()}**
 
 ℹ️ *Última atualização: {contrato['ultima_atualizacao'].strftime('%d/%m/%Y %H:%M')}*
 """
@@ -133,11 +133,11 @@ Status: **{contrato['status'].upper()}**
             "atencao": "🟡 O contrato requer **ATENÇÃO** - há pontos a serem observados.",
             "critico": "🔴 O contrato está em situação **CRÍTICA** - ação imediata necessária."
         }
-        
+        status_val = contrato.get('status', 'indefinido')
         return f"""
 📊 **Status do Contrato**
 
-{status_msg.get(contrato['status'], 'Status não identificado')}
+{status_msg.get(status_val, 'Status não identificado')}
 
 **{contrato['numero']}**
 - Fornecedor: {contrato['fornecedor']}
