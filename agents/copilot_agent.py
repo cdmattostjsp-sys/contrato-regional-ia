@@ -76,12 +76,15 @@ O **{contrato.get('numero', '(nº não informado)')}** possui:
     
     # === PERGUNTAS SOBRE FISCALIZAÇÃO ===
     elif any(palavra in pergunta_lower for palavra in ["fiscal", "responsável", "quem", "fiscalização"]):
+        numero = contrato.get('numero', '(nº não informado)')
+        fiscal_titular = contrato.get('fiscal_titular', '(fiscal titular não informado)')
+        fiscal_substituto = contrato.get('fiscal_substituto', '(fiscal substituto não informado)')
         return f"""
 👥 **Equipe de Fiscalização**
 
-A fiscalização do **{contrato['numero']}** é realizada por:
-- **Fiscal Titular:** {contrato['fiscal_titular']}
-- **Fiscal Substituto:** {contrato['fiscal_substituto']}
+A fiscalização do **{numero}** é realizada por:
+- **Fiscal Titular:** {fiscal_titular}
+- **Fiscal Substituto:** {fiscal_substituto}
 
 📋 A fiscalização é exercida conforme previsto na Cláusula 7ª do contrato.
 
