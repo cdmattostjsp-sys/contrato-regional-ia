@@ -118,34 +118,29 @@ def main():
             )
     
     # Input do usuário
+    from ui.forms_help import help_pergunta_ia
     with st.container():
-        user_input = st.chat_input("Digite sua pergunta sobre o contrato...")
-        
+        user_input = st.chat_input(
+            "Digite sua pergunta sobre o contrato...",
+            help=help_pergunta_ia()
+        )
+        st.caption("Descreva sua dúvida de forma clara e objetiva. Inclua contexto relevante para obter resposta precisa.")
         if user_input:
-            # Adiciona pergunta do usuário ao histórico
             st.session_state.chat_history.append({
                 "role": "user",
                 "content": user_input,
                 "timestamp": datetime.now()
             })
-            
-            # Processa pergunta via agente
             resposta = processar_pergunta_copilot(
                 pergunta=user_input,
                 contrato=contrato
             )
-            
-            # Adiciona resposta ao histórico
             st.session_state.chat_history.append({
                 "role": "assistant",
                 "content": resposta,
                 "timestamp": datetime.now()
             })
-            
-            # Log
             add_log("INFO", f"Copiloto: Pergunta processada para contrato {contrato['id']}")
-            
-            # Rerun para atualizar interface
             st.rerun()
 
 

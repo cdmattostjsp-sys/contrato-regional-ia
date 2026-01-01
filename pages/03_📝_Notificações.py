@@ -94,25 +94,32 @@ def main():
         key="tipo_notificacao"
     )
 
+    from ui.forms_help import help_motivo, help_prazo, help_fundamentacao
     motivo = st.text_area(
         "Motivo da Notificação",
-        placeholder="Descreva o motivo da notificação...",
+        placeholder="Ex: Atraso na entrega do serviço entre jan/2025 e mar/2025, com impacto na rotina do setor.",
+        help=help_motivo(),
         height=80,
         key="notif_motivo"
     )
+    st.caption("Descreva fatos, período e impacto. Evite juízo de valor.")
     prazo = st.number_input(
         "Prazo para Resposta (dias úteis)",
         min_value=1,
         max_value=30,
         value=5,
+        help=help_prazo(),
         key="notif_prazo"
     )
+    st.caption("O prazo deve ser contado em dias úteis, a partir do recebimento da notificação.")
     fundamentacao = st.text_area(
         "Fundamentação Legal (opcional)",
-        placeholder="Ex: Cláusula 7ª do contrato, Lei 8.666/93, etc.",
+        placeholder="Ex: Cláusula 7ª do contrato; Lei 14.133/2021, art. 115; IN TJSP nº 12/2025.",
+        help=help_fundamentacao(),
         height=80,
         key="notif_fundamentacao"
     )
+    st.caption("Exemplos: Cláusula X do contrato; Lei 14.133/2021, art. ...; IN TJSP nº 12/2025.")
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
         if st.button("🤖 Gerar com IA", type="primary", use_container_width=True):

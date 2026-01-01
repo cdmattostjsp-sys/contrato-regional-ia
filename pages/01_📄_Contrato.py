@@ -925,11 +925,14 @@ def main():
     def render_central_consulta_contratos():
         st.subheader("Consulta de Contratos")
         st.caption("Use a busca e os filtros para localizar um contrato e abrir os detalhes.")
+        from ui.forms_help import help_busca_contrato, help_filtro_home
         busca = st.text_input(
             "🔍 Buscar contrato",
             placeholder="Digite número, objeto, fornecedor ou palavra-chave...",
+            help=help_busca_contrato(),
             key="busca_central_contrato"
         )
+        st.caption("Utilize a busca para localizar contratos por número, objeto ou fornecedor.")
         with st.expander("🔎 Filtros Avançados", expanded=False):
             col_f1, col_f2, col_f3 = st.columns(3)
             with col_f1:
@@ -937,14 +940,16 @@ def main():
                     "Número do Contrato",
                     placeholder="Ex: 2024/00070406",
                     key="filtro_num_contrato_central",
-                    help="Filtra por número exato ou parcial do contrato"
+                    help="Digite o número completo ou parcial do contrato."
                 )
+                st.caption("Filtra por número exato ou parcial do contrato.")
                 filtro_num_processo = st.text_input(
                     "Número do Processo",
                     placeholder="Ex: 2024/00070406",
                     key="filtro_num_processo_central",
-                    help="Filtra por número exato ou parcial do processo"
+                    help="Digite o número completo ou parcial do processo."
                 )
+                st.caption("Filtra por número exato ou parcial do processo.")
             with col_f2:
                 from services.contract_service import get_todos_contratos
                 contratos_temp = get_todos_contratos()
@@ -953,15 +958,17 @@ def main():
                     "Fornecedor/Empresa",
                     ["Todos"] + fornecedores,
                     key="filtro_fornecedor_central",
-                    help="Filtra por empresa contratada"
+                    help="Selecione para filtrar por empresa contratada."
                 )
+                st.caption("Filtra por empresa contratada.")
                 fiscais = sorted(list(set([c.get('fiscal_titular', '') for c in contratos_temp if c.get('fiscal_titular')])))
                 filtro_fiscal = st.selectbox(
                     "Fiscal/Gestor",
                     ["Todos"] + fiscais,
                     key="filtro_fiscal_central",
-                    help="Filtra por fiscal titular do contrato"
+                    help="Selecione para filtrar por fiscal titular do contrato."
                 )
+                st.caption("Filtra por fiscal titular do contrato.")
             with col_f3:
                 from services.tag_service import get_tag_service
                 tag_service = get_tag_service()
@@ -972,9 +979,10 @@ def main():
                     options=list(tags_opcoes.keys()),
                     format_func=lambda x: tags_opcoes[x],
                     key="filtro_tags_central",
-                    help="Filtra por tags aplicadas aos contratos"
+                    help="Filtra por tags aplicadas aos contratos."
                 )
                 st.caption("[🏷️ Gerenciar Tags](pages/09_🏷️_Gerenciar_Tags.py)")
+                st.caption(help_filtro_home())
         col1, col2, col3 = st.columns(3)
         with col1:
             filtro_status = st.selectbox(

@@ -13,13 +13,29 @@ def render_bloco_historico(contrato):
     col1, col2, col3 = st.columns(3)
     with col1:
         periodo_opcoes = ["7 dias", "30 dias", "90 dias", "Todos"]
-        periodo = st.selectbox("Período", periodo_opcoes, index=1, key="hist_periodo")
+        periodo = st.selectbox(
+            "Período",
+            periodo_opcoes,
+            index=1,
+            key="hist_periodo",
+            help="Filtra eventos do histórico pelo período selecionado."
+        )
     with col2:
         tipos = ["Todos"] + get_event_types(contract_id)
-        tipo_evento = st.selectbox("Tipo de Evento", tipos, key="hist_tipo")
+        tipo_evento = st.selectbox(
+            "Tipo de Evento",
+            tipos,
+            key="hist_tipo",
+            help="Filtra por tipo de evento registrado no histórico."
+        )
     with col3:
         sources = ["Todos"] + get_sources(contract_id)
-        source = st.selectbox("Módulo", sources, key="hist_source")
+        source = st.selectbox(
+            "Módulo",
+            sources,
+            key="hist_source",
+            help="Filtra eventos por módulo do sistema."
+        )
     # Calcula datas
     date_from = None
     if periodo != "Todos":

@@ -50,17 +50,55 @@ def render_medicoes(contract_id):
     medicoes = get_medicoes(contract_id)
     st.dataframe(medicoes)
     if st.button("Nova medição", key="btn_nova_medicao"):
+        from ui.forms_help import help_prazo
         with st.form("form_nova_medicao", clear_on_submit=True):
-            competencia = st.text_input("Competência (YYYY-MM)")
-            etapa_id = st.text_input("Etapa (ID ou 'Geral')")
-            percentual_no_periodo = st.number_input("% no período", 0.0, 100.0, 0.0)
-            percentual_acumulado = st.number_input("% acumulado", 0.0, 100.0, 0.0)
-            valor_medido = st.number_input("Valor medido (R$)", 0.0)
-            data_medicao = st.date_input("Data da medição", value=datetime.today())
-            ateste_status = st.selectbox("Status do ateste", ["PENDENTE", "ATESTADO"])
-            responsavel_ateste = st.text_input("Responsável pelo ateste (opcional)")
-            observacoes = st.text_area("Observações")
-            evidencia_link = st.text_input("Evidência (link ou caminho, opcional)")
+            competencia = st.text_input(
+                "Competência (YYYY-MM)",
+                placeholder="Ex: 2025-01",
+                help="Informe o mês e ano da medição no formato AAAA-MM."
+            )
+            etapa_id = st.text_input(
+                "Etapa (ID ou 'Geral')",
+                placeholder="Ex: 1, 2, Geral",
+                help="Identifique a etapa da medição. Use 'Geral' se não houver etapas."
+            )
+            percentual_no_periodo = st.number_input(
+                "% no período", 0.0, 100.0, 0.0,
+                help="Percentual executado no período informado."
+            )
+            percentual_acumulado = st.number_input(
+                "% acumulado", 0.0, 100.0, 0.0,
+                help="Percentual acumulado até a data da medição."
+            )
+            valor_medido = st.number_input(
+                "Valor medido (R$)", 0.0,
+                help="Valor financeiro correspondente à medição."
+            )
+            data_medicao = st.date_input(
+                "Data da medição",
+                value=datetime.today(),
+                help="Data de referência da medição."
+            )
+            ateste_status = st.selectbox(
+                "Status do ateste",
+                ["PENDENTE", "ATESTADO"],
+                help="Indica se o ateste foi realizado."
+            )
+            responsavel_ateste = st.text_input(
+                "Responsável pelo ateste (opcional)",
+                placeholder="Ex: João da Silva",
+                help="Nome do responsável pelo ateste, se aplicável."
+            )
+            observacoes = st.text_area(
+                "Observações",
+                placeholder="Inclua informações relevantes sobre a medição.",
+                help="Descreva detalhes adicionais, se necessário."
+            )
+            evidencia_link = st.text_input(
+                "Evidência (link ou caminho, opcional)",
+                placeholder="Ex: https://drive.tjsp/...",
+                help="Informe o link ou caminho do arquivo de evidência, se houver."
+            )
             submitted = st.form_submit_button("Salvar")
             if submitted:
                 medicao = {
@@ -87,14 +125,45 @@ def render_pagamentos(contract_id):
     st.dataframe(pagamentos)
     if st.button("Novo pagamento", key="btn_novo_pagamento"):
         with st.form("form_novo_pagamento", clear_on_submit=True):
-            medicao_id = st.text_input("ID da Medição (opcional)")
-            data_pagamento = st.date_input("Data do pagamento", value=datetime.today())
-            valor_pago = st.number_input("Valor pago (R$)", 0.0)
-            tipo = st.selectbox("Tipo", ["MEDICAO", "ADIANTAMENTO", "REAJUSTE", "RETENCAO", "GLOSA", "OUTRO"])
-            referencia_nf = st.text_input("Referência NF (opcional)")
-            referencia_ne_empenho = st.text_input("Referência NE/Empenho (opcional)")
-            status = st.selectbox("Status", ["PREVISTO", "REALIZADO"])
-            observacoes = st.text_area("Observações")
+            medicao_id = st.text_input(
+                "ID da Medição (opcional)",
+                placeholder="Ex: 2025-01-1",
+                help="Identificador da medição relacionada, se aplicável."
+            )
+            data_pagamento = st.date_input(
+                "Data do pagamento",
+                value=datetime.today(),
+                help="Data em que o pagamento foi realizado."
+            )
+            valor_pago = st.number_input(
+                "Valor pago (R$)", 0.0,
+                help="Valor financeiro efetivamente pago."
+            )
+            tipo = st.selectbox(
+                "Tipo",
+                ["MEDICAO", "ADIANTAMENTO", "REAJUSTE", "RETENCAO", "GLOSA", "OUTRO"],
+                help="Classificação do pagamento."
+            )
+            referencia_nf = st.text_input(
+                "Referência NF (opcional)",
+                placeholder="Ex: NF 12345",
+                help="Número da nota fiscal vinculada, se houver."
+            )
+            referencia_ne_empenho = st.text_input(
+                "Referência NE/Empenho (opcional)",
+                placeholder="Ex: NE 2025/0001",
+                help="Número da NE ou empenho relacionado, se houver."
+            )
+            status = st.selectbox(
+                "Status",
+                ["PREVISTO", "REALIZADO"],
+                help="Situação do pagamento."
+            )
+            observacoes = st.text_area(
+                "Observações",
+                placeholder="Inclua informações relevantes sobre o pagamento.",
+                help="Descreva detalhes adicionais, se necessário."
+            )
             submitted = st.form_submit_button("Salvar")
             if submitted:
                 pagamento = {

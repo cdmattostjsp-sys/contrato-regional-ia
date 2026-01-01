@@ -547,56 +547,59 @@ def render_contracts_dashboard():
         render_tag_management_modal()
     
     # Barra de busca geral
+    from ui.forms_help import help_busca_contrato, help_filtro_home
     busca = st.text_input(
         "🔍 Buscar contrato",
         placeholder="Digite número, objeto, fornecedor ou palavra-chave...",
+        help=help_busca_contrato(),
         key="busca_contrato"
     )
+    st.caption("Utilize a busca para localizar contratos por número, objeto ou fornecedor.")
     
     # Filtros avançados em expander
     with st.expander("🔎 Filtros Avançados", expanded=False):
         col_f1, col_f2, col_f3 = st.columns(3)
-        
         with col_f1:
             filtro_num_contrato = st.text_input(
                 "Número do Contrato",
                 placeholder="Ex: 2024/00070406",
                 key="filtro_num_contrato",
-                help="Filtra por número exato ou parcial do contrato"
+                help="Digite o número completo ou parcial do contrato."
             )
-            
+            st.caption("Filtra por número exato ou parcial do contrato.")
             filtro_num_processo = st.text_input(
                 "Número do Processo",
                 placeholder="Ex: 2024/00070406",
                 key="filtro_num_processo",
-                help="Filtra por número exato ou parcial do processo"
+                help="Digite o número completo ou parcial do processo."
             )
+            st.caption("Filtra por número exato ou parcial do processo.")
         
         with col_f2:
-            # Lista de fornecedores únicos
             contratos_temp = get_todos_contratos()
             fornecedores = sorted(list(set([c.get('fornecedor', '') for c in contratos_temp if c.get('fornecedor')])))
             filtro_fornecedor = st.selectbox(
                 "Fornecedor/Empresa",
                 ["Todos"] + fornecedores,
                 key="filtro_fornecedor",
-                help="Filtra por empresa contratada"
+                help="Selecione para filtrar por empresa contratada."
             )
-            
-            # Lista de fiscais únicos
+            st.caption("Filtra por empresa contratada.")
             fiscais = sorted(list(set([c.get('fiscal_titular', '') for c in contratos_temp if c.get('fiscal_titular')])))
             filtro_fiscal = st.selectbox(
                 "Fiscal/Gestor",
                 ["Todos"] + fiscais,
                 key="filtro_fiscal",
-                help="Filtra por fiscal titular do contrato"
+                help="Selecione para filtrar por fiscal titular do contrato."
             )
+            st.caption("Filtra por fiscal titular do contrato.")
         
         with col_f3:
             # Filtro por tags
             tag_service = get_tag_service()
             todas_tags = tag_service.obter_todas_tags()
             tags_opcoes = {t['id']: f"{t['icone']} {t['nome']}" for t in todas_tags}
+            st.caption(help_filtro_home())
             
             filtro_tags = st.multiselect(
                 "Tags",
