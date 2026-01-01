@@ -53,16 +53,12 @@ def main():
     apply_tjsp_styles()
     initialize_session_state()
     
-    # Cabeçalho
-    st.markdown("""
-        <div style="background: linear-gradient(135deg, #003366 0%, #0066CC 100%); 
-                    padding: 2rem; border-radius: 10px; margin-bottom: 2rem; color: white;">
-            <h1>📚 Biblioteca de Manuais Institucionais</h1>
-            <p style="font-size: 1.1rem; opacity: 0.9;">
-            Base de conhecimento para fiscalização e gestão de contratos - RAJ 10.1
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Cabeçalho padronizado institucional
+    from components.layout_header import render_module_banner
+    render_module_banner(
+        title="Biblioteca de Manuais Institucionais",
+        subtitle="Base de conhecimento para fiscalização e gestão de contratos - RAJ 10.1"
+    )
     
     # Botão de navegação
     col1, col2 = st.columns([1, 5])
