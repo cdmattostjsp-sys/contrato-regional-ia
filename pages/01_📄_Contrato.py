@@ -1052,7 +1052,8 @@ def main():
     with tab6:
         render_bloco_historico(contrato)
     with tab7:
-        render_bloco_execucao_fisico_financeira(contrato)
+        from components.execucao_ff import render_bloco_execucao_fisico_financeira
+        render_bloco_execucao_fisico_financeira(contrato["id"])
 
 
 if __name__ == "__main__":
