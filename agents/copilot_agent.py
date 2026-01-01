@@ -37,13 +37,25 @@ def processar_pergunta_copilot(pergunta: str, contrato: Dict) -> str:
     
     # === PERGUNTAS SOBRE VIGÊNCIA E PRAZO ===
     if any(palavra in pergunta_lower for palavra in ["vigência", "prazo", "quando", "até quando", "validade"]):
+        numero = contrato.get('numero', '(nº não informado)')
+        vigencia = contrato.get('vigencia', '(vigência não informada)')
+        data_inicio = contrato.get('data_inicio')
+        data_fim = contrato.get('data_fim')
+        def formatar_data(dt):
+            if hasattr(dt, 'strftime'):
+                return dt.strftime('%d/%m/%Y')
+            elif isinstance(dt, str):
+                return dt
+            return '(data não informada)'
+        data_inicio_fmt = formatar_data(data_inicio)
+        data_fim_fmt = formatar_data(data_fim)
         return f"""
 📅 **Vigência do Contrato**
 
-O contrato **{contrato['numero']}** possui a seguinte vigência:
-- **Período:** {contrato['vigencia']}
-- **Data de início:** {contrato['data_inicio'].strftime('%d/%m/%Y')}
-- **Data de término:** {contrato['data_fim'].strftime('%d/%m/%Y')}
+O contrato **{numero}** possui a seguinte vigência:
+- **Período:** {vigencia}
+- **Data de início:** {data_inicio_fmt}
+- **Data de término:** {data_fim_fmt}
 
 ℹ️ *Fonte: Cláusula 2ª do contrato*
 """
