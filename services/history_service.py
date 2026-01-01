@@ -134,11 +134,7 @@ def get_sources(contract_id, db_path=None):
         conn.close()
         return sources
     except Exception:
-        return []import os
-import sqlite3
-import json
-from datetime import datetime
-import streamlit as st
+        return []
 
 def get_db_path():
     # Prioriza st.secrets, senão usa data/history.db
