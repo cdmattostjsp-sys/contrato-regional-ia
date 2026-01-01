@@ -104,6 +104,11 @@ Objeto: {contrato['objeto']}
     elif any(palavra in pergunta_lower for palavra in ["pendência", "problema", "irregularidade", "alerta"]):
         if "pendencias" in contrato and contrato["pendencias"]:
             pendencias_texto = "\n".join([f"- {p}" for p in contrato["pendencias"]])
+            ultima_atualizacao = contrato.get('ultima_atualizacao')
+            if ultima_atualizacao:
+                ultima_atualizacao_str = ultima_atualizacao.strftime('%d/%m/%Y %H:%M')
+            else:
+                ultima_atualizacao_str = '(data não informada)'
             return f"""
 ⚠️ **Pendências Identificadas**
 
@@ -113,9 +118,14 @@ O contrato **{contrato['numero']}** possui as seguintes pendências:
 
 🔔 Recomenda-se notificar a contratada e estabelecer prazo para regularização.
 
-ℹ️ *Fonte: Relatório de fiscalização - Última atualização: {contrato['ultima_atualizacao'].strftime('%d/%m/%Y %H:%M')}*
+ℹ️ *Fonte: Relatório de fiscalização - Última atualização: {ultima_atualizacao_str}*
 """
         else:
+            ultima_atualizacao = contrato.get('ultima_atualizacao')
+            if ultima_atualizacao:
+                ultima_atualizacao_str = ultima_atualizacao.strftime('%d/%m/%Y %H:%M')
+            else:
+                ultima_atualizacao_str = '(data não informada)'
             return f"""
 ✅ **Situação Regular**
 
@@ -123,7 +133,7 @@ O contrato **{contrato['numero']}** não possui pendências registradas no momen
 
 Status: **{contrato.get('status', 'indefinido').upper()}**
 
-ℹ️ *Última atualização: {contrato['ultima_atualizacao'].strftime('%d/%m/%Y %H:%M')}*
+ℹ️ *Última atualização: {ultima_atualizacao_str}*
 """
     
     # === PERGUNTAS SOBRE STATUS ===
@@ -134,6 +144,11 @@ Status: **{contrato.get('status', 'indefinido').upper()}**
             "critico": "🔴 O contrato está em situação **CRÍTICA** - ação imediata necessária."
         }
         status_val = contrato.get('status', 'indefinido')
+        ultima_atualizacao = contrato.get('ultima_atualizacao')
+        if ultima_atualizacao:
+            ultima_atualizacao_str = ultima_atualizacao.strftime('%d/%m/%Y %H:%M')
+        else:
+            ultima_atualizacao_str = '(data não informada)'
         return f"""
 📊 **Status do Contrato**
 
@@ -141,7 +156,7 @@ Status: **{contrato.get('status', 'indefinido').upper()}**
 
 **{contrato['numero']}**
 - Fornecedor: {contrato['fornecedor']}
-- Última atualização: {contrato['ultima_atualizacao'].strftime('%d/%m/%Y %H:%M')}
+- Última atualização: {ultima_atualizacao_str}
 
 ℹ️ Para detalhes, acesse a página de visualização do contrato.
 """
