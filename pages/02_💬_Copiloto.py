@@ -121,8 +121,7 @@ def main():
     from ui.forms_help import help_pergunta_ia
     with st.container():
         user_input = st.chat_input(
-            "Digite sua pergunta sobre o contrato...",
-            help=help_pergunta_ia()
+            "Digite sua pergunta sobre o contrato..."
         )
         st.caption("Descreva sua dúvida de forma clara e objetiva. Inclua contexto relevante para obter resposta precisa.")
         if user_input:
