@@ -111,7 +111,7 @@ def main():
             ### Rotina Mensal
             
             - 📄 Elaborar relatório mensal
-            - 💰 Conferir e atestar notas fiscais
+            - 💲 Conferir e atestar notas fiscais
             - 📊 Analisar indicadores de desempenho
             - 🗂️ Organizar documentação do mês
             

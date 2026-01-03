@@ -246,7 +246,7 @@ def render_bloco_iss(contrato: dict):
         <div style="background: #F8F9FA; padding: 1.5rem; border-radius: 10px; 
                     border-left: 4px solid {cor_badge}; margin-bottom: 1.5rem;">
             <h3 style="margin: 0 0 1rem 0; color: #003366;">
-                💰 TRIBUTAÇÃO - ISS (Imposto Sobre Serviços)
+                💲 TRIBUTAÇÃO - ISS (Imposto Sobre Serviços)
             </h3>
             <div style="margin-bottom: 1rem;">
                 <span style="background: {cor_badge}; color: white; padding: 0.4rem 1rem; 
@@ -352,7 +352,7 @@ def render_bloco_aditivos(contrato: dict):
             icone = "⏰"
         elif 'Acréscimo de Valor' in tipos:
             cor_border = "#28A745"
-            icone = "💰"
+            icone = "💲"
         elif 'Supressão de Valor' in tipos:
             cor_border = "#DC3545"
             icone = "💸"
@@ -406,7 +406,7 @@ def render_bloco_aditivos(contrato: dict):
                     st.markdown(f"""
                         <div style="background: #D4EDDA; padding: 0.8rem; border-radius: 5px; margin: 0.5rem 0;">
                             <p style="margin: 0; color: #155724;">
-                                💰 <strong>{descricao}</strong><br>
+                                💲 <strong>{descricao}</strong><br>
                                 Valor acrescido: <strong>R$ {valor:,.2f}</strong><br>
                                 Novo valor total: <strong>R$ {novo_total:,.2f}</strong>
                             </p>
@@ -563,7 +563,7 @@ def render_formulario_aditivo(contrato: dict):
                 dados_aditivo['nova_data_fim'] = nova_data_fim.isoformat() if nova_data_fim else ''
         
         if "Acréscimo de Valor" in tipos_modificacao:
-            st.markdown("#### 💰 Dados do Acréscimo")
+            st.markdown("#### 💲 Dados do Acréscimo")
             col_a1, col_a2 = st.columns(2)
             with col_a1:
                 percentual_acrescimo = st.number_input(
@@ -1039,7 +1039,7 @@ def main():
     render_module_banner("Contrato – Detalhes e Acompanhamento", contrato.get("objeto", ""))
     tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
         "📋 Dados Gerais", 
-        "💰 Pagamentos & ISS",
+        "💲 Pagamentos & ISS",
         "📑 Aditivos",
         "🧑‍💼 Apoio ao Gestor",
         "📁 Documentos", 

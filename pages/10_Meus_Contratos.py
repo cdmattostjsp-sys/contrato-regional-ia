@@ -48,7 +48,7 @@ def render_metrics_fiscal(contratos_fiscal: list, alertas_fiscal: list):
     
     with col2:
         st.metric(
-            label="💰 Valor Total",
+            label="💲 Valor Total",
             value=f"R$ {valor_total/1_000_000:.1f}M",
             delta=f"{total_contratos} contratos"
         )
@@ -85,7 +85,7 @@ def render_performance_charts(contratos_fiscal: list):
     
     st.markdown("### 📊 Minha Performance")
     
-    tab1, tab2, tab3 = st.tabs(["📈 Status", "📅 Vencimentos", "💰 Por Tipo"])
+    tab1, tab2, tab3 = st.tabs(["📈 Status", "📅 Vencimentos", "💲 Por Tipo"])
     
     # TAB 1: DISTRIBUIÇÃO POR STATUS
     with tab1:
@@ -196,7 +196,7 @@ def render_performance_charts(contratos_fiscal: list):
             st.plotly_chart(fig_tipo, use_container_width=True)
             
             # Tabela resumo
-            st.markdown("#### 💰 Detalhamento")
+            st.markdown("#### 💲 Detalhamento")
             for tipo, valor in sorted(tipo_valor.items(), key=lambda x: x[1], reverse=True):
                 count = len([c for c in contratos_fiscal if c.get('tipo') == tipo])
                 col_t1, col_t2, col_t3 = st.columns([2, 1, 1])
