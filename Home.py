@@ -307,25 +307,6 @@ def render_graficos_analytics():
             st.caption(f"📊 {len(vencimentos)} contratos vencem nos próximos 6 meses")
         else:
             st.info("Nenhum contrato vence nos próximos 6 meses.")
-            df_venc = pd.DataFrame(vencimentos[:15])  # Top 15
-            
-            fig_timeline = px.bar(
-                df_venc,
-                x='Dias Restantes',
-                y='Contrato',
-                orientation='h',
-                color='Dias Restantes',
-                color_continuous_scale=['#DC3545', '#FFC107', '#28A745'],
-                hover_data=['Fornecedor', 'Data de Término'],
-                labels={'Dias Restantes': 'Dias para Vencimento'}
-            )
-            fig_timeline.update_layout(
-                height=500,
-                xaxis_title="Dias para Vencimento",
-                yaxis_title="",
-                showlegend=False
-            )
-            st.plotly_chart(fig_timeline, use_container_width=True)
             
             st.caption(f"📊 {len(vencimentos)} contratos vencem nos próximos 6 meses")
         else:
