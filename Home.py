@@ -265,31 +265,48 @@ def render_graficos_analytics():
         hoje = datetime.now()
         seis_meses = hoje + timedelta(days=180)
         
-        vencimentos = []
-        for c in contratos:
-            data_fim = c.get('data_fim')
-            if data_fim:
-                if isinstance(data_fim, str):
-                    try:
-                        data_fim = datetime.fromisoformat(data_fim)
-                    except:
-                        continue
-                
-                if hoje <= data_fim <= seis_meses:
-                    dias_restantes = (data_fim - hoje).days
-                    vencimentos.append({
-                        'Contrato': c.get('numero', 'N/A'),
-                        'Data de Término': data_fim.strftime('%d/%m/%Y'),
-                        'Dias Restantes': dias_restantes,
-                        'Fornecedor': c.get('fornecedor', 'N/A'),
-                        'Valor': c.get('valor', 0)
-                    })
-        
         if vencimentos:
             # Ordena por dias restantes
             vencimentos.sort(key=lambda x: x['Dias Restantes'])
-            
             # Gráfico de barras horizontal
+            df_venc = pd.DataFrame(vencimentos[:15])  # Top 15
+            fig_timeline = px.bar(
+                df_venc,
+                x='Dias Restantes',
+                y='Contrato',
+                orientation='h',
+                color='Dias Restantes',
+                color_continuous_scale=['#DC3545', '#FFC107', '#28A745'],
+                hover_data=['Fornecedor', 'Data de Término'],
+                labels={'Dias Restantes': 'Dias para Vencimento'}
+            )
+            fig_timeline.update_layout(
+                height=500,
+                xaxis_title="Dias para Vencimento",
+                yaxis_title="",
+                showlegend=False
+            )
+            st.plotly_chart(fig_timeline, use_container_width=True)
+
+            # Botão para exportar para Excel
+            df_export = pd.DataFrame(vencimentos)
+            excel_bytes = None
+            if not df_export.empty:
+                output = io.BytesIO()
+                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                    df_export.to_excel(writer, sheet_name='Vencimentos', index=False)
+                excel_bytes = output.getvalue()
+            st.download_button(
+                label="📥 Exportar para Excel",
+                data=excel_bytes,
+                file_name=f"contratos_vencimentos_{datetime.now().strftime('%Y%m%d')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+                key="btn_exportar_vencimentos_excel"
+            )
+            st.caption(f"📊 {len(vencimentos)} contratos vencem nos próximos 6 meses")
+        else:
+            st.info("Nenhum contrato vence nos próximos 6 meses.")
             df_venc = pd.DataFrame(vencimentos[:15])  # Top 15
             
             fig_timeline = px.bar(
