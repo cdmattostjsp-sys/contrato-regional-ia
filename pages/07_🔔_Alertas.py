@@ -109,7 +109,6 @@ def render_alerta_card(alerta: dict, on_resolvido=None):
         if st.button("✅ Marcar Resolvido", key=f"resolve_{alerta['id']}", use_container_width=True):
             if on_resolvido:
                 on_resolvido(alerta['id'])
-            st.success("Alerta marcado como resolvido!")
 
 
 def load_alertas_resolvidos():
