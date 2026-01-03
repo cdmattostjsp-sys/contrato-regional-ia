@@ -304,8 +304,10 @@ def main():
     st.markdown("---")
 
     def marcar_resolvido(alerta_id):
-        save_alerta_resolvido(alerta_id)
-        st.session_state["rerun_alerta_resolvido"] = True
+        alertas_resolvidos_atual = load_alertas_resolvidos()
+        if alerta_id not in alertas_resolvidos_atual:
+            save_alerta_resolvido(alerta_id)
+            st.session_state["rerun_alerta_resolvido"] = True
 
     if not alertas_filtrados:
         st.success("✅ Nenhum alerta encontrado com os filtros aplicados!")
