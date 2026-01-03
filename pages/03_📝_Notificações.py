@@ -66,16 +66,16 @@ def main():
     # Botões de navegação
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        if st.button("🏛️ Home", use_container_width=True):
+        if st.button("🏛️ Home", width='stretch'):
             st.switch_page("Home.py")
     with col2:
-        if st.button("📄 Ver Contrato", use_container_width=True):
+        if st.button("📄 Ver Contrato", width='stretch'):
             st.switch_page("pages/01_📄_Contrato.py")
     with col3:
-        if st.button("💬 Copiloto", use_container_width=True):
+        if st.button("💬 Copiloto", width='stretch'):
             st.switch_page("pages/02_💬_Copiloto.py")
     with col4:
-        if st.button("📖 Como Proceder", use_container_width=True):
+        if st.button("📖 Como Proceder", width='stretch'):
             st.switch_page("pages/04_📖_Como_Proceder.py")
 
     # --- SELEÇÃO DE PERFIL E TIPO DE NOTIFICAÇÃO ---
@@ -122,7 +122,7 @@ def main():
     st.caption("Exemplos: Cláusula X do contrato; Lei 14.133/2021, art. ...; IN TJSP nº 12/2025.")
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
-        if st.button("⚙️ Gerar com IA", type="primary", use_container_width=True):
+        if st.button("⚙️ Gerar com IA", type="primary", width='stretch'):
             if not motivo:
                 st.error("⚠️ Por favor, descreva o motivo da notificação.")
             else:
@@ -154,7 +154,7 @@ def main():
                     add_log("INFO", f"Notificação gerada para contrato {contrato['id']}")
                     st.rerun()
     with col_btn2:
-        if st.button("🗑️ Limpar", use_container_width=True):
+        if st.button("🗑️ Limpar", width='stretch'):
             reset_notificacao()
             st.rerun()
     
@@ -243,16 +243,16 @@ def main():
                     data=docx_bytes,
                     file_name=file_name,
                     mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                    use_container_width=True,
+                    width='stretch',
                     key="btn_baixar_docx_notificacao"
                 )
             else:
                 st.warning("A funcionalidade de download em DOCX está indisponível. Instale a dependência 'python-docx' para habilitar.")
         with col_act2:
-            if st.button("📧 Enviar", use_container_width=True):
+            if st.button("📧 Enviar", width='stretch'):
                 st.info("Funcionalidade em desenvolvimento")
         with col_act3:
-            if st.button("✏️ Editar", use_container_width=True):
+            if st.button("✏️ Editar", width='stretch'):
                 st.info("Funcionalidade em desenvolvimento")
 def montar_texto_notificacao(modelo: str, contrato: dict, form: dict) -> str:
     """

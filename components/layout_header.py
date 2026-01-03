@@ -45,7 +45,7 @@ def render_context_bar(contrato: dict, key_prefix: str):
     with col_a:
         st.success(f"Contrato selecionado: Nº {contrato.get('numero','')} — Fornecedor: {contrato.get('fornecedor','')}")
     with col_b:
-        if st.button("Trocar contrato", key=f"{key_prefix}_trocar_contrato", use_container_width=True):
+        if st.button("Trocar contrato", key=f"{key_prefix}_trocar_contrato", width='stretch'):
             st.session_state["modo_selecao_contrato"] = True
             st.rerun()
 
