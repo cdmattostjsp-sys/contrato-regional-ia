@@ -150,7 +150,7 @@ def main():
                 st.rerun()
         
         with col_save2:
-            if st.button("🏠 Voltar à Home", use_container_width=True):
+            if st.button("🏛️ Voltar à Home", use_container_width=True):
                 st.switch_page("Home.py")
     
     # ===== TAB 2: TESTAR EMAIL =====

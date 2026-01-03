@@ -32,7 +32,7 @@ def main():
     )
     
     # Botão de navegação
-    if st.button("🏠 Voltar à Home", use_container_width=False):
+    if st.button("🏛️ Voltar à Home", use_container_width=False):
         st.switch_page("Home.py")
     
     st.markdown("---")

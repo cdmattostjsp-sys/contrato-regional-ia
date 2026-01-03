@@ -719,7 +719,7 @@ def render_bloco_dados_gerais(contrato: dict):
     kid = str(contrato.get("id", contrato.get("numero", "sem_id")))
 
     with c1:
-        if st.button("🏠 Home", width="stretch", key=f"btn_dash_{kid}"):
+        if st.button("🏛️ Home", width="stretch", key=f"btn_dash_{kid}"):
             st.switch_page("Home.py")
 
     with c2:
@@ -1023,7 +1023,7 @@ def main():
         st.markdown("---")
         colh1, colh2, colh3 = st.columns(3)
         with colh1:
-            if st.button("🏠 Ir para Home", key="btn_home_central"):
+            if st.button("🏛️ Ir para Home", key="btn_home_central"):
                 st.switch_page("Home.py")
         with colh2:
             if st.button("📚 Biblioteca", key="btn_biblio_central"):
