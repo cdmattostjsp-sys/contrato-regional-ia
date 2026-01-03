@@ -126,6 +126,10 @@ def save_alerta_resolvido(alerta_id):
         json.dump(list(resolvidos), f, indent=2)
 
 def main():
+        # Rerun seguro após marcar resolvido
+        if st.session_state.get("rerun_alerta_resolvido", False):
+            st.session_state["rerun_alerta_resolvido"] = False
+            st.experimental_rerun()
     st.set_page_config(
         page_title="TJSP - Alertas Contratuais",
         page_icon="🔔",
@@ -302,7 +306,7 @@ def main():
 
     def marcar_resolvido(alerta_id):
         save_alerta_resolvido(alerta_id)
-        st.experimental_rerun()
+        st.session_state["rerun_alerta_resolvido"] = True
 
     if not alertas_filtrados:
         st.success("✅ Nenhum alerta encontrado com os filtros aplicados!")
