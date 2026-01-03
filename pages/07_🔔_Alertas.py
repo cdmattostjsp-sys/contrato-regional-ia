@@ -8,6 +8,7 @@ import streamlit as st
 import sys
 from pathlib import Path
 from datetime import datetime
+import json
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -20,7 +21,7 @@ from services.email_service import get_email_service
 from components.layout_header import render_module_banner
 
 
-def render_alerta_card(alerta: dict):
+def render_alerta_card(alerta: dict, on_resolvido=None):
     """Renderiza card de alerta individual"""
     
     # Define cores e ícones por tipo
@@ -106,8 +107,23 @@ def render_alerta_card(alerta: dict):
     
     with col3:
         if st.button("✅ Marcar Resolvido", key=f"resolve_{alerta['id']}", use_container_width=True):
-            st.success("Funcionalidade em desenvolvimento")
+            if on_resolvido:
+                on_resolvido(alerta['id'])
+            st.success("Alerta marcado como resolvido!")
 
+
+def load_alertas_resolvidos():
+    try:
+        with open("data/alertas_resolvidos.json", "r") as f:
+            return set(json.load(f))
+    except Exception:
+        return set()
+
+def save_alerta_resolvido(alerta_id):
+    resolvidos = load_alertas_resolvidos()
+    resolvidos.add(alerta_id)
+    with open("data/alertas_resolvidos.json", "w") as f:
+        json.dump(list(resolvidos), f, indent=2)
 
 def main():
     st.set_page_config(
@@ -142,6 +158,7 @@ def main():
     with st.spinner("Calculando alertas..."):
         contratos = get_todos_contratos()
         alertas = calcular_alertas(contratos)
+        alertas_resolvidos = load_alertas_resolvidos()
         
         # Verifica se deve enviar notificações automáticas
         config_email = st.session_state.get('config_email', {})
@@ -264,9 +281,9 @@ def main():
         if st.button("🔄 Atualizar", use_container_width=True):
             st.rerun()
     
-    # Aplica filtros
-    alertas_filtrados = alertas
-    
+    # Aplica filtros e oculta resolvidos
+    alertas_filtrados = [a for a in alertas if a.get('id') not in alertas_resolvidos]
+
     if filtro_tipo != "Todos":
         tipo_map = {
             "🔴 Críticos": "critico",
@@ -276,25 +293,25 @@ def main():
         tipo_busca = tipo_map.get(filtro_tipo)
         if tipo_busca:
             alertas_filtrados = [a for a in alertas_filtrados if a.get('tipo') == tipo_busca]
-    
+
     if filtro_categoria != "Todas":
         alertas_filtrados = [a for a in alertas_filtrados if a.get('categoria') == filtro_categoria]
-    
+
     # Mostra resultados
     st.markdown("---")
-    
+
+    def marcar_resolvido(alerta_id):
+        save_alerta_resolvido(alerta_id)
+        st.experimental_rerun()
+
     if not alertas_filtrados:
         st.success("✅ Nenhum alerta encontrado com os filtros aplicados!")
-        # st.balloons() removido para manter perfil institucional TJSP
     else:
         if len(alertas_filtrados) != len(alertas):
             st.info(f"📊 Exibindo **{len(alertas_filtrados)}** de {len(alertas)} alertas")
-        
         st.markdown("### 📋 Lista de Alertas")
-        
-        # Renderiza alertas
         for alerta in alertas_filtrados:
-            render_alerta_card(alerta)
+            render_alerta_card(alerta, on_resolvido=marcar_resolvido)
     
     # Rodapé informativo
     st.markdown("---")
