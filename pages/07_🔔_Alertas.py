@@ -114,15 +114,17 @@ def render_alerta_card(alerta: dict, on_resolvido=None):
 def load_alertas_resolvidos():
     try:
         with open("data/alertas_resolvidos.json", "r") as f:
-            return set(json.load(f))
+            data = json.load(f)
+            if isinstance(data, list) and data and isinstance(data[0], dict):
+                return data
+            # Suporte legado: lista de ids
+            return []
     except Exception:
-        return set()
+        return []
 
 def save_alerta_resolvido(alerta_id):
-    resolvidos = load_alertas_resolvidos()
-    resolvidos.add(alerta_id)
-    with open("data/alertas_resolvidos.json", "w") as f:
-        json.dump(list(resolvidos), f, indent=2)
+    # Função não será mais usada diretamente, pois agora exige justificativa
+    pass
 
 def main():
     # Rerun seguro após marcar resolvido
@@ -162,6 +164,8 @@ def main():
         contratos = get_todos_contratos()
         alertas = calcular_alertas(contratos)
         alertas_resolvidos = load_alertas_resolvidos()
+        # Lista de ids resolvidos
+        ids_resolvidos = set(r["id"] for r in alertas_resolvidos)
         
         # Verifica se deve enviar notificações automáticas
         config_email = st.session_state.get('config_email', {})
@@ -285,7 +289,7 @@ def main():
             st.rerun()
     
     # Aplica filtros e oculta resolvidos
-    alertas_filtrados = [a for a in alertas if a.get('id') not in alertas_resolvidos]
+    alertas_filtrados = [a for a in alertas if a.get('id') not in ids_resolvidos]
 
     if filtro_tipo != "Todos":
         tipo_map = {
@@ -304,9 +308,20 @@ def main():
     st.markdown("---")
 
     def marcar_resolvido(alerta_id):
-        alertas_resolvidos_atual = load_alertas_resolvidos()
-        if alerta_id not in alertas_resolvidos_atual:
-            save_alerta_resolvido(alerta_id)
+        # Abre campo de justificativa obrigatória
+        st.session_state["justificando_alerta"] = alerta_id
+
+    def salvar_resolvido(alerta_id, justificativa):
+        resolvidos = load_alertas_resolvidos()
+        if not any(r.get("id") == alerta_id for r in resolvidos):
+            resolvidos.append({
+                "id": alerta_id,
+                "justificativa": justificativa,
+                "data": datetime.now().isoformat(timespec="seconds")
+            })
+            with open("data/alertas_resolvidos.json", "w") as f:
+                json.dump(resolvidos, f, indent=2, ensure_ascii=False)
+            st.session_state.pop("justificando_alerta", None)
             st.session_state["rerun_alerta_resolvido"] = True
 
     if not alertas_filtrados:
@@ -316,7 +331,19 @@ def main():
             st.info(f"📊 Exibindo **{len(alertas_filtrados)}** de {len(alertas)} alertas")
         st.markdown("### 📋 Lista de Alertas")
         for alerta in alertas_filtrados:
-            render_alerta_card(alerta, on_resolvido=marcar_resolvido)
+            # Se o usuário está justificando este alerta, mostra campo obrigatório
+            if st.session_state.get("justificando_alerta") == alerta["id"]:
+                with st.form(f"form_justifica_{alerta['id']}", clear_on_submit=False):
+                    st.write(f"**Justificativa obrigatória para resolver o alerta:**")
+                    justificativa = st.text_area("Justificativa", "", key=f"just_{alerta['id']}")
+                    submitted = st.form_submit_button("Confirmar Resolução")
+                    if submitted:
+                        if not justificativa.strip():
+                            st.warning("A justificativa é obrigatória.")
+                        else:
+                            salvar_resolvido(alerta["id"], justificativa.strip())
+            else:
+                render_alerta_card(alerta, on_resolvido=marcar_resolvido)
     
     # Rodapé informativo
     st.markdown("---")
@@ -350,7 +377,3 @@ def main():
         
         Os alertas são recalculados a cada visualização da página ou ao clicar em "🔄 Atualizar".
         """)
-
-
-if __name__ == "__main__":
-    main()
