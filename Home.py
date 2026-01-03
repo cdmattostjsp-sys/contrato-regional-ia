@@ -203,7 +203,7 @@ def render_graficos_analytics():
         return
     
     # Cria abas para organizar gráficos
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Distribuição", "📅 Timeline", "💰 Fornecedores", "📈 Status"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Distribuição", "📅 Prazos", "💰 Fornecedores", "📈 Status"])
     
     # ===== TAB 1: DISTRIBUIÇÃO =====
     with tab1:

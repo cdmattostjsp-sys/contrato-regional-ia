@@ -719,7 +719,7 @@ def render_bloco_dados_gerais(contrato: dict):
     kid = str(contrato.get("id", contrato.get("numero", "sem_id")))
 
     with c1:
-        if st.button("🏠 Dashboard", width="stretch", key=f"btn_dash_{kid}"):
+        if st.button("🏠 Home", width="stretch", key=f"btn_dash_{kid}"):
             st.switch_page("Home.py")
 
     with c2:

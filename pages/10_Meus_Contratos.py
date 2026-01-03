@@ -392,7 +392,7 @@ def main():
     col_nav1, col_nav2, col_nav3 = st.columns([4, 1, 1])
     
     with col_nav1:
-        if st.button("🏠 Dashboard Geral", use_container_width=False):
+        if st.button("🏠 Home Geral", use_container_width=False):
             st.switch_page("Home.py")
     
     with col_nav2:
