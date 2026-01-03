@@ -751,7 +751,7 @@ def render_bloco_apoio_gestor(contrato: dict):
         <div style=\"background: #FFF3CD; border-left: 4px solid #FFC107; padding: 1rem;\"
             border-radius: 5px; margin-bottom: 1.5rem;\">
             <h3 style=\"color: #856404; margin: 0 0 0.5rem 0;\">
-                👔 APOIO AO GESTOR - SUPORTE NORMATIVO
+                🧑‍💼 APOIO AO GESTOR - SUPORTE NORMATIVO
             </h3>
             <p style=\"color: #856404; margin: 0; font-size: 0.9rem;\">
                 ⚠️ Informações orientativas baseadas em legislação e cláusulas contratuais.<br>
@@ -1041,7 +1041,7 @@ def main():
         "📋 Dados Gerais", 
         "💰 Pagamentos & ISS",
         "📑 Aditivos",
-        "👔 Apoio ao Gestor",
+        "🧑‍💼 Apoio ao Gestor",
         "📁 Documentos", 
         "📊 Histórico",
         "🧾 Execução Físico-Financeira"
