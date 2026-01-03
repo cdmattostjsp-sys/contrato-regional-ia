@@ -115,9 +115,13 @@ def load_alertas_resolvidos():
     try:
         with open("data/alertas_resolvidos.json", "r") as f:
             data = json.load(f)
-            if isinstance(data, list) and data and isinstance(data[0], dict):
-                return data
-            # Suporte legado: lista de ids
+            if isinstance(data, list):
+                if not data:
+                    return []
+                if isinstance(data[0], dict):
+                    return data
+                # Se vier lista de IDs (legado), converte para lista de dicts
+                return [{"id": id_antigo, "justificativa": "", "data": ""} for id_antigo in data if isinstance(id_antigo, str)]
             return []
     except Exception:
         return []
@@ -127,70 +131,70 @@ def save_alerta_resolvido(alerta_id):
     pass
 
 def main():
-    # Rerun seguro após marcar resolvido
-    if st.session_state.get("rerun_alerta_resolvido", False):
-        st.session_state["rerun_alerta_resolvido"] = False
-        st.experimental_rerun()
-    st.set_page_config(
-        page_title="TJSP - Alertas Contratuais",
-        page_icon="🔔",
-        layout="wide"
-    )
-    
-    apply_tjsp_styles()
-    initialize_session_state()
-    
-    # Cabeçalho padronizado institucional
-    render_module_banner(
-        title="Alertas Contratuais",
-        subtitle="Sistema Automático de Monitoramento e Alertas"
-    )
-    
-    # Botão de retorno e configurações
-    col_nav1, col_nav2 = st.columns([6, 1])
-    
-    with col_nav1:
-        if st.button("🏛️ Voltar à Home", width="content"):
-            st.switch_page("Home.py")
-    
-    with col_nav2:
-        if st.button("⚙️ Configurar Emails", width="stretch", type="secondary"):
-            st.switch_page("pages/08_⚙️_Configurações.py")
-    
-    st.markdown("---")
-    
-    # Carrega contratos e calcula alertas
-    with st.spinner("Calculando alertas..."):
-        contratos = get_todos_contratos()
-        alertas = calcular_alertas(contratos)
-        alertas_resolvidos = load_alertas_resolvidos()
-        # Lista de ids resolvidos
-        ids_resolvidos = set(r["id"] for r in alertas_resolvidos)
+    try:
+        st.set_page_config(
+            page_title="TJSP - Alertas Contratuais",
+            page_icon="🔔",
+            layout="wide"
+        )
+        apply_tjsp_styles()
+        initialize_session_state()
+        # Cabeçalho padronizado institucional
+        render_module_banner(
+            title="Alertas Contratuais",
+            subtitle="Sistema Automático de Monitoramento e Alertas"
+        )
         
-        # Verifica se deve enviar notificações automáticas
-        config_email = st.session_state.get('config_email', {})
-        if config_email.get('alertas_criticos', False):
-            email_service = get_email_service()
-            alertas_criticos = [a for a in alertas if a.get('tipo') == 'critico']
+        # Botão de retorno e configurações
+        col_nav1, col_nav2 = st.columns([6, 1])
+        
+        with col_nav1:
+            if st.button("🏛️ Voltar à Home", width="content"):
+                st.switch_page("Home.py")
+        
+        with col_nav2:
+            if st.button("⚙️ Configurar Emails", width="stretch", type="secondary"):
+                st.switch_page("pages/08_⚙️_Configurações.py")
+        
+        st.markdown("---")
+        
+        # Carrega contratos e calcula alertas
+        with st.spinner("Calculando alertas..."):
+            contratos = get_todos_contratos()
+            alertas = calcular_alertas(contratos)
+            alertas_resolvidos = load_alertas_resolvidos()
+            # Lista de ids resolvidos
+            ids_resolvidos = set(r["id"] for r in alertas_resolvidos)
             
-            # Verifica alertas não notificados
-            alertas_ja_notificados = st.session_state.get('alertas_notificados', set())
-            
-            for alerta in alertas_criticos:
-                alerta_id = alerta.get('id')
-                if alerta_id not in alertas_ja_notificados:
-                    # Envia notificação
-                    email_principal = config_email.get('email_principal', '')
-                    if email_principal:
-                        resultado = email_service.enviar_alerta_critico(
-                            alerta=alerta,
-                            destinatarios=[email_principal] + config_email.get('emails_copia', [])
-                        )
-                        
-                        if resultado['sucesso']:
-                            # Marca como notificado
-                            alertas_ja_notificados.add(alerta_id)
-                            st.session_state.alertas_notificados = alertas_ja_notificados
+            # Verifica se deve enviar notificações automáticas
+            config_email = st.session_state.get('config_email', {})
+            if config_email.get('alertas_criticos', False):
+                email_service = get_email_service()
+                alertas_criticos = [a for a in alertas if a.get('tipo') == 'critico']
+                
+                # Verifica alertas não notificados
+                alertas_ja_notificados = st.session_state.get('alertas_notificados', set())
+                
+                for alerta in alertas_criticos:
+                    alerta_id = alerta.get('id')
+                    if alerta_id not in alertas_ja_notificados:
+                        # Envia notificação
+                        email_principal = config_email.get('email_principal', '')
+                        if email_principal:
+                            resultado = email_service.enviar_alerta_critico(
+                                alerta=alerta,
+                                destinatarios=[email_principal] + config_email.get('emails_copia', [])
+                            )
+                            
+                            if resultado['sucesso']:
+                                # Marca como notificado
+                                alertas_ja_notificados.add(alerta_id)
+                                st.session_state.alertas_notificados = alertas_ja_notificados
+    except Exception as e:
+        st.error(f"Erro ao carregar página de alertas: {e}")
+        import traceback
+        st.exception(e)
+        return
     
     # Estatísticas de alertas
     contagens = get_alertas_por_tipo(alertas)
@@ -312,6 +316,8 @@ def main():
         st.session_state["justificando_alerta"] = alerta_id
 
     def salvar_resolvido(alerta_id, justificativa):
+        from pathlib import Path
+        Path("data").mkdir(parents=True, exist_ok=True)
         resolvidos = load_alertas_resolvidos()
         if not any(r.get("id") == alerta_id for r in resolvidos):
             resolvidos.append({
@@ -322,7 +328,7 @@ def main():
             with open("data/alertas_resolvidos.json", "w") as f:
                 json.dump(resolvidos, f, indent=2, ensure_ascii=False)
             st.session_state.pop("justificando_alerta", None)
-            st.session_state["rerun_alerta_resolvido"] = True
+            st.rerun()
 
     if not alertas_filtrados:
         st.success("✅ Nenhum alerta encontrado com os filtros aplicados!")
@@ -377,3 +383,4 @@ def main():
         
         Os alertas são recalculados a cada visualização da página ou ao clicar em "🔄 Atualizar".
         """)
+        main()
