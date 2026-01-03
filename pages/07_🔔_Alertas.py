@@ -89,7 +89,7 @@ def render_alerta_card(alerta: dict, on_resolvido=None):
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("📄 Ver Contrato", key=f"ver_{alerta['id']}", use_container_width=True):
+        if st.button("📄 Ver Contrato", key=f"ver_{alerta['id']}", width="stretch"):
             # Busca contrato
             contratos = get_todos_contratos()
             contrato = next((c for c in contratos if c['id'] == alerta['contrato_id']), None)
@@ -98,7 +98,7 @@ def render_alerta_card(alerta: dict, on_resolvido=None):
                 st.switch_page("pages/01_📄_Contrato.py")
     
     with col2:
-        if st.button("📝 Gerar Notificação", key=f"notif_{alerta['id']}", use_container_width=True):
+        if st.button("📝 Gerar Notificação", key=f"notif_{alerta['id']}", width="stretch"):
             contratos = get_todos_contratos()
             contrato = next((c for c in contratos if c['id'] == alerta['contrato_id']), None)
             if contrato:
@@ -106,7 +106,7 @@ def render_alerta_card(alerta: dict, on_resolvido=None):
                 st.switch_page("pages/03_📝_Notificações.py")
     
     with col3:
-        if st.button("✅ Marcar Resolvido", key=f"resolve_{alerta['id']}", use_container_width=True):
+        if st.button("✅ Marcar Resolvido", key=f"resolve_{alerta['id']}", width="stretch"):
             if on_resolvido:
                 on_resolvido(alerta['id'])
 
@@ -150,11 +150,11 @@ def main():
     col_nav1, col_nav2 = st.columns([6, 1])
     
     with col_nav1:
-        if st.button("🏛️ Voltar à Home", use_container_width=False):
+        if st.button("🏛️ Voltar à Home", width="content"):
             st.switch_page("Home.py")
     
     with col_nav2:
-        if st.button("⚙️ Configurar Emails", use_container_width=True, type="secondary"):
+        if st.button("⚙️ Configurar Emails", width="stretch", type="secondary"):
             st.switch_page("pages/08_⚙️_Configurações.py")
     
     st.markdown("---")
@@ -240,7 +240,7 @@ def main():
             email_configurado = config_email.get('email_principal', '')
             
             if email_configurado:
-                if st.button("📤 Enviar Alertas por Email", type="primary", use_container_width=True):
+                if st.button("📤 Enviar Alertas por Email", type="primary", width="stretch"):
                     email_service = get_email_service()
                     alertas_criticos = [a for a in alertas if a.get('tipo') == 'critico']
                     
@@ -259,7 +259,7 @@ def main():
                         else:
                             st.warning(f"⚠️ {sucessos}/{len(alertas_criticos)} emails enviados")
             else:
-                if st.button("⚙️ Configurar Email", use_container_width=True):
+                if st.button("⚙️ Configurar Email", width="stretch"):
                     st.switch_page("pages/08_⚙️_Configurações.py")
     
     st.markdown("---")
@@ -285,7 +285,7 @@ def main():
     with col_filtro3:
         st.write("")
         st.write("")
-        if st.button("🔄 Atualizar", use_container_width=True):
+        if st.button("🔄 Atualizar", width="stretch"):
             st.rerun()
     
     # Aplica filtros e oculta resolvidos
