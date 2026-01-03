@@ -692,11 +692,11 @@ def render_acoes_documentos(contrato: dict):
 
     with col2:
         if st.button("Abrir Relatório do Fiscal", use_container_width=True, key="relatorio_fiscal_btn_funcional_aba_contrato"):
-            st.info("🤖 Recurso em desenvolvimento. O copiloto gerará o relatório baseado nos dados do contrato.")
+            st.info("⚙️ Recurso em desenvolvimento. O copiloto gerará o relatório baseado nos dados do contrato.")
 
     with col3:
         if st.button("Abrir Relatório Final ao Gestor", use_container_width=True, key="relatorio_final_btn_funcional_aba_contrato"):
-            st.info("🤖 Recurso em desenvolvimento. O copiloto gerará o relatório final consolidado.")
+            st.info("⚙️ Recurso em desenvolvimento. O copiloto gerará o relatório final consolidado.")
 
 
 def render_contrato_detalhes(contrato: dict):

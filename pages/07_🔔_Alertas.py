@@ -300,7 +300,7 @@ def main():
     st.markdown("---")
     with st.expander("ℹ️ Como funcionam os alertas automáticos"):
         st.markdown("""
-        ### 🤖 Sistema Automático de Alertas
+        ### ⚙️ Sistema Automático de Alertas
         
         Os alertas são calculados automaticamente com base em regras de negócio:
         

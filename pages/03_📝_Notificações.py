@@ -122,7 +122,7 @@ def main():
     st.caption("Exemplos: Cláusula X do contrato; Lei 14.133/2021, art. ...; IN TJSP nº 12/2025.")
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
-        if st.button("🤖 Gerar com IA", type="primary", use_container_width=True):
+        if st.button("⚙️ Gerar com IA", type="primary", use_container_width=True):
             if not motivo:
                 st.error("⚠️ Por favor, descreva o motivo da notificação.")
             else:

@@ -24,7 +24,7 @@ def render_chat_message(role: str, content: str, timestamp: datetime):
         icon = "👤"
         class_name = "user"
     else:
-        icon = "🤖"
+        icon = "⚙️"
         class_name = "assistant"
     
     st.markdown(f"""
