@@ -76,9 +76,7 @@ def exportar_para_excel(contratos):
         # Ajusta largura das colunas
         worksheet.set_column('A:A', 20)  # Número
         worksheet.set_column('B:B', 35)  # Fornecedor
-        worksheet.set_column('C:C', 15)  # Tipo
-        worksheet.set_column('D:D', 12)  # Status
-        worksheet.set_column('E:E', 15)  # Valor
+            st.caption(f"📊 {len(vencimentos)} contratos vencem nos próximos 6 meses")
         worksheet.set_column('F:G', 12)  # Datas
         worksheet.set_column('H:H', 25)  # Fiscal
         worksheet.set_column('I:I', 50)  # Objeto
