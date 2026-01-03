@@ -383,4 +383,41 @@ def main():
         
         Os alertas são recalculados a cada visualização da página ou ao clicar em "🔄 Atualizar".
         """)
-        main()
+def main():
+    st.set_page_config(
+        page_title="TJSP - Alertas Contratuais",
+        page_icon="🔔",
+        layout="wide"
+    )
+
+    apply_tjsp_styles()
+    initialize_session_state()
+
+    # Rerun seguro (depois do set_page_config)
+    if st.session_state.pop("rerun_alerta_resolvido", False):
+        st.rerun()
+
+    try:
+        render_module_banner(
+            title="Alertas Contratuais",
+            subtitle="Sistema Automático de Monitoramento e Alertas"
+        )
+        # ... restante do código principal da página ...
+        # (deixe aqui o conteúdo já existente da main, exceto a chamada recursiva)
+        # ...existing code...
+    except Exception as e:
+        st.error("Erro ao carregar página de alertas.")
+        st.exception(e)
+        return
+
+    # ...existing code...
+
+    with st.expander("ℹ️ Como funcionam os alertas automáticos"):
+        st.markdown("""
+        ### ⚙️ Sistema Automático de Alertas
+        # ...existing code...
+        """)
+
+
+if __name__ == "__main__":
+    main()
