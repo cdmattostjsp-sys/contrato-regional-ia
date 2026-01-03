@@ -66,7 +66,7 @@ def main():
     # Botões de navegação
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        if st.button("🏠 Home", use_container_width=True):
+        if st.button("🏛️ Home", use_container_width=True):
             st.switch_page("Home.py")
     with col2:
         if st.button("📄 Ver Contrato", use_container_width=True):
