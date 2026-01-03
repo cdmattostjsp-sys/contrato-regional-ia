@@ -200,7 +200,7 @@ def render_graficos_analytics():
         return
     
     # Cria abas para organizar gráficos
-    tab1, tab2, tab3, tab4 = st.tabs(["📊 Distribuição", "📅 Prazos", "💰 Fornecedores", "📈 Status"])
+    tab1, tab2, tab3, tab4 = st.tabs(["📊 Distribuição", "📅 Prazos", "🏢 Fornecedores", "📈 Status"])
     
     # ===== TAB 1: DISTRIBUIÇÃO =====
     with tab1:
@@ -330,7 +330,7 @@ def render_graficos_analytics():
     
     # ===== TAB 3: FORNECEDORES =====
     with tab3:
-        st.markdown("### 💰 Top 10 Fornecedores por Valor Total")
+        st.markdown("### 🏢 Top 10 Fornecedores por Valor Total")
         
         # Agrupa por fornecedor
         fornecedores = {}
