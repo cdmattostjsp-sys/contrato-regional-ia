@@ -76,7 +76,6 @@ def exportar_para_excel(contratos):
         # Ajusta largura das colunas
         worksheet.set_column('A:A', 20)  # Número
         worksheet.set_column('B:B', 35)  # Fornecedor
-            st.caption(f"📊 {len(vencimentos)} contratos vencem nos próximos 6 meses")
         worksheet.set_column('F:G', 12)  # Datas
         worksheet.set_column('H:H', 25)  # Fiscal
         worksheet.set_column('I:I', 50)  # Objeto
@@ -258,11 +257,34 @@ def render_graficos_analytics():
     # ===== TAB 2: TIMELINE =====
     with tab2:
         st.markdown("### 📅 Vencimentos dos Próximos 6 Meses")
-        
+
         # Filtra contratos com data_fim nos próximos 6 meses
         hoje = datetime.now()
         seis_meses = hoje + timedelta(days=180)
-        
+        vencimentos = []
+        for c in contratos:
+            data_fim = c.get('data_fim')
+            if data_fim:
+                # Tenta converter para datetime se não for
+                if not isinstance(data_fim, datetime):
+                    try:
+                        data_fim_dt = datetime.strptime(str(data_fim), "%Y-%m-%d")
+                    except Exception:
+                        try:
+                            data_fim_dt = datetime.strptime(str(data_fim), "%d/%m/%Y")
+                        except Exception:
+                            continue
+                else:
+                    data_fim_dt = data_fim
+                if hoje <= data_fim_dt <= seis_meses:
+                    dias_restantes = (data_fim_dt - hoje).days
+                    vencimentos.append({
+                        'Contrato': c.get('numero', ''),
+                        'Fornecedor': c.get('fornecedor', ''),
+                        'Data de Término': data_fim_dt.strftime('%d/%m/%Y'),
+                        'Dias Restantes': dias_restantes
+                    })
+
         if vencimentos:
             # Ordena por dias restantes
             vencimentos.sort(key=lambda x: x['Dias Restantes'])
@@ -302,10 +324,6 @@ def render_graficos_analytics():
                 use_container_width=True,
                 key="btn_exportar_vencimentos_excel"
             )
-            st.caption(f"📊 {len(vencimentos)} contratos vencem nos próximos 6 meses")
-        else:
-            st.info("Nenhum contrato vence nos próximos 6 meses.")
-            
             st.caption(f"📊 {len(vencimentos)} contratos vencem nos próximos 6 meses")
         else:
             st.info("Nenhum contrato vence nos próximos 6 meses.")
@@ -816,11 +834,12 @@ def main():
     render_header()
     # Scroll para "meus contratos" se solicitado
     if st.session_state.get("scroll_meus_contratos"):
+        import streamlit.components.v1 as components
         components.html(
             """
             <script>
-              const el = window.parent.document.querySelector('#meus_contratos');
-              if (el) { el.scrollIntoView({behavior: 'smooth', block: 'start'}); }
+                const el = window.parent.document.querySelector('#meus_contratos');
+                if (el) { el.scrollIntoView({behavior: 'smooth', block: 'start'}); }
             </script>
             """,
             height=0
