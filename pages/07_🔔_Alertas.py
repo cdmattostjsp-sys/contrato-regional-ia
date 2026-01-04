@@ -89,7 +89,7 @@ def render_alerta_card(alerta: dict, on_resolvido=None):
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("📄 Ver Contrato", key=f"ver_{alerta['id']}", width="stretch"):
+        if st.button("📄 Ver Contrato", key=f"ver_{alerta['id']}", use_container_width=True):
             # Busca contrato
             contratos = get_todos_contratos()
             contrato = next((c for c in contratos if c['id'] == alerta['contrato_id']), None)
@@ -98,7 +98,7 @@ def render_alerta_card(alerta: dict, on_resolvido=None):
                 st.switch_page("pages/01_📄_Contrato.py")
     
     with col2:
-        if st.button("📝 Gerar Notificação", key=f"notif_{alerta['id']}", width="stretch"):
+        if st.button("📝 Gerar Notificação", key=f"notif_{alerta['id']}", use_container_width=True):
             contratos = get_todos_contratos()
             contrato = next((c for c in contratos if c['id'] == alerta['contrato_id']), None)
             if contrato:
@@ -106,7 +106,7 @@ def render_alerta_card(alerta: dict, on_resolvido=None):
                 st.switch_page("pages/03_📝_Notificações.py")
     
     with col3:
-        if st.button("✅ Marcar Resolvido", key=f"resolve_{alerta['id']}", width="stretch"):
+        if st.button("✅ Marcar Resolvido", key=f"resolve_{alerta['id']}", use_container_width=True):
             if on_resolvido:
                 on_resolvido(alerta['id'])
 
@@ -149,11 +149,11 @@ def main():
         col_nav1, col_nav2 = st.columns([6, 1])
         
         with col_nav1:
-            if st.button("🏛️ Voltar à Home", width="content"):
+            if st.button("🏛️ Voltar à Home", use_container_width=False):
                 st.switch_page("Home.py")
         
         with col_nav2:
-            if st.button("⚙️ Configurar Emails", width="stretch", type="secondary"):
+            if st.button("⚙️ Configurar Emails", use_container_width=True, type="secondary"):
                 st.switch_page("pages/08_⚙️_Configurações.py")
         
         st.markdown("---")
@@ -244,7 +244,7 @@ def main():
             email_configurado = config_email.get('email_principal', '')
             
             if email_configurado:
-                if st.button("📤 Enviar Alertas por Email", type="primary", width="stretch"):
+                if st.button("📤 Enviar Alertas por Email", type="primary", use_container_width=True):
                     email_service = get_email_service()
                     alertas_criticos = [a for a in alertas if a.get('tipo') == 'critico']
                     
@@ -263,7 +263,7 @@ def main():
                         else:
                             st.warning(f"⚠️ {sucessos}/{len(alertas_criticos)} emails enviados")
             else:
-                if st.button("⚙️ Configurar Email", width="stretch"):
+                if st.button("⚙️ Configurar Email", use_container_width=True):
                     st.switch_page("pages/08_⚙️_Configurações.py")
     
     st.markdown("---")
@@ -289,7 +289,7 @@ def main():
     with col_filtro3:
         st.write("")
         st.write("")
-        if st.button("🔄 Atualizar", width="stretch"):
+        if st.button("🔄 Atualizar", use_container_width=True):
             st.rerun()
     
     # Aplica filtros e oculta resolvidos
@@ -330,25 +330,58 @@ def main():
             st.session_state.pop("justificando_alerta", None)
             st.rerun()
 
-    if not alertas_filtrados:
-        st.success("✅ Nenhum alerta encontrado com os filtros aplicados!")
+    # Verifica se há um alerta sendo justificado
+    justificando = st.session_state.get("justificando_alerta")
+    
+    if justificando:
+        # Mostra apenas o formulário de justificativa
+        alerta_atual = next((a for a in alertas_filtrados if a["id"] == justificando), None)
+        if alerta_atual:
+            st.warning(f"⚠️ Complete a justificativa para resolver o alerta antes de continuar")
+            st.markdown("---")
+            
+            # Informações do alerta
+            st.markdown(f"### {alerta_atual.get('titulo', 'Alerta')}")
+            st.write(alerta_atual.get('descricao', ''))
+            st.caption(f"**Contrato:** {alerta_atual.get('contrato_numero', 'N/A')}")
+            
+            st.markdown("---")
+            
+            with st.form(f"form_justifica_{justificando}", clear_on_submit=False):
+                st.write("**Por que este alerta está sendo resolvido?**")
+                justificativa = st.text_area(
+                    "Justificativa obrigatória:",
+                    placeholder="Descreva o motivo da resolução deste alerta...",
+                    height=100,
+                    key=f"just_{justificando}"
+                )
+                
+                col_btn1, col_btn2 = st.columns(2)
+                with col_btn1:
+                    submitted = st.form_submit_button("✅ Confirmar Resolução", type="primary", use_container_width=True)
+                with col_btn2:
+                    cancelado = st.form_submit_button("❌ Cancelar", use_container_width=True)
+                
+                if submitted:
+                    if not justificativa.strip():
+                        st.error("⚠️ A justificativa é obrigatória para resolver o alerta.")
+                    else:
+                        salvar_resolvido(justificando, justificativa.strip())
+                        st.success("✅ Alerta resolvido com sucesso!")
+                        st.rerun()
+                
+                if cancelado:
+                    st.session_state.pop("justificando_alerta", None)
+                    st.rerun()
     else:
-        if len(alertas_filtrados) != len(alertas):
-            st.info(f"📊 Exibindo **{len(alertas_filtrados)}** de {len(alertas)} alertas")
-        st.markdown("### 📋 Lista de Alertas")
-        for alerta in alertas_filtrados:
-            # Se o usuário está justificando este alerta, mostra campo obrigatório
-            if st.session_state.get("justificando_alerta") == alerta["id"]:
-                with st.form(f"form_justifica_{alerta['id']}", clear_on_submit=False):
-                    st.write(f"**Justificativa obrigatória para resolver o alerta:**")
-                    justificativa = st.text_area("Justificativa", "", key=f"just_{alerta['id']}")
-                    submitted = st.form_submit_button("Confirmar Resolução")
-                    if submitted:
-                        if not justificativa.strip():
-                            st.warning("A justificativa é obrigatória.")
-                        else:
-                            salvar_resolvido(alerta["id"], justificativa.strip())
-            else:
+        # Mostra lista normal de alertas
+        if not alertas_filtrados:
+            st.success("✅ Nenhum alerta encontrado com os filtros aplicados!")
+        else:
+            if len(alertas_filtrados) != len(alertas):
+                st.info(f"📊 Exibindo **{len(alertas_filtrados)}** de {len(alertas)} alertas")
+            st.markdown("### 📋 Lista de Alertas")
+            for alerta in alertas_filtrados:
                 render_alerta_card(alerta, on_resolvido=marcar_resolvido)
     
     # Rodapé informativo
@@ -383,41 +416,4 @@ def main():
         
         Os alertas são recalculados a cada visualização da página ou ao clicar em "🔄 Atualizar".
         """)
-def main():
-    st.set_page_config(
-        page_title="TJSP - Alertas Contratuais",
-        page_icon="🔔",
-        layout="wide"
-    )
 
-    apply_tjsp_styles()
-    initialize_session_state()
-
-    # Rerun seguro (depois do set_page_config)
-    if st.session_state.pop("rerun_alerta_resolvido", False):
-        st.rerun()
-
-    try:
-        render_module_banner(
-            title="Alertas Contratuais",
-            subtitle="Sistema Automático de Monitoramento e Alertas"
-        )
-        # ... restante do código principal da página ...
-        # (deixe aqui o conteúdo já existente da main, exceto a chamada recursiva)
-        # ...existing code...
-    except Exception as e:
-        st.error("Erro ao carregar página de alertas.")
-        st.exception(e)
-        return
-
-    # ...existing code...
-
-    with st.expander("ℹ️ Como funcionam os alertas automáticos"):
-        st.markdown("""
-        ### ⚙️ Sistema Automático de Alertas
-        # ...existing code...
-        """)
-
-
-if __name__ == "__main__":
-    main()
