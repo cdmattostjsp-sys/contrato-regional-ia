@@ -419,3 +419,6 @@ def main():
         Os alertas são recalculados a cada visualização da página ou ao clicar em "🔄 Atualizar".
         """)
 
+
+if __name__ == "__main__":
+    main()
