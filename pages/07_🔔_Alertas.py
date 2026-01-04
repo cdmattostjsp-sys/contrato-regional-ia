@@ -308,12 +308,11 @@ def main():
     if filtro_categoria != "Todas":
         alertas_filtrados = [a for a in alertas_filtrados if a.get('categoria') == filtro_categoria]
 
-    # Mostra resultados
-    st.markdown("---")
-
+    # Define funções auxiliares antes de usar
     def marcar_resolvido(alerta_id):
         # Abre campo de justificativa obrigatória
         st.session_state["justificando_alerta"] = alerta_id
+        st.rerun()
 
     def salvar_resolvido(alerta_id, justificativa):
         from pathlib import Path
@@ -329,6 +328,9 @@ def main():
                 json.dump(resolvidos, f, indent=2, ensure_ascii=False)
             st.session_state.pop("justificando_alerta", None)
             st.rerun()
+
+    # Mostra resultados
+    st.markdown("---")
 
     # Verifica se há um alerta sendo justificado
     justificando = st.session_state.get("justificando_alerta")
