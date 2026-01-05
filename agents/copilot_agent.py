@@ -3,6 +3,11 @@ Agente Copilot de Contratos
 ============================
 Processa perguntas sobre contratos usando contexto específico.
 
+VERSÃO: Com integração de IA generativa (modo híbrido)
+- Usa IA quando disponível (via st.secrets)
+- Fallback para modo padrão quando IA não configurada
+- Mantém compatibilidade total com sistema legado
+
 Padrão: Responde EXCLUSIVAMENTE com base no contrato carregado.
 Não inventa informações. Se não souber, admite.
 
@@ -15,21 +20,82 @@ Base de Conhecimento:
 from typing import Dict
 from datetime import datetime
 from pathlib import Path
+import logging
+
+# Configuração de logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 def processar_pergunta_copilot(pergunta: str, contrato: Dict) -> str:
     """
     Processa pergunta do usuário sobre o contrato.
     
-    IMPORTANTE: Esta é uma implementação mockada para o MVP.
-    Em produção, integrar com modelo LLM (OpenAI, Azure OpenAI, etc.)
+    ARQUITETURA HÍBRIDA:
+    1. Verifica se IA está disponível (via st.secrets)
+    2. Se disponível: usa IA generativa com prompt institucional
+    3. Se indisponível: usa modo padrão (regras mockadas)
+    
+    GOVERNANÇA:
+    - IA atua apenas como apoio textual
+    - Respostas não são vinculantes
+    - Sistema funciona normalmente sem IA
     
     Args:
         pergunta: Pergunta do usuário
         contrato: Dados do contrato
         
     Returns:
-        Resposta baseada no contrato
+        Resposta baseada no contrato (via IA ou modo padrão)
+    """
+    try:
+        # Tenta usar IA (se disponível)
+        from services.copiloto_ai_service import processar_pergunta_com_ia, registrar_uso_copiloto
+        from prompts.system_prompts import COPILOT_SYSTEM_PROMPT
+        
+        logger.info(f"Processando pergunta para contrato {contrato.get('id', 'desconhecido')}")
+        
+        # Processa com IA (ou fallback)
+        resposta, metadata = processar_pergunta_com_ia(
+            pergunta=pergunta,
+            contrato=contrato,
+            system_prompt=COPILOT_SYSTEM_PROMPT
+        )
+        
+        # Registra uso para governança (sem armazenar conteúdo)
+        registrar_uso_copiloto(
+            contrato_id=contrato.get('id', 'desconhecido'),
+            metadata=metadata
+        )
+        
+        logger.info(f"Pergunta processada com sucesso (modo: {metadata.get('modo')})")
+        
+        return resposta
+        
+    except ImportError as e:
+        # Serviço de IA não disponível: usa modo padrão legado
+        logger.warning(f"Serviço de IA não disponível, usando modo padrão: {e}")
+        return _processar_pergunta_modo_padrao(pergunta, contrato)
+        
+    except Exception as e:
+        # Erro inesperado: usa modo padrão
+        logger.error(f"Erro ao processar pergunta: {e}")
+        return _processar_pergunta_modo_padrao(pergunta, contrato)
+
+
+def _processar_pergunta_modo_padrao(pergunta: str, contrato: Dict) -> str:
+    """
+    Processa pergunta usando regras mockadas (modo legado).
+    
+    IMPORTANTE: Esta função mantém compatibilidade com sistema anterior.
+    É chamada apenas quando IA não está disponível.
+    
+    Args:
+        pergunta: Pergunta do usuário
+        contrato: Dados do contrato
+        
+    Returns:
+        Resposta baseada em regras mockadas
     """
     
     # Normaliza pergunta para análise

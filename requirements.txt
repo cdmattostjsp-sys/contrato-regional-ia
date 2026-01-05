@@ -10,3 +10,6 @@ xlsxwriter>=3.1.0
 # Para extração de texto de PDF e busca fuzzy
 pymupdf>=1.23.0
 rapidfuzz>=3.6.1
+
+# Para integração com IA generativa (OpenAI)
+openai>=1.12.0
