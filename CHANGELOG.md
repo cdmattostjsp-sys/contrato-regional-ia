@@ -7,6 +7,81 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
 ---
 
+## [1.2.0] - 2026-01-05
+
+### ✨ Adicionado
+
+#### Integração com IA Generativa no Módulo de NOTIFICAÇÕES
+
+**Geração Assistida de Notificações Contratuais**
+
+- **Novo Service Layer:** `services/notificacao_ai_service.py`
+  - Gera sugestões de textos formais de notificações via IA
+  - Contexto sanitizado (sem dados sensíveis)
+  - Modo degradado quando IA não disponível
+  - Registro de uso para governança
+
+- **Funções Implementadas:**
+  - `is_ai_enabled()` - Verifica disponibilidade da IA
+  - `gerar_sugestao_notificacao()` - Função principal de geração
+  - `registrar_geracao_notificacao()` - Rastreabilidade
+  - `_consultar_openai_notificacao()` - Integração OpenAI
+
+**Interface do Usuário:**
+- Botão "✨ Gerar Sugestão com IA" na página de notificações
+- Área editável para revisar/ajustar texto sugerido
+- Botões: "Usar Este Texto", "Gerar Nova", "Descartar"
+- Mensagem institucional quando IA indisponível
+
+**Prompt Institucional:**
+- Linguagem formal e objetiva
+- Estrutura padronizada TJSP
+- Não inventa normas ou fatos
+- Indica campos a complementar
+
+**Governança:**
+- Registro de evento `NOTIFICACAO_GERADA_COM_IA`
+- Metadados: tipo, categoria, modo, timestamp
+- NÃO armazena conteúdo da notificação
+
+**Documentação:**
+- 📄 `docs/NOTIFICACOES_IA.md` - Documentação completa
+
+### ✏️ Modificado
+
+- **pages/03_📝_Notificações.py**
+  - Integrado serviço de IA
+  - Área de exibição de sugestão
+  - Botões de ação na sugestão
+  - Mantém compatibilidade com templates padrão
+
+### 🔒 Segurança
+
+- Contexto sanitizado antes de envio à IA
+- Apenas dados não sensíveis enviados
+- Chave via `st.secrets` (mesmo padrão do COPILOTO)
+- Validação e tratamento de erros
+
+### 📊 Impacto
+
+**Compatibilidade:**
+- ✅ Zero breaking changes
+- ✅ Templates padrão preservados
+- ✅ Sistema funciona com ou sem IA
+- ✅ Usuário sempre é autor final
+
+**Custo:**
+- ~$0.0005 por notificação
+- ~$0.50 para 1.000 notificações/mês
+
+**Princípios Institucionais:**
+- ✅ IA sugere; servidor decide
+- ✅ Nenhuma notificação enviada automaticamente
+- ✅ Toda sugestão é editável
+- ✅ Reversibilidade total
+
+---
+
 ## [1.1.0] - 2026-01-05
 
 ### ✨ Adicionado

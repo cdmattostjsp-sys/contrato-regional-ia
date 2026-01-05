@@ -122,42 +122,94 @@ def main():
     st.caption("Exemplos: Cláusula X do contrato; Lei 14.133/2021, art. ...; IN TJSP nº 12/2025.")
     col_btn1, col_btn2 = st.columns(2)
     with col_btn1:
-        if st.button("⚙️ Gerar com IA", type="primary", width='stretch'):
+        if st.button("✨ Gerar Sugestão com IA", type="primary", width='stretch', help="Gera sugestão de texto usando IA. Você poderá revisar e editar antes de salvar."):
             if not motivo:
                 st.error("⚠️ Por favor, descreva o motivo da notificação.")
             else:
-                with st.spinner("Gerando notificação..."):
-                    st.session_state.notificacao_campos_ai = {
+                with st.spinner("🤖 Gerando sugestão com IA..."):
+                    # Importa serviço de IA
+                    from services.notificacao_ai_service import (
+                        gerar_sugestao_notificacao,
+                        registrar_geracao_notificacao
+                    )
+                    
+                    # Prepara dados para a IA
+                    dados_notificacao = {
+                        "categoria": categoria_notificacao,
                         "tipo": tipo_notificacao_legivel,
                         "motivo": motivo,
                         "prazo": prazo,
-                        "fundamentacao": fundamentacao,
-                        "destinatario": contrato.get("fornecedor", "")
+                        "fundamentacao": fundamentacao
                     }
-                    notificacao_gerada = "(Funcionalidade IA em desenvolvimento)"
-                    st.session_state.notificacao_buffer = notificacao_gerada
-                    # Log de evento de geração de notificação
-                    log_event(
-                        contrato,
-                        event_type="NOTIFICACAO_GERADA",
-                        title="Notificação gerada",
-                        details=f"{categoria_notificacao} - {tipo_notificacao_legivel} | prazo {prazo} dias úteis",
-                        source="Notificações",
-                        metadata={
-                            "categoria": categoria_notificacao,
-                            "tipo": tipo_notificacao_legivel,
-                            "prazo": prazo,
-                            "fundamentacao": fundamentacao,
-                            "tamanho_texto": len(notificacao_gerada) if notificacao_gerada else 0
-                        }
+                    
+                    # Gera sugestão via IA
+                    resultado = gerar_sugestao_notificacao(
+                        contexto_contrato=contrato,
+                        dados_notificacao=dados_notificacao
                     )
-                    add_log("INFO", f"Notificação gerada para contrato {contrato['id']}")
+                    
+                    # Registra uso (governança)
+                    registrar_geracao_notificacao(
+                        contrato_id=contrato.get("id", "desconhecido"),
+                        tipo_notificacao=tipo_notificacao_legivel,
+                        categoria=categoria_notificacao,
+                        modo=resultado["modo"]
+                    )
+                    
+                    # Armazena resultado no session_state
+                    st.session_state.notificacao_ia_resultado = resultado
+                    
+                    # Exibe mensagem ao usuário
+                    if resultado["sucesso"]:
+                        st.success(resultado["mensagem"])
+                        st.session_state.notificacao_buffer = resultado["texto_sugerido"]
+                    else:
+                        st.warning(resultado["mensagem"])
+                    
+                    add_log("INFO", f"Sugestão IA para contrato {contrato['id']} - Modo: {resultado['modo']}")
                     st.rerun()
     with col_btn2:
         if st.button("🗑️ Limpar", width='stretch'):
             reset_notificacao()
             st.rerun()
     
+    # Exibe sugestão da IA se disponível
+    if "notificacao_ia_resultado" in st.session_state and st.session_state.notificacao_ia_resultado.get("sucesso"):
+        st.markdown("---")
+        with st.expander("✨ **Sugestão Gerada por IA** (Clique para expandir)", expanded=True):
+            resultado = st.session_state.notificacao_ia_resultado
+            
+            # Metadados da geração
+            st.caption(f"📊 {resultado.get('resumo_criterios', '')}")
+            
+            # Texto sugerido editável
+            st.markdown("**💡 Texto Sugerido (editável):**")
+            texto_editavel = st.text_area(
+                "Revise e ajuste o texto conforme necessário:",
+                value=resultado.get("texto_sugerido", ""),
+                height=400,
+                key="texto_ia_editavel",
+                label_visibility="collapsed"
+            )
+            
+            # Botões de ação na sugestão
+            col_ia1, col_ia2, col_ia3 = st.columns(3)
+            with col_ia1:
+                if st.button("✅ Usar Este Texto", type="primary", use_container_width=True):
+                    st.session_state.notificacao_buffer = texto_editavel
+                    st.success("✅ Texto aplicado à pré-visualização abaixo")
+                    st.rerun()
+            with col_ia2:
+                if st.button("🔄 Gerar Nova Sugestão", use_container_width=True):
+                    del st.session_state.notificacao_ia_resultado
+                    st.rerun()
+            with col_ia3:
+                if st.button("❌ Descartar", use_container_width=True):
+                    del st.session_state.notificacao_ia_resultado
+                    st.info("Sugestão descartada. Use o template padrão abaixo.")
+                    st.rerun()
+            
+            st.warning("⚠️ **Importante:** Este texto foi gerado por IA. Revise integralmente antes de usar. Você é responsável pelo conteúdo final.")
 
     # Pré-visualização da notificação
     with st.container():
