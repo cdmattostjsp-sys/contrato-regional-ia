@@ -135,6 +135,15 @@ contrato-regional-ia/
 - Manual de Boas Práticas em Contratações (24,3 MB)
 - Referências legais estruturadas
 
+### 🔔 Alertas Contratuais
+- Sistema automático de identificação de alertas
+- Monitoramento de vigência, status e pendências
+- Resolução formal com justificativa obrigatória
+- Rastreabilidade completa (ato administrativo)
+- Integração com histórico do contrato
+- Notificações por email (configurável)
+- **Documentação completa:** `docs/MODULO_ALERTAS.md`
+
 ---
 
 ## 🎨 Design System
@@ -175,6 +184,7 @@ Referência: `DESIGN_SYSTEM_TJSP.md` (repositório synapse-next-homologacao)
 - [x] CSS institucional TJSP
 - [x] Navegação entre páginas
 - [x] Session state management
+- [x] **Módulo de Alertas consolidado (governança)**
 
 ### � Base de Conhecimento
 - [x] Manual de Contratos TJSP 2025
@@ -196,7 +206,7 @@ Referência: `DESIGN_SYSTEM_TJSP.md` (repositório synapse-next-homologacao)
 ### 📅 Roadmap Futuro
 - [ ] Integração com sistemas TJSP (e-SAJ, etc.)
 - [ ] Dashboard analytics avançado
-- [ ] Alertas automáticos de vencimento
+- [ ] Painel de auditoria de alertas resolvidos
 - [ ] Workflow de aprovação de notificações
 - [ ] Assinatura digital de documentos
 - [ ] App mobile (Progressive Web App)
@@ -232,6 +242,7 @@ Este projeto segue os padrões definidos em:
 - **DESIGN_SYSTEM_TJSP.md** - Design system institucional
 - **CODE_STANDARDS.md** - Padrões de código
 - **INTEGRATION_BLUEPRINT.md** - Blueprint de integrações
+- **docs/MODULO_ALERTAS.md** - Documentação técnica do módulo de alertas
 
 Repositório de referência: [synapse-next-homologacao](https://github.com/cdmattostjsp-sys/synapse-next-homologacao)
 

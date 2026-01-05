@@ -16,8 +16,16 @@ sys.path.append(str(Path(__file__).parent.parent))
 from ui.styles import apply_tjsp_styles
 from services.session_manager import initialize_session_state
 from services.contract_service import get_todos_contratos
-from services.alert_service import calcular_alertas, get_alertas_por_tipo, get_alertas_por_categoria
+from services.alert_service import (
+    calcular_alertas, 
+    get_alertas_por_tipo, 
+    get_alertas_por_categoria,
+    registrar_resolucao_alerta,
+    STATUS_ATIVO,
+    STATUS_RESOLVIDO
+)
 from services.email_service import get_email_service
+from services.history_service import log_event
 from components.layout_header import render_module_banner
 
 
@@ -112,6 +120,16 @@ def render_alerta_card(alerta: dict, on_resolvido=None):
 
 
 def load_alertas_resolvidos():
+    """
+    Carrega alertas resolvidos do arquivo de persistência.
+    
+    Retorna lista de dicionários com:
+    - id: identificador do alerta
+    - status: STATUS_RESOLVIDO
+    - justificativa: texto da justificativa
+    - data: data/hora da resolução
+    - usuario: responsável pela resolução
+    """
     try:
         with open("data/alertas_resolvidos.json", "r") as f:
             data = json.load(f)
@@ -119,9 +137,19 @@ def load_alertas_resolvidos():
                 if not data:
                     return []
                 if isinstance(data[0], dict):
+                    # Garante que todos tenham status RESOLVIDO
+                    for item in data:
+                        if 'status' not in item:
+                            item['status'] = STATUS_RESOLVIDO
                     return data
                 # Se vier lista de IDs (legado), converte para lista de dicts
-                return [{"id": id_antigo, "justificativa": "", "data": ""} for id_antigo in data if isinstance(id_antigo, str)]
+                return [{
+                    "id": id_antigo, 
+                    "status": STATUS_RESOLVIDO,
+                    "justificativa": "", 
+                    "data": "",
+                    "usuario": "Sistema"
+                } for id_antigo in data if isinstance(id_antigo, str)]
             return []
     except Exception:
         return []
@@ -315,19 +343,69 @@ def main():
         st.rerun()
 
     def salvar_resolvido(alerta_id, justificativa):
+        """
+        Salva alerta como resolvido e registra evento formal no histórico.
+        
+        Este é um ATO ADMINISTRATIVO que será rastreado permanentemente.
+        """
         from pathlib import Path
-        Path("data").mkdir(parents=True, exist_ok=True)
-        resolvidos = load_alertas_resolvidos()
-        if not any(r.get("id") == alerta_id for r in resolvidos):
-            resolvidos.append({
-                "id": alerta_id,
-                "justificativa": justificativa,
-                "data": datetime.now().isoformat(timespec="seconds")
-            })
-            with open("data/alertas_resolvidos.json", "w") as f:
-                json.dump(resolvidos, f, indent=2, ensure_ascii=False)
+        
+        # Busca o alerta completo
+        alerta_atual = next((a for a in alertas_filtrados if a["id"] == alerta_id), None)
+        if not alerta_atual:
+            st.error("Alerta não encontrado")
+            return
+        
+        # Busca contrato relacionado
+        contratos = get_todos_contratos()
+        contrato = next((c for c in contratos if c['id'] == alerta_atual['contrato_id']), None)
+        if not contrato:
+            st.error("Contrato não encontrado")
+            return
+        
+        # Registra resolução formal
+        try:
+            usuario = st.session_state.get('usuario_atual', 'Gestor')
+            resolucao = registrar_resolucao_alerta(
+                alerta=alerta_atual,
+                justificativa=justificativa,
+                usuario=usuario
+            )
+            
+            # Registra no histórico do contrato (ATO ADMINISTRATIVO FORMAL)
+            log_event(
+                contract=contrato,
+                event_type="RESOLUCAO_ALERTA",
+                title=f"Resolução de Alerta: {alerta_atual.get('titulo', 'Sem título')}",
+                details=f"Justificativa: {justificativa}",
+                source="Sistema de Alertas",
+                actor=usuario,
+                metadata=resolucao
+            )
+            
+            # Persiste nos alertas resolvidos
+            Path("data").mkdir(parents=True, exist_ok=True)
+            resolvidos = load_alertas_resolvidos()
+            if not any(r.get("id") == alerta_id for r in resolvidos):
+                resolvidos.append({
+                    "id": alerta_id,
+                    "status": STATUS_RESOLVIDO,
+                    "justificativa": justificativa,
+                    "data": datetime.now().isoformat(timespec="seconds"),
+                    "usuario": usuario,
+                    "alerta_tipo": alerta_atual.get("tipo"),
+                    "alerta_categoria": alerta_atual.get("categoria"),
+                    "contrato_numero": alerta_atual.get("contrato_numero")
+                })
+                with open("data/alertas_resolvidos.json", "w") as f:
+                    json.dump(resolvidos, f, indent=2, ensure_ascii=False)
+            
             st.session_state.pop("justificando_alerta", None)
             st.rerun()
+            
+        except Exception as e:
+            st.error(f"Erro ao registrar resolução: {e}")
+            return
 
     # Mostra resultados
     st.markdown("---")
@@ -339,7 +417,7 @@ def main():
         # Mostra apenas o formulário de justificativa
         alerta_atual = next((a for a in alertas_filtrados if a["id"] == justificando), None)
         if alerta_atual:
-            st.warning(f"⚠️ Complete a justificativa para resolver o alerta antes de continuar")
+            st.warning(f"⚠️ Resolução de alerta requer justificativa formal")
             st.markdown("---")
             
             # Informações do alerta
@@ -350,26 +428,28 @@ def main():
             st.markdown("---")
             
             with st.form(f"form_justifica_{justificando}", clear_on_submit=False):
-                st.write("**Por que este alerta está sendo resolvido?**")
+                st.write("**Registro de Ato Administrativo - Resolução de Alerta**")
+                st.caption("A justificativa será registrada permanentemente no histórico do contrato.")
                 justificativa = st.text_area(
-                    "Justificativa obrigatória:",
-                    placeholder="Descreva o motivo da resolução deste alerta...",
-                    height=100,
-                    key=f"just_{justificando}"
+                    "Justificativa da resolução (obrigatória):",
+                    placeholder="Descreva as razões administrativas que fundamentam a resolução deste alerta...",
+                    height=120,
+                    key=f"just_{justificando}",
+                    help="Este registro constitui ato administrativo rastreável para fins de auditoria."
                 )
                 
                 col_btn1, col_btn2 = st.columns(2)
                 with col_btn1:
-                    submitted = st.form_submit_button("✅ Confirmar Resolução", type="primary", use_container_width=True)
+                    submitted = st.form_submit_button("✅ Registrar Resolução", type="primary", use_container_width=True)
                 with col_btn2:
                     cancelado = st.form_submit_button("❌ Cancelar", use_container_width=True)
                 
                 if submitted:
                     if not justificativa.strip():
-                        st.error("⚠️ A justificativa é obrigatória para resolver o alerta.")
+                        st.error("⚠️ A justificativa é obrigatória para registro formal do ato administrativo.")
                     else:
                         salvar_resolvido(justificando, justificativa.strip())
-                        st.success("✅ Alerta resolvido com sucesso!")
+                        st.success("✅ Resolução registrada com sucesso no histórico do contrato!")
                         st.rerun()
                 
                 if cancelado:
@@ -388,36 +468,83 @@ def main():
     
     # Rodapé informativo
     st.markdown("---")
-    with st.expander("ℹ️ Como funcionam os alertas automáticos"):
+    with st.expander("ℹ️ Sobre o Sistema de Alertas e Governança"):
         st.markdown("""
-        ### ⚙️ Sistema Automático de Alertas
+        ### ⚙️ Sistema Automático de Alertas Contratuais
         
-        Os alertas são calculados automaticamente com base em regras de negócio:
+        Este módulo constitui **instrumento de governança administrativa**, 
+        com rastreabilidade completa e registro formal de decisões.
+        
+        ---
+        
+        #### 🎯 Modelo de Funcionamento
+        
+        **O sistema APONTA alertas** baseados em regras de negócio pré-estabelecidas:
         
         **🔴 Alertas Críticos:**
-        - Vigência < 60 dias
+        - Vigência inferior a 60 dias
         - Contratos vencidos
-        - Status marcado como crítico
+        - Status crítico identificado
         
         **🟡 Alertas de Atenção:**
         - Vigência entre 60-120 dias
-        - Contratos com pendências
+        - Pendências contratuais identificadas
         
         **🔵 Alertas Informativos:**
-        - Contratos de alto valor (> R$ 50M)
-        - Notificações gerais
+        - Contratos de alto valor (> R$ 50 milhões)
+        - Notificações gerais de acompanhamento
         
-        ### 📊 Ações Disponíveis
+        ---
         
-        Para cada alerta você pode:
-        - **Ver Contrato**: Acessar detalhes completos
-        - **Gerar Notificação**: Criar notificação com IA
-        - **Marcar Resolvido**: Registrar resolução (em desenvolvimento)
+        #### 👤 Decisão Administrativa
         
-        ### 🔄 Atualização
+        **O gestor RESOLVE** cada alerta através de análise e decisão fundamentada.
         
-        Os alertas são recalculados a cada visualização da página ou ao clicar em "🔄 Atualizar".
+        A resolução de alertas:
+        - É sempre uma **decisão humana**
+        - Requer **justificativa obrigatória**
+        - Identifica o **responsável pela decisão**
+        - Registra **data e hora** do ato administrativo
+        
+        ---
+        
+        #### 📋 Rastreabilidade
+        
+        **O sistema REGISTRA** permanentemente cada ato administrativo:
+        
+        - Todos os alertas resolvidos ficam registrados
+        - Justificativas são rastreáveis por auditoria
+        - Histórico de decisões fica vinculado ao contrato
+        - Eventos são consultáveis no módulo de Histórico
+        
+        ---
+        
+        #### 📊 Ações Disponíveis
+        
+        Para cada alerta identificado:
+        - **Ver Contrato**: Acessar informações completas
+        - **Gerar Notificação**: Criar documento formal com IA
+        - **Marcar Resolvido**: Registrar decisão administrativa formal
+        
+        ---
+        
+        #### 🔄 Atualização de Alertas
+        
+        Os alertas são recalculados automaticamente:
+        - A cada acesso à página
+        - Ao clicar no botão "🔄 Atualizar"
+        - Baseados no estado atual dos contratos
+        
+        ---
+        
+        #### 📧 Notificações Automáticas
+        
+        Quando configurado, alertas críticos podem ser enviados automaticamente 
+        por email aos gestores responsáveis.
+        
+        Configure em: **⚙️ Configurações** → **Notificações por Email**
         """)
+
 
 
 if __name__ == "__main__":

@@ -213,6 +213,31 @@ def processar_com_llm(prompt: str, contexto: str) -> str:
 - [Streamlit Docs](https://docs.streamlit.io)
 - [Python Docs](https://docs.python.org/3/)
 - Padrões TJSP: `synapse-next-homologacao`
+- **Módulo de Alertas:** `docs/MODULO_ALERTAS.md` ⚠️ **LEITURA OBRIGATÓRIA**
+
+### 🔔 Módulo de Alertas - Guia Rápido
+
+O módulo implementa **governança administrativa** com rastreabilidade:
+
+```python
+# Exemplo: Adicionar nova regra de alerta
+from services.alert_service import STATUS_ATIVO
+
+if nova_condicao:
+    alertas.append({
+        'id': f"NOVO_{contrato['id']}",
+        'status': STATUS_ATIVO,  # Sempre ATIVO ao gerar
+        'tipo': 'critico',       # critico | atencao | info
+        'categoria': 'Categoria',
+        'titulo': 'Título',
+        'descricao': 'Descrição',
+        'contrato_id': contrato['id'],
+        'contrato_numero': contrato['numero'],
+        'data_alerta': datetime.now()
+    })
+```
+
+**⚠️ IMPORTANTE:** Nunca exclua alertas — apenas resolva com justificativa.
 
 ### Suporte
 - Issues: GitHub Issues
