@@ -70,11 +70,52 @@ def filtrar(periodo_ini: Optional[str], periodo_fim: Optional[str], status: Opti
     return [r for r in records if _match(r)]
 
 def atualizar_status(registro_id: str, novo_status: str) -> bool:
+    """
+    Atualiza status de um registro e registra evento no histórico.
+    
+    Args:
+        registro_id: ID do registro
+        novo_status: Novo status a aplicar
+        
+    Returns:
+        True se atualizado com sucesso, False caso contrário
+    """
     records = _load_records()
     for r in records:
         if r['id'] == registro_id:
+            status_anterior = r['status_fluxo']
             r['status_fluxo'] = novo_status
             _save_records(records)
+            
+            # Registra evento no histórico
+            try:
+                from services.history_service import log_event
+                from services.contract_service import get_todos_contratos
+                
+                contrato_id = r['contrato_id']
+                contratos = get_todos_contratos()
+                contrato = next((c for c in contratos if c['id'] == contrato_id), None)
+                
+                if contrato:
+                    log_event(
+                        contract=contrato,
+                        event_type="FF_STATUS_ATUALIZADO",
+                        title=f"Status atualizado: NF {r.get('nf_numero')}",
+                        details=f"Status alterado de '{status_anterior}' para '{novo_status}'",
+                        source="Execução Físico-Financeira",
+                        actor="Sistema",
+                        metadata={
+                            'registro_id': registro_id,
+                            'nf_numero': r.get('nf_numero'),
+                            'competencia': r.get('competencia'),
+                            'status_anterior': status_anterior,
+                            'status_novo': novo_status,
+                            'valor_bruto': r.get('valor_bruto')
+                        }
+                    )
+            except Exception as e:
+                print(f"Aviso: Não foi possível registrar evento no histórico: {e}")
+            
             return True
     return False
 

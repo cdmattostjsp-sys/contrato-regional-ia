@@ -183,5 +183,104 @@ def render_pagamentos(contract_id):
                 st.success("Pagamento salvo!")
 
 def render_alertas_ff(contract_id):
+    """
+    Renderiza alertas e pendências de execução físico-financeira.
+    
+    Integra com ff_alert_rules para calcular alertas reais baseados
+    nos registros financeiros do contrato.
+    """
     st.subheader("Alertas e Pendências")
-    st.info("Regras de alerta e validação serão implementadas nos próximos passos.")
+    
+    try:
+        from services.ff_alert_rules import compute_ff_alerts_for_contract
+        from services.contract_service import get_todos_contratos
+        from services.history_service import log_event
+        
+        # Calcula alertas FF para o contrato
+        alertas_ff = compute_ff_alerts_for_contract(contract_id)
+        
+        if not alertas_ff:
+            st.success("✅ Nenhum alerta de execução físico-financeira identificado.")
+            return
+        
+        # Agrupa alertas por tipo
+        alertas_criticos = [a for a in alertas_ff if a.get('tipo') == 'critico']
+        alertas_atencao = [a for a in alertas_ff if a.get('tipo') == 'atencao']
+        alertas_info = [a for a in alertas_ff if a.get('tipo') == 'info']
+        
+        # Exibe resumo
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("🔴 Críticos", len(alertas_criticos))
+        with col2:
+            st.metric("🟡 Atenção", len(alertas_atencao))
+        with col3:
+            st.metric("🔵 Informativos", len(alertas_info))
+        
+        st.markdown("---")
+        
+        # Renderiza alertas críticos
+        if alertas_criticos:
+            st.markdown("### 🔴 Alertas Críticos")
+            for alerta in alertas_criticos:
+                with st.container():
+                    st.error(f"**{alerta.get('titulo')}**")
+                    st.write(alerta.get('descricao'))
+                    
+                    metadados = alerta.get('metadados_ff', {})
+                    if metadados:
+                        st.caption(f"📋 **Detalhes:** {', '.join([f'{k}: {v}' for k, v in metadados.items() if k != 'regra'])}")
+                    
+                    st.markdown("---")
+        
+        # Renderiza alertas de atenção
+        if alertas_atencao:
+            st.markdown("### 🟡 Alertas de Atenção")
+            for alerta in alertas_atencao:
+                with st.container():
+                    st.warning(f"**{alerta.get('titulo')}**")
+                    st.write(alerta.get('descricao'))
+                    
+                    metadados = alerta.get('metadados_ff', {})
+                    if metadados:
+                        st.caption(f"📋 **Detalhes:** {', '.join([f'{k}: {v}' for k, v in metadados.items() if k != 'regra'])}")
+                    
+                    st.markdown("---")
+        
+        # Renderiza alertas informativos
+        if alertas_info:
+            with st.expander(f"🔵 Alertas Informativos ({len(alertas_info)})"):
+                for alerta in alertas_info:
+                    st.info(f"**{alerta.get('titulo')}**")
+                    st.write(alerta.get('descricao'))
+                    st.markdown("---")
+        
+        # Registra evento de alertas FF calculados (apenas uma vez por sessão)
+        session_key = f"ff_alertas_logged_{contract_id}"
+        if session_key not in st.session_state:
+            try:
+                contratos = get_todos_contratos()
+                contrato = next((c for c in contratos if c['id'] == contract_id), None)
+                
+                if contrato:
+                    log_event(
+                        contract=contrato,
+                        event_type="FF_ALERTA_GERADO",
+                        title=f"Alertas FF calculados: {len(alertas_ff)} alertas",
+                        details=f"{len(alertas_criticos)} críticos, {len(alertas_atencao)} atenção, {len(alertas_info)} informativos",
+                        source="Execução Físico-Financeira",
+                        actor="Sistema",
+                        metadata={
+                            'total_alertas': len(alertas_ff),
+                            'criticos': len(alertas_criticos),
+                            'atencao': len(alertas_atencao),
+                            'informativos': len(alertas_info)
+                        }
+                    )
+                    st.session_state[session_key] = True
+            except Exception as e:
+                pass  # Não bloqueia UI se logging falhar
+        
+    except Exception as e:
+        st.error(f"Erro ao calcular alertas: {e}")
+        st.info("💡 **Observação:** Alertas de execução FF requerem registros financeiros cadastrados.")

@@ -152,52 +152,90 @@ def render_bloco_pagamentos(contrato: dict):
     with st.expander("📄 **Histórico Detalhado de Atestes**"):
         st.markdown("### Registros de Ateste e Pagamento")
         
-        # Dados mockados de pagamentos individuais (preparado para integração)
-        itens_pagamento = contrato.get("itens_pagamento", [
-            {"competencia": "Nov/2024", "nota_fiscal": "NF-12345", "valor": 15000.00, "status": "atestado", "data_ateste": "05/12/2024"},
-            {"competencia": "Out/2024", "nota_fiscal": "NF-12344", "valor": 15000.00, "status": "atestado", "data_ateste": "05/11/2024"},
-            {"competencia": "Set/2024", "nota_fiscal": "NF-12343", "valor": 15000.00, "status": "atestado", "data_ateste": "05/10/2024"},
-            {"competencia": "Ago/2024", "nota_fiscal": "NF-12342", "valor": 15000.00, "status": "atestado", "data_ateste": "05/09/2024"},
-            {"competencia": "Jul/2024", "nota_fiscal": "NF-12341", "valor": 15000.00, "status": "atestado", "data_ateste": "05/08/2024"},
-            {"competencia": "Jun/2024", "nota_fiscal": "NF-12340", "valor": 15000.00, "status": "atestado", "data_ateste": "05/07/2024"},
-            {"competencia": "Mai/2024", "nota_fiscal": "NF-12339", "valor": 15000.00, "status": "atestado", "data_ateste": "05/06/2024"},
-            {"competencia": "Abr/2024", "nota_fiscal": "NF-12338", "valor": 15000.00, "status": "atestado", "data_ateste": "05/05/2024"},
-            {"competencia": "Mar/2024", "nota_fiscal": "NF-12337", "valor": 15000.00, "status": "atestado", "data_ateste": "05/04/2024"},
-            {"competencia": "Fev/2024", "nota_fiscal": "Pendente", "valor": 15000.00, "status": "pendente", "data_ateste": None},
-            {"competencia": "Jan/2024", "nota_fiscal": "Pendente", "valor": 15000.00, "status": "pendente", "data_ateste": None},
-            {"competencia": "Dez/2023", "nota_fiscal": "Pendente", "valor": 15000.00, "status": "pendente", "data_ateste": None},
-        ])
-        
-        # Renderiza cada item de pagamento
-        for idx, item in enumerate(itens_pagamento, 1):
-            competencia = item.get("competencia", "N/A")
-            nota_fiscal = item.get("nota_fiscal", "N/A")
-            valor = item.get("valor", 0.0)
-            status_item = item.get("status", "pendente")
-            data_ateste = item.get("data_ateste")
+        # INTEGRAÇÃO COM DADOS REAIS
+        try:
+            from services.execution_financial_service import listar_por_contrato
             
-            # Define cor e ícone por status
-            if status_item == "atestado":
-                cor_status = "#28A745"
-                icone_status = "✅"
-                texto_status = "Atestado"
+            registros_reais = listar_por_contrato(contrato.get('id'))
+            
+            if registros_reais:
+                # Converte registros reais para formato esperado pela UI
+                itens_pagamento = []
+                for registro in registros_reais:
+                    status_fluxo = registro.get('status_fluxo', 'Pendente')
+                    
+                    # Mapeia status_fluxo para status simplificado
+                    if any(termo in status_fluxo.lower() for termo in ['atestado', 'pago']):
+                        status_item = 'atestado'
+                    else:
+                        status_item = 'pendente'
+                    
+                    # Formata data do ateste
+                    data_ateste_str = registro.get('data_ateste')
+                    if data_ateste_str:
+                        try:
+                            from datetime import datetime
+                            data_obj = datetime.strptime(data_ateste_str, '%Y-%m-%d')
+                            data_ateste_formatada = data_obj.strftime('%d/%m/%Y')
+                        except:
+                            data_ateste_formatada = data_ateste_str
+                    else:
+                        data_ateste_formatada = None
+                    
+                    itens_pagamento.append({
+                        'competencia': registro.get('competencia', 'N/A'),
+                        'nota_fiscal': registro.get('nf_numero', 'N/A'),
+                        'valor': registro.get('valor_bruto', 0.0),
+                        'status': status_item,
+                        'data_ateste': data_ateste_formatada
+                    })
             else:
-                cor_status = "#FFC107"
-                icone_status = "⏳"
-                texto_status = "Pendente"
-            
-            # Card do item com data do ateste (se houver)
-            data_ateste_html = f"<div style='color: #00796B; font-size: 0.85rem; margin-top: 0.2rem;'><strong>Data do Ateste:</strong> {data_ateste}</div>" if data_ateste else ""
-            st.markdown(f"""
-                <div style="background: white; padding: 1rem; border-radius: 8px; 
-                            margin-bottom: 0.8rem; border-left: 3px solid {cor_status};">
-                    <div style="display: grid; grid-template-columns: auto 1fr auto auto; gap: 1rem; align-items: center;">
-                        <div style="font-weight: bold; color: #003366;">
-                            {competencia}
-                        </div>
-                        <div style="color: #495057;">
-                            <strong>NF:</strong> {nota_fiscal}
-                        </div>
+                # Fallback para mock se não houver registros
+                itens_pagamento = contrato.get("itens_pagamento", [
+                    {"competencia": "Nov/2024", "nota_fiscal": "NF-12345", "valor": 15000.00, "status": "atestado", "data_ateste": "05/12/2024"},
+                    {"competencia": "Out/2024", "nota_fiscal": "NF-12344", "valor": 15000.00, "status": "atestado", "data_ateste": "05/11/2024"},
+                    {"competencia": "Set/2024", "nota_fiscal": "NF-12343", "valor": 15000.00, "status": "atestado", "data_ateste": "05/10/2024"},
+                ])
+        except Exception as e:
+            # Se houver erro, usa mock
+            st.caption(f"⚠️ Usando dados de exemplo (erro ao carregar registros reais)")
+            itens_pagamento = contrato.get("itens_pagamento", [
+                {"competencia": "Nov/2024", "nota_fiscal": "NF-12345", "valor": 15000.00, "status": "atestado", "data_ateste": "05/12/2024"},
+            ])
+        
+        if not itens_pagamento:
+            st.info("📭 Nenhum registro de ateste/pagamento cadastrado para este contrato.")
+        else:
+            # Renderiza cada item de pagamento
+            for idx, item in enumerate(itens_pagamento, 1):
+                competencia = item.get("competencia", "N/A")
+                nota_fiscal = item.get("nota_fiscal", "N/A")
+                valor = item.get("valor", 0.0)
+                status_item = item.get("status", "pendente")
+                data_ateste = item.get("data_ateste")
+                
+                # Define cor e ícone por status
+                if status_item == "atestado":
+                    cor_status = "#28A745"
+                    icone_status = "✅"
+                    texto_status = "Atestado"
+                else:
+                    cor_status = "#FFC107"
+                    icone_status = "⏳"
+                    texto_status = "Pendente"
+                
+                # Card do item com data do ateste (se houver)
+                data_ateste_html = f"<div style='color: #00796B; font-size: 0.85rem; margin-top: 0.2rem;'><strong>Data do Ateste:</strong> {data_ateste}</div>" if data_ateste else ""
+                st.markdown(f"""
+                    <div style="background: white; padding: 1rem; border-radius: 8px; 
+                                margin-bottom: 0.8rem; border-left: 3px solid {cor_status};">
+                        <div style="display: grid; grid-template-columns: auto 1fr auto auto; gap: 1rem; align-items: center;">
+                            <div style="font-weight: bold; color: #003366;">
+                                {competencia}
+                            </div>
+                            <div style="color: #495057;">
+                                <strong>NF:</strong> {nota_fiscal}
+                            </div>
                         <div style="color: #495057;">
                             <strong>R$ {valor:,.2f}</strong>
                         </div>

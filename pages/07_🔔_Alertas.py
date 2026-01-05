@@ -189,7 +189,28 @@ def main():
         # Carrega contratos e calcula alertas
         with st.spinner("Calculando alertas..."):
             contratos = get_todos_contratos()
-            alertas = calcular_alertas(contratos)
+            alertas_contratuais = calcular_alertas(contratos)
+            
+            # Calcula alertas de execução físico-financeira
+            alertas_ff_todos = []
+            try:
+                from services.ff_alert_rules import compute_ff_alerts_for_contract
+                from services.alert_service import upsert_ff_alerts, merge_alertas_contratuais_e_ff
+                
+                for contrato in contratos:
+                    alertas_ff_contrato = compute_ff_alerts_for_contract(contrato['id'])
+                    if alertas_ff_contrato:
+                        # Enriquece com dados do contrato
+                        alertas_ff_processados = upsert_ff_alerts(alertas_ff_contrato, contrato)
+                        alertas_ff_todos.extend(alertas_ff_processados)
+                
+                # Mescla alertas contratuais com alertas FF
+                alertas = merge_alertas_contratuais_e_ff(alertas_contratuais, alertas_ff_todos)
+            except Exception as e:
+                # Se falhar, usa apenas alertas contratuais
+                st.warning(f"⚠️ Alertas FF não puderam ser calculados: {e}")
+                alertas = alertas_contratuais
+            
             alertas_resolvidos = load_alertas_resolvidos()
             # Lista de ids resolvidos
             ids_resolvidos = set(r["id"] for r in alertas_resolvidos)

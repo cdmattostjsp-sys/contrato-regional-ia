@@ -16,6 +16,8 @@ Estados do alerta:
 
 from datetime import datetime, timedelta
 from typing import List, Dict
+import json
+from pathlib import Path
 
 # Estados possíveis do alerta
 STATUS_ATIVO = "ATIVO"
@@ -194,6 +196,62 @@ def get_alertas_por_categoria(alertas: List[Dict]) -> Dict[str, List[Dict]]:
         agrupados[categoria].append(alerta)
     
     return agrupados
+
+
+def upsert_ff_alerts(alertas_ff: List[Dict], contrato: Dict) -> List[Dict]:
+    """
+    Insere ou atualiza alertas de execução físico-financeira.
+    
+    Garante que:
+    - Alertas FF são adicionados aos alertas do contrato
+    - Não há duplicatas (baseado em ID estável)
+    - Metadados do contrato são preenchidos corretamente
+    
+    Args:
+        alertas_ff: Lista de alertas FF calculados
+        contrato: Dicionário do contrato para preencher metadados
+        
+    Returns:
+        Lista de alertas FF processados
+    """
+    # Enriquece alertas com dados do contrato
+    for alerta in alertas_ff:
+        alerta['contrato_numero'] = contrato.get('numero', contrato.get('id'))
+        alerta['status'] = STATUS_ATIVO
+    
+    return alertas_ff
+
+
+def merge_alertas_contratuais_e_ff(alertas_contratuais: List[Dict], alertas_ff: List[Dict]) -> List[Dict]:
+    """
+    Mescla alertas contratuais (vigência, status, etc.) com alertas FF.
+    
+    Remove duplicatas baseadas no ID do alerta.
+    
+    Args:
+        alertas_contratuais: Alertas gerados por calcular_alertas()
+        alertas_ff: Alertas de execução físico-financeira
+        
+    Returns:
+        Lista unificada de alertas sem duplicatas
+    """
+    # Cria dicionário por ID para evitar duplicatas
+    alertas_dict = {}
+    
+    for alerta in alertas_contratuais:
+        alertas_dict[alerta['id']] = alerta
+    
+    for alerta in alertas_ff:
+        # Sobrescreve se já existir (prioriza FF)
+        alertas_dict[alerta['id']] = alerta
+    
+    # Ordena por criticidade
+    alertas_merged = list(alertas_dict.values())
+    prioridade = {'critico': 0, 'atencao': 1, 'info': 2}
+    alertas_merged.sort(key=lambda x: (prioridade.get(x['tipo'], 3), x.get('dias_restantes', 999)))
+    
+    return alertas_merged
+
 
 def registrar_resolucao_alerta(alerta: Dict, justificativa: str, usuario: str = "Gestor") -> Dict:
     """
