@@ -3,6 +3,11 @@ Serviço de IA para o Módulo COPILOTO
 =====================================
 Centraliza toda integração com modelos de IA generativa.
 
+FASE 2.1 - INTEGRAÇÃO COM BIBLIOTECA INSTITUCIONAL:
+- Consulta a biblioteca de conhecimento antes de acionar a IA
+- Prioriza documentos institucionais vigentes nas respostas
+- Referencia fontes institucionais explicitamente
+
 PRINCÍPIOS INSTITUCIONAIS:
 - IA atua apenas como apoio textual ao servidor
 - Nenhuma ação administrativa é executada automaticamente
@@ -14,10 +19,14 @@ GOVERNANÇA:
 - Chaves lidas exclusivamente via st.secrets
 - Modo degradado quando IA não disponível
 - Rastreabilidade de uso (via history_service)
+- Documentos institucionais ATIVOS têm prioridade
+
+AUTOR: Fase 2.1 - Biblioteca de Conhecimento
+DATA: Janeiro/2026
 """
 
 import streamlit as st
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List
 from datetime import datetime
 import logging
 
@@ -101,16 +110,54 @@ def get_status_ia() -> Dict[str, any]:
 # INTEGRAÇÃO COM OPENAI
 # ============================================================================
 
+def consultar_biblioteca_institucional(pergunta: str) -> Tuple[List[Dict], str]:
+    """
+    Consulta a biblioteca institucional curada para obter contexto.
+    
+    FASE 2.1: Esta função é chamada ANTES de acionar a IA,
+    para incluir documentos institucionais vigentes no contexto.
+    
+    Args:
+        pergunta: Pergunta do usuário
+    
+    Returns:
+        Tupla (documentos: List[Dict], contexto_formatado: str)
+    """
+    try:
+        from services.library_search_service import (
+            buscar_documentos_relevantes,
+            formatar_contexto_institucional
+        )
+        
+        # Busca documentos relevantes
+        documentos = buscar_documentos_relevantes(pergunta, limite=3)
+        
+        if documentos:
+            contexto = formatar_contexto_institucional(documentos)
+            logger.info(f"Biblioteca institucional: {len(documentos)} documentos encontrados")
+            return documentos, contexto
+        else:
+            logger.info("Biblioteca institucional: nenhum documento relevante encontrado")
+            return [], ""
+            
+    except Exception as e:
+        logger.warning(f"Erro ao consultar biblioteca institucional: {e}")
+        return [], ""
+
+
 def consultar_ia_openai(
     pergunta: str,
     contexto_contrato: str,
     system_prompt: str,
+    contexto_institucional: str = "",
     modelo: str = "gpt-4o-mini",
     temperatura: float = 0.3,
-    max_tokens: int = 1000
+    max_tokens: int = 1500
 ) -> Optional[str]:
     """
     Consulta o modelo OpenAI com a pergunta do usuário.
+    
+    FASE 2.1: Agora inclui contexto da biblioteca institucional.
     
     IMPORTANTE: Esta função APENAS é chamada se a IA estiver disponível.
     
@@ -118,6 +165,7 @@ def consultar_ia_openai(
         pergunta: Pergunta do usuário
         contexto_contrato: Contexto estruturado do contrato
         system_prompt: Prompt de sistema institucional
+        contexto_institucional: Contexto da biblioteca institucional (Fase 2.1)
         modelo: Modelo OpenAI a ser usado
         temperatura: Controle de criatividade (0.0 = determinístico, 1.0 = criativo)
         max_tokens: Limite de tokens na resposta
@@ -136,10 +184,38 @@ def consultar_ia_openai(
         # Inicializa cliente OpenAI
         client = OpenAI(api_key=api_key)
         
+        # FASE 2.1: Monta prompt com prioridade institucional
+        if contexto_institucional:
+            conteudo_usuario = f"""Você deve responder com base prioritária nos documentos institucionais abaixo.
+Em caso de conflito entre documentos institucionais e outras fontes, prevalece a orientação institucional.
+Sempre cite a fonte institucional quando usar informações da biblioteca.
+
+{contexto_institucional}
+
+---
+
+{contexto_contrato}
+
+---
+
+PERGUNTA DO USUÁRIO:
+{pergunta}"""
+        else:
+            # Sem documentos institucionais
+            conteudo_usuario = f"""Não foram encontrados documentos institucionais diretamente aplicáveis a esta pergunta.
+Responda com cautela e recomende consulta a fontes oficiais quando apropriado.
+
+{contexto_contrato}
+
+---
+
+PERGUNTA DO USUÁRIO:
+{pergunta}"""
+        
         # Monta mensagens
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"{contexto_contrato}\n\n---\n\nPERGUNTA DO USUÁRIO:\n{pergunta}"}
+            {"role": "user", "content": conteudo_usuario}
         ]
         
         logger.info(f"Consultando OpenAI (modelo: {modelo})")
@@ -228,15 +304,19 @@ No momento, o recurso de apoio inteligente não está disponível.
         
         return resposta_padrao, metadata
     
+    # FASE 2.1: Consulta biblioteca institucional ANTES de chamar a IA
+    documentos_institucionais, contexto_institucional = consultar_biblioteca_institucional(pergunta)
+    
     # Monta contexto do contrato
     from agents.copilot_agent import extrair_contexto_contrato
     contexto_contrato = extrair_contexto_contrato(contrato)
     
-    # Consulta IA
+    # Consulta IA com contexto institucional
     resposta_ia = consultar_ia_openai(
         pergunta=pergunta,
         contexto_contrato=contexto_contrato,
-        system_prompt=system_prompt
+        system_prompt=system_prompt,
+        contexto_institucional=contexto_institucional
     )
     
     if resposta_ia:
@@ -245,16 +325,34 @@ No momento, o recurso de apoio inteligente não está disponível.
             "modo": "IA_ATIVA",
             "ia_disponivel": True,
             "timestamp": datetime.now(),
-            "mensagem_sistema": "Resposta gerada por IA generativa"
+            "mensagem_sistema": "Resposta gerada por IA generativa",
+            "documentos_institucionais_usados": len(documentos_institucionais),
+            "biblioteca_consultada": len(documentos_institucionais) > 0
         }
         
-        # Adiciona rodapé institucional
-        resposta_final = f"""{resposta_ia}
-
+        # FASE 2.1: Adiciona referências institucionais se houver
+        if documentos_institucionais:
+            referencias = "\n".join([
+                f"- {doc['referencia']}" for doc in documentos_institucionais
+            ])
+            rodape_institucional = f"""
 ---
 
+📚 **Fontes Institucionais Consultadas:**
+{referencias}
+
+⚠️ **IMPORTANTE:** Esta resposta foi gerada por IA com base em documentos institucionais vigentes. Não constitui orientação jurídica vinculante. Sempre valide as informações com fontes oficiais e consulte as cláusulas contratuais originais.
+            """
+        else:
+            rodape_institucional = """
+---
+
+ℹ️ *Não foram encontrados documentos institucionais diretamente aplicáveis a esta pergunta.*
+
 ⚠️ **IMPORTANTE:** Esta resposta foi gerada por IA como apoio textual. Não constitui orientação jurídica vinculante. Sempre valide as informações com fontes oficiais e consulte as cláusulas contratuais originais.
-        """
+            """
+        
+        resposta_final = f"{resposta_ia}{rodape_institucional}"
         
         return resposta_final, metadata
     else:

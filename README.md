@@ -144,6 +144,61 @@ contrato-regional-ia/
 - Notificações por email (configurável)
 - **Documentação completa:** `docs/MODULO_ALERTAS.md`
 
+### 📚 Biblioteca de Conhecimento Institucional (Fase 2.1)
+
+A **Biblioteca de Conhecimento Institucional** é um repositório curado de documentos orientativos do TJSP, consumido automaticamente pela IA do COPILOTO.
+
+#### Funcionalidades
+
+- **Upload controlado** de documentos PDF/DOCX (restrito por perfil)
+- **Metadados obrigatórios**: título, tipo, área, versão, status
+- **Versionamento simples**: controle de versões sem sobrescrita
+- **Indexação textual**: extração automática de texto para busca
+- **Consumo pela IA**: COPILOTO consulta documentos ativos como referência
+
+#### Governança
+
+- **Perfis autorizados**: ADMIN, CURADOR, JURIDICO
+- **Status de documentos**: ATIVO (usado pela IA) / REVOGADO (histórico)
+- **Rastreabilidade**: eventos registrados no histórico institucional
+- **Referenciação**: respostas da IA citam fontes institucionais
+
+#### Tipos de Documentos Suportados
+
+- Manual
+- Nota Técnica
+- Orientação Jurídica
+- Caderno Técnico
+- Instrução Normativa
+- Guia de Boas Práticas
+
+#### Estrutura de Arquivos
+
+```
+knowledge/
+├── documentos/           # Arquivos originais por tipo
+│   ├── manual/
+│   ├── nota_tecnica/
+│   ├── orientacao_juridica/
+│   ├── caderno_tecnico/
+│   ├── instrucao_normativa/
+│   └── guia_de_boas_praticas/
+├── textos_extraidos/     # Textos extraídos para indexação
+└── index.json            # Índice de metadados
+```
+
+#### Como Usar
+
+1. Acesse a página **📚 Gestão de Conhecimento**
+2. Faça upload do documento (PDF/DOCX)
+3. Preencha os metadados obrigatórios
+4. Clique em **Publicar Documento**
+5. O COPILOTO passará a consultar o documento em suas respostas
+
+#### Princípio Fundamental
+
+> **A IA não substitui normas. Ela opera subordinada ao conhecimento institucional validado.**
+
 ---
 
 ## 🎨 Design System
