@@ -354,7 +354,11 @@ def main():
     apply_tjsp_styles()
     initialize_session_state()
     
-    render_header()
+    from components.layout_header import render_module_banner
+    render_module_banner(
+        title="Biblioteca de Conhecimento Institucional",
+        subtitle="Gestão de documentos orientativos do TJSP - Fase 2.1"
+    )
     
     # Abas principais
     tab1, tab2, tab3 = st.tabs([
