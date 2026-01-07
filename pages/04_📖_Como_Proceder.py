@@ -39,7 +39,7 @@ def main():
     
     # Tabs de orientações
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "🎯 Atribuições",
+        "Atribuições",
         "📋 Acompanhamento",
         "⚠️ Irregularidades",
         "📝 Notificações",
@@ -47,7 +47,7 @@ def main():
     ])
     
     with tab1:
-        st.markdown("## 🎯 Atribuições do Fiscal de Contrato")
+        st.markdown("## Atribuições do Fiscal de Contrato")
         
         st.markdown("""
         ### Responsabilidades Principais
