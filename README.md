@@ -298,8 +298,74 @@ Este projeto segue os padrões definidos em:
 - **CODE_STANDARDS.md** - Padrões de código
 - **INTEGRATION_BLUEPRINT.md** - Blueprint de integrações
 - **docs/MODULO_ALERTAS.md** - Documentação técnica do módulo de alertas
+- **docs/CONTEXTO_ENRIQUECIDO_NOTIFICACOES.md** - Contexto enriquecido com PDFs e Base de Conhecimento
 
 Repositório de referência: [synapse-next-homologacao](https://github.com/cdmattostjsp-sys/synapse-next-homologacao)
+
+---
+
+## 🏛️ Contratos Regionais e Execução por Comarca (FASE 3)
+
+### 📍 Contexto Institucional
+
+No TJSP, contratos regionais (limpeza, vigilância, manutenção) abrangem **múltiplas comarcas**, cada uma com seus próprios fiscais titular e suplente. Esta é a **realidade operacional**, não uma exceção.
+
+### ✨ Funcionalidade Implementada
+
+O sistema agora suporta **execução territorializada de contratos**:
+
+1. **Cadastro por Comarca**
+   - Um contrato pode ter múltiplos fiscais
+   - Cada comarca possui fiscal titular e suplente
+   - Compatível com contratos simples (comarca única)
+
+2. **Notificações Contextualizadas**
+   - Seleciona comarca relacionada ao fato
+   - Identifica automaticamente o fiscal responsável
+   - Gera notificação dirigida ao fiscal correto
+
+3. **Governança e Rastreabilidade**
+   - Histórico registra comarca + fiscal
+   - Auditoria completa de responsabilidades
+   - Compatibilidade retroativa garantida
+
+### 📐 Modelo de Dados
+
+```json
+{
+  "numero": "56/2025",
+  "fornecedor": "Empresa Regional Ltda",
+  "fiscais_por_comarca": [
+    {
+      "comarca": "Sorocaba",
+      "titular": "João Silva",
+      "suplente": "Maria Costa"
+    },
+    {
+      "comarca": "Itapetininga",
+      "titular": "Carlos Lima",
+      "suplente": "Ana Souza"
+    }
+  ]
+}
+```
+
+### 🔄 Compatibilidade
+
+- **Contratos antigos** continuam funcionando normalmente
+- **Migração** não é obrigatória (sistema adapta automaticamente)
+- **Nenhuma quebra** de funcionalidade existente
+
+### 📚 Funções de Utilidade
+
+```python
+from services.contract_service import (
+    obter_fiscais_do_contrato,      # Lista todos os fiscais
+    obter_fiscal_por_comarca,        # Fiscal de comarca específica
+    obter_comarcas_do_contrato,      # Lista de comarcas
+    eh_contrato_regional             # Verifica se é regional
+)
+```
 
 ---
 

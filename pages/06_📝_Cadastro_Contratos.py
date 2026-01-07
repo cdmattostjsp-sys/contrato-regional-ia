@@ -224,6 +224,82 @@ def main():
                     help="Status atual do contrato"
                 )
             
+            # FASE 3: Fiscais por Comarca (Contratos Regionais)
+            st.markdown("---")
+            st.markdown("### 🏛️ Fiscais por Comarca (Contratos Regionais)")
+            st.caption("""
+            **Contratos regionais** abrangem múltiplas comarcas, cada uma com seu fiscal.
+            Se este contrato abrange apenas uma comarca, deixe esta seção vazia e use os campos acima.
+            """)
+            
+            usar_modelo_regional = st.checkbox(
+                "Este contrato abrange múltiplas comarcas (modelo regional)",
+                help="Marque se o contrato possui fiscais diferentes por comarca"
+            )
+            
+            fiscais_por_comarca = []
+            
+            if usar_modelo_regional:
+                st.info("📍 **Adicione os fiscais de cada comarca abrangida pelo contrato:**")
+                
+                # Inicializa session_state para fiscais temporários
+                if 'fiscais_temp' not in st.session_state:
+                    st.session_state.fiscais_temp = []
+                
+                # Formulário para adicionar comarca
+                with st.container():
+                    col_comarca, col_tit, col_sup = st.columns([2, 2, 2])
+                    
+                    with col_comarca:
+                        nova_comarca = st.text_input(
+                            "Comarca",
+                            key="input_comarca",
+                            placeholder="Ex: Sorocaba"
+                        )
+                    
+                    with col_tit:
+                        novo_titular = st.text_input(
+                            "Fiscal Titular",
+                            key="input_titular",
+                            placeholder="Nome do fiscal"
+                        )
+                    
+                    with col_sup:
+                        novo_suplente = st.text_input(
+                            "Fiscal Suplente",
+                            key="input_suplente",
+                            placeholder="Nome do suplente"
+                        )
+                    
+                    col_add, col_clear = st.columns([1, 4])
+                    
+                    with col_add:
+                        if st.button("➕ Adicionar", key="btn_add_comarca"):
+                            if nova_comarca and novo_titular and novo_suplente:
+                                st.session_state.fiscais_temp.append({
+                                    "comarca": nova_comarca,
+                                    "titular": novo_titular,
+                                    "suplente": novo_suplente
+                                })
+                                st.rerun()
+                            else:
+                                st.error("⚠️ Preencha todos os campos da comarca!")
+                
+                # Exibe fiscais adicionados
+                if st.session_state.fiscais_temp:
+                    st.markdown("**Comarcas cadastradas:**")
+                    for idx, fiscal in enumerate(st.session_state.fiscais_temp):
+                        col_info, col_del = st.columns([5, 1])
+                        with col_info:
+                            st.write(f"**{fiscal['comarca']}:** {fiscal['titular']} (titular) / {fiscal['suplente']} (suplente)")
+                        with col_del:
+                            if st.button("🗑️", key=f"del_comarca_{idx}"):
+                                st.session_state.fiscais_temp.pop(idx)
+                                st.rerun()
+                    
+                    fiscais_por_comarca = st.session_state.fiscais_temp.copy()
+            
+            st.markdown("---")
             st.markdown("### 📎 Upload de Documentos")
             
             arquivo_pdf = st.file_uploader(
@@ -409,6 +485,12 @@ def main():
                         "ultima_atualizacao": datetime.now().isoformat()
                     }
                     
+                    # FASE 3: Adiciona fiscais por comarca se for contrato regional
+                    if usar_modelo_regional and fiscais_por_comarca:
+                        dados_contrato["fiscais_por_comarca"] = fiscais_por_comarca
+                        # Limpa session_state após salvar
+                        st.session_state.fiscais_temp = []
+                    
                     # Salva contrato
                     try:
                         salvar_contrato(dados_contrato, arquivo_pdf, arquivos_aditivos, dados_aditivos_list)
@@ -449,10 +531,23 @@ def main():
                     with col3:
                         st.write(f"**Gestor Titular:** {contrato.get('gestor_titular', '-')}")
                         st.write(f"**Gestor Suplente:** {contrato.get('gestor_suplente', '-')}")
-                        st.write(f"**Fiscal Titular:** {contrato['fiscal_titular']}")
-                        st.write(f"**Fiscal Substituto:** {contrato['fiscal_substituto']}")
+                        
+                        # FASE 3: Exibe fiscais de forma compatível
+                        if 'fiscais_por_comarca' in contrato and contrato['fiscais_por_comarca']:
+                            st.write(f"**Tipo:** Contrato Regional ({len(contrato['fiscais_por_comarca'])} comarcas)")
+                        else:
+                            st.write(f"**Fiscal Titular:** {contrato.get('fiscal_titular', '-')}")
+                            st.write(f"**Fiscal Substituto:** {contrato.get('fiscal_substituto', '-')}")
                     
                     st.write(f"**Objeto:** {contrato['objeto']}")
+                    
+                    # FASE 3: Exibe fiscais por comarca (se houver)
+                    if 'fiscais_por_comarca' in contrato and contrato['fiscais_por_comarca']:
+                        st.markdown("**🏛️ Fiscais por Comarca:**")
+                        for fiscal in contrato['fiscais_por_comarca']:
+                            st.write(f"  • **{fiscal['comarca']}:**")
+                            st.write(f"    - Titular: {fiscal['titular']}")
+                            st.write(f"    - Suplente: {fiscal['suplente']}")
                     
                     # Exibe PDFs
                     if 'pdf_filename' in contrato:

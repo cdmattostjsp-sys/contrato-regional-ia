@@ -94,6 +94,20 @@ def main():
         key="tipo_notificacao"
     )
 
+    # FASE 3: Seleção de comarca para contratos regionais
+    comarca_selecionada = None
+    from services.contract_service import obter_comarcas_do_contrato, eh_contrato_regional
+    
+    if eh_contrato_regional(contrato):
+        comarcas = obter_comarcas_do_contrato(contrato)
+        st.info(f"📍 **Contrato Regional** - Selecione a comarca relacionada à notificação:")
+        comarca_selecionada = st.selectbox(
+            "Comarca",
+            comarcas,
+            key="comarca_notificacao",
+            help="Selecione a comarca onde ocorreu o fato que motiva a notificação"
+        )
+
     from ui.forms_help import help_motivo, help_prazo, help_fundamentacao
     motivo = st.text_area(
         "Motivo da Notificação",
@@ -139,7 +153,8 @@ def main():
                         "tipo": tipo_notificacao_legivel,
                         "motivo": motivo,
                         "prazo": prazo,
-                        "fundamentacao": fundamentacao
+                        "fundamentacao": fundamentacao,
+                        "comarca": comarca_selecionada  # FASE 3: Inclui comarca
                     }
                     
                     # Gera sugestão via IA
@@ -148,13 +163,14 @@ def main():
                         dados_notificacao=dados_notificacao
                     )
                     
-                    # Registra uso (governança) - ATUALIZADO para incluir fontes
+                    # Registra uso (governança) - FASE 3: Inclui comarca
                     registrar_geracao_notificacao(
                         contrato_id=contrato.get("id", "desconhecido"),
                         tipo_notificacao=tipo_notificacao_legivel,
                         categoria=categoria_notificacao,
                         modo=resultado["modo"],
-                        fontes_usadas=resultado.get("fontes_usadas", [])
+                        fontes_usadas=resultado.get("fontes_usadas", []),
+                        comarca=comarca_selecionada  # FASE 3
                     )
                     
                     # Armazena resultado no session_state

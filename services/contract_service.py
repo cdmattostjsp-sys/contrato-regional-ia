@@ -5,12 +5,20 @@ Gerencia operações relacionadas a contratos regionais.
 
 Nota: Atualmente utiliza dados mockados + contratos cadastrados via upload.
 Preparado para futura integração com API REST corporativa.
+
+EVOLUÇÃO FASE 3 - Contratos Regionais com Fiscais por Comarca:
+- Suporte a múltiplas comarcas por contrato
+- Cada comarca possui fiscal titular e suplente
+- Compatibilidade total com contratos simples (modelo antigo)
 """
 
 from datetime import datetime, timedelta
 from typing import List, Dict, Optional
 import json
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_contratos_cadastrados() -> List[Dict]:
@@ -581,3 +589,111 @@ def obter_documentos_contrato(contrato_id: str) -> Dict[str, List[str]]:
         resultado['aditivos'].append(str(arquivo))
     
     return resultado
+
+
+# ============================================================================
+# FASE 3: CONTRATOS REGIONAIS - FISCAIS POR COMARCA
+# ============================================================================
+
+def obter_fiscais_do_contrato(contrato: Dict) -> List[Dict]:
+    """
+    Retorna lista normalizada de fiscais do contrato, com suporte a:
+    - Contratos regionais (múltiplas comarcas): fiscais_por_comarca
+    - Contratos simples (modelo antigo): fiscal_titular + fiscal_substituto
+    
+    Esta função garante COMPATIBILIDADE RETROATIVA com contratos antigos.
+    
+    Args:
+        contrato: Dict com dados do contrato
+        
+    Returns:
+        Lista de dicts com estrutura:
+        [
+            {
+                "comarca": str,
+                "titular": str,
+                "suplente": str,
+                "email_titular": str (opcional),
+                "email_suplente": str (opcional)
+            }
+        ]
+        
+    Exemplos:
+        # Contrato regional (novo modelo):
+        contrato = {
+            "fiscais_por_comarca": [
+                {"comarca": "Sorocaba", "titular": "João", "suplente": "Maria"}
+            ]
+        }
+        
+        # Contrato simples (modelo antigo):
+        contrato = {
+            "fiscal_titular": "João",
+            "fiscal_substituto": "Maria"
+        }
+    """
+    # PRIORIDADE 1: Novo modelo (fiscais por comarca)
+    if 'fiscais_por_comarca' in contrato and contrato['fiscais_por_comarca']:
+        return contrato['fiscais_por_comarca']
+    
+    # PRIORIDADE 2: Modelo antigo (compatibilidade)
+    # Trata como contrato de comarca única
+    titular = contrato.get('fiscal_titular', '')
+    suplente = contrato.get('fiscal_substituto', '')
+    
+    if titular or suplente:
+        return [{
+            "comarca": contrato.get('comarca', '(Comarca Única)'),
+            "titular": titular,
+            "suplente": suplente
+        }]
+    
+    # FALLBACK: Sem fiscais cadastrados
+    return []
+
+
+def obter_fiscal_por_comarca(contrato: Dict, comarca: str) -> Optional[Dict]:
+    """
+    Retorna fiscal específico de uma comarca do contrato.
+    
+    Args:
+        contrato: Dict com dados do contrato
+        comarca: Nome da comarca
+        
+    Returns:
+        Dict com titular/suplente ou None se não encontrado
+    """
+    fiscais = obter_fiscais_do_contrato(contrato)
+    
+    for fiscal in fiscais:
+        if fiscal.get('comarca', '').lower() == comarca.lower():
+            return fiscal
+    
+    return None
+
+
+def obter_comarcas_do_contrato(contrato: Dict) -> List[str]:
+    """
+    Retorna lista de comarcas abrangidas pelo contrato.
+    
+    Args:
+        contrato: Dict com dados do contrato
+        
+    Returns:
+        Lista de nomes de comarcas
+    """
+    fiscais = obter_fiscais_do_contrato(contrato)
+    return [f.get('comarca', '') for f in fiscais if f.get('comarca')]
+
+
+def eh_contrato_regional(contrato: Dict) -> bool:
+    """
+    Verifica se o contrato é regional (múltiplas comarcas).
+    
+    Args:
+        contrato: Dict com dados do contrato
+        
+    Returns:
+        True se contrato regional, False caso contrário
+    """
+    return len(obter_comarcas_do_contrato(contrato)) > 1

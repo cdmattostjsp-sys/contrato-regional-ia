@@ -170,13 +170,16 @@ Use quebras de linha para separar seções.
 # GERAÇÃO DE SUGESTÃO VIA IA
 # ============================================================================
 
-def _enriquecer_contexto_com_documentos(contexto_contrato: Dict, motivo: str) -> Dict:
+def _enriquecer_contexto_com_documentos(contexto_contrato: Dict, motivo: str, comarca: Optional[str] = None) -> Dict:
     """
     Enriquece contexto com texto extraído de PDFs do contrato e Base de Conhecimento.
+    
+    FASE 3: Suporta comarca para contratos regionais.
     
     Args:
         contexto_contrato: Contexto sanitizado do contrato
         motivo: Motivo da notificação (para filtrar trechos relevantes)
+        comarca: Nome da comarca (para contratos regionais)
         
     Returns:
         Dict com:
@@ -184,8 +187,9 @@ def _enriquecer_contexto_com_documentos(contexto_contrato: Dict, motivo: str) ->
         - 'texto_aditivos': Trechos relevantes dos aditivos
         - 'texto_conhecimento': Trechos da Base de Conhecimento
         - 'fontes_usadas': Lista de fontes consultadas (para governança)
+        - 'fiscal_responsavel': Dict com fiscal titular/suplente (se comarca fornecida)
     """
-    from services.contract_service import obter_documentos_contrato
+    from services.contract_service import obter_documentos_contrato, obter_fiscal_por_comarca
     from services.document_service import extrair_texto_pdf, filtrar_trechos_relevantes
     from services.library_search_service import buscar_documentos_relevantes, formatar_resultado_busca
     
@@ -193,8 +197,16 @@ def _enriquecer_contexto_com_documentos(contexto_contrato: Dict, motivo: str) ->
         'texto_contrato': '',
         'texto_aditivos': '',
         'texto_conhecimento': '',
-        'fontes_usadas': []
+        'fontes_usadas': [],
+        'fiscal_responsavel': None  # FASE 3: Adiciona fiscal responsável
     }
+    
+    # FASE 3: Se comarca fornecida, identifica fiscal responsável
+    if comarca:
+        fiscal = obter_fiscal_por_comarca(contexto_contrato, comarca)
+        if fiscal:
+            resultado['fiscal_responsavel'] = fiscal
+            resultado['fontes_usadas'].append(f"Fiscal: {fiscal.get('titular')} (Comarca: {comarca})")
     
     # Extrai palavras-chave do motivo para filtrar trechos relevantes
     palavras_chave = _extrair_palavras_chave(motivo)
@@ -330,8 +342,14 @@ def gerar_sugestao_notificacao(
     contexto_sanitizado = _sanitizar_contexto_contrato(contexto_contrato)
     
     # NOVO: Enriquece contexto com documentos do contrato e Base de Conhecimento
+    # FASE 3: Inclui comarca para contratos regionais
     motivo = dados_notificacao.get('motivo', '')
-    contexto_enriquecido = _enriquecer_contexto_com_documentos(contexto_contrato, motivo)
+    comarca = dados_notificacao.get('comarca')  # FASE 3
+    contexto_enriquecido = _enriquecer_contexto_com_documentos(
+        contexto_contrato, 
+        motivo,
+        comarca
+    )
     
     # Monta prompt contextual com dados enriquecidos
     prompt_contexto = _montar_prompt_contexto(
@@ -541,12 +559,15 @@ def registrar_geracao_notificacao(
     categoria: str,
     modo: str,
     usuario: Optional[str] = None,
-    fontes_usadas: Optional[List[str]] = None
+    fontes_usadas: Optional[List[str]] = None,
+    comarca: Optional[str] = None  # FASE 3
 ) -> None:
     """
     Registra geração de notificação para fins de governança.
     
     NÃO armazena conteúdo da notificação (apenas metadados).
+    
+    FASE 3: Inclui comarca para contratos regionais.
     
     Args:
         contrato_id: ID do contrato
@@ -555,12 +576,17 @@ def registrar_geracao_notificacao(
         modo: Modo de geração (IA_ATIVA | MODO_PADRAO | ERRO_IA)
         usuario: ID do usuário (opcional)
         fontes_usadas: Lista de fontes consultadas (opcional)
+        comarca: Comarca relacionada (opcional, para contratos regionais)
     """
     try:
         from services.history_service import log_event
         
         # Prepara metadados
         details = f"{categoria} - {tipo_notificacao} | Modo: {modo}"
+        
+        # FASE 3: Adiciona comarca se fornecida
+        if comarca:
+            details += f" | Comarca: {comarca}"
         
         # Adiciona informação sobre fontes (se houver)
         if fontes_usadas:
@@ -577,6 +603,7 @@ def registrar_geracao_notificacao(
                 "categoria": categoria,
                 "tipo": tipo_notificacao,
                 "modo": modo,
+                "comarca": comarca,  # FASE 3
                 "timestamp": datetime.now().isoformat(),
                 "usuario": usuario or "não identificado",
                 "fontes_usadas": fontes_usadas or []  # Lista completa de fontes
