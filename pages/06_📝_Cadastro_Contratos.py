@@ -274,7 +274,7 @@ def main():
                     col_add, col_clear = st.columns([1, 4])
                     
                     with col_add:
-                        if st.button("➕ Adicionar", key="btn_add_comarca"):
+                        if st.form_submit_button("➕ Adicionar", key="btn_add_comarca_add"):
                             if nova_comarca and novo_titular and novo_suplente:
                                 st.session_state.fiscais_temp.append({
                                     "comarca": nova_comarca,
@@ -293,7 +293,7 @@ def main():
                         with col_info:
                             st.write(f"**{fiscal['comarca']}:** {fiscal['titular']} (titular) / {fiscal['suplente']} (suplente)")
                         with col_del:
-                            if st.button("🗑️", key=f"del_comarca_{idx}"):
+                            if st.form_submit_button("🗑️", key=f"del_comarca_{idx}_del"):
                                 st.session_state.fiscais_temp.pop(idx)
                                 st.rerun()
                     
