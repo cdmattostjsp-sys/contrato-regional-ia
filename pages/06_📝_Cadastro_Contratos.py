@@ -195,6 +195,17 @@ def main():
                     help="Data de término da vigência"
                 )
                 
+                gestor_titular = st.text_input(
+                    "Gestor Titular *",
+                    placeholder="Ex: Ana Paula Souza",
+                    help="Nome do gestor titular"
+                )
+
+                gestor_suplente = st.text_input(
+                    "Gestor Suplente *",
+                    placeholder="Ex: Carlos Eduardo Lima",
+                    help="Nome do gestor suplente"
+                )
                 fiscal_titular = st.text_input(
                     "Fiscal Titular *",
                     placeholder="Ex: João Silva Santos",
@@ -370,7 +381,7 @@ def main():
             
             if submitted:
                 # Validações
-                if not all([numero, fornecedor, objeto, valor, fiscal_titular, fiscal_substituto, arquivo_pdf]):
+                if not all([numero, fornecedor, objeto, valor, gestor_titular, gestor_suplente, fiscal_titular, fiscal_substituto, arquivo_pdf]):
                     st.error("⚠️ Preencha todos os campos obrigatórios (*) e faça upload do PDF!")
                 elif data_fim <= data_inicio:
                     st.error("⚠️ A data de término deve ser posterior à data de início!")
@@ -391,6 +402,8 @@ def main():
                         "status": status,
                         "data_inicio": data_inicio.isoformat(),
                         "data_fim": data_fim.isoformat(),
+                        "gestor_titular": gestor_titular,
+                        "gestor_suplente": gestor_suplente,
                         "fiscal_titular": fiscal_titular,
                         "fiscal_substituto": fiscal_substituto,
                         "ultima_atualizacao": datetime.now().isoformat()
@@ -434,6 +447,8 @@ def main():
                         st.write(f"**Status:** {contrato['status']}")
                     
                     with col3:
+                        st.write(f"**Gestor Titular:** {contrato.get('gestor_titular', '-')}")
+                        st.write(f"**Gestor Suplente:** {contrato.get('gestor_suplente', '-')}")
                         st.write(f"**Fiscal Titular:** {contrato['fiscal_titular']}")
                         st.write(f"**Fiscal Substituto:** {contrato['fiscal_substituto']}")
                     
