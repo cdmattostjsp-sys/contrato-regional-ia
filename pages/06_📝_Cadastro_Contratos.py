@@ -184,15 +184,24 @@ def main():
                     help="Valor total do contrato"
                 )
             
+            import locale
+            locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
+            from datetime import datetime
+            def date_input_br(label, key=None, help=None):
+                # Mostra o campo no formato brasileiro
+                data = st.date_input(label, format="%d/%m/%Y", key=key, help=help)
+                return data
+
             with col2:
-                data_inicio = st.date_input(
+                data_inicio = date_input_br(
                     "Data de Início *",
-                    help="Data de início da vigência"
+                    help="Data de início da vigência",
+                    key="data_inicio"
                 )
-                
-                data_fim = st.date_input(
+                data_fim = date_input_br(
                     "Data de Término *",
-                    help="Data de término da vigência"
+                    help="Data de término da vigência",
+                    key="data_fim"
                 )
                 
                 gestor_titular = st.text_input(
@@ -325,15 +334,12 @@ def main():
             
             if arquivos_aditivos:
                 st.info(f"📋 **{len(arquivos_aditivos)} aditivo(s) selecionado(s)** - Informe os dados de cada um:")
-                
                 for i, aditivo in enumerate(arquivos_aditivos, 1):
                     st.markdown(f"##### Aditivo {i:02d} - {aditivo.name}")
-                    
                     with st.container():
                         col_a, col_b = st.columns(2)
-                        
                         with col_a:
-                            data_aditivo = st.date_input(
+                            data_aditivo = date_input_br(
                                 f"Data do Aditivo {i}",
                                 key=f"data_aditivo_{i}",
                                 help="Data de assinatura do aditivo"
@@ -385,9 +391,8 @@ def main():
                                     key=f"prorrog_{i}"
                                 )
                                 dados_aditivo['prorrogacao_dias'] = prorrogacao_dias
-                            
                             with col_p2:
-                                nova_data_fim = st.date_input(
+                                nova_data_fim = date_input_br(
                                     f"Nova Data de Término {i}",
                                     key=f"nova_data_{i}"
                                 )
@@ -462,42 +467,43 @@ def main():
                 elif data_fim <= data_inicio:
                     st.error("⚠️ A data de término deve ser posterior à data de início!")
                 else:
-                    # Gera ID único
-                    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-                    contrato_id = f"CTR{timestamp}"
-                    
-                    # Monta dados do contrato
-                    dados_contrato = {
-                        "id": contrato_id,
-                        "numero": numero,
-                        "tipo": tipo,
-                        "fornecedor": fornecedor,
-                        "objeto": objeto,
-                        "vigencia": f"{data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}",
-                        "valor": float(valor),
-                        "status": status,
-                        "data_inicio": data_inicio.isoformat(),
-                        "data_fim": data_fim.isoformat(),
-                        "gestor_titular": gestor_titular,
-                        "gestor_suplente": gestor_suplente,
-                        "fiscal_titular": fiscal_titular,
-                        "fiscal_substituto": fiscal_substituto,
-                        "ultima_atualizacao": datetime.now().isoformat()
-                    }
-                    
-                    # FASE 3: Adiciona fiscais por comarca se for contrato regional
-                    if usar_modelo_regional and fiscais_por_comarca:
-                        dados_contrato["fiscais_por_comarca"] = fiscais_por_comarca
-                        # Limpa session_state após salvar
-                        st.session_state.fiscais_temp = []
-                    
-                    # Salva contrato
-                    try:
-                        salvar_contrato(dados_contrato, arquivo_pdf, arquivos_aditivos, dados_aditivos_list)
-                        
-                        st.success(f"✅ Contrato **{numero}** cadastrado com sucesso!")
-                        
-                        if arquivos_aditivos and len(arquivos_aditivos) > 0:
+                    # Checa duplicidade pelo número do contrato
+                    contratos_existentes = listar_contratos_cadastrados()
+                    duplicado = any(c.get("numero", "").strip().lower() == numero.strip().lower() for c in contratos_existentes)
+                    if duplicado:
+                        st.error(f"⚠️ Já existe um contrato cadastrado com o número: {numero}. Verifique antes de prosseguir.")
+                    else:
+                        # Gera ID único
+                        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+                        contrato_id = f"CTR{timestamp}"
+                        # Monta dados do contrato
+                        dados_contrato = {
+                            "id": contrato_id,
+                            "numero": numero,
+                            "tipo": tipo,
+                            "fornecedor": fornecedor,
+                            "objeto": objeto,
+                            "vigencia": f"{data_inicio.strftime('%d/%m/%Y')} a {data_fim.strftime('%d/%m/%Y')}",
+                            "valor": float(valor),
+                            "status": status,
+                            "data_inicio": data_inicio.isoformat(),
+                            "data_fim": data_fim.isoformat(),
+                            "gestor_titular": gestor_titular,
+                            "gestor_suplente": gestor_suplente,
+                            "fiscal_titular": fiscal_titular,
+                            "fiscal_substituto": fiscal_substituto,
+                            "ultima_atualizacao": datetime.now().isoformat()
+                        }
+                        # FASE 3: Adiciona fiscais por comarca se for contrato regional
+                        if usar_modelo_regional and fiscais_por_comarca:
+                            dados_contrato["fiscais_por_comarca"] = fiscais_por_comarca
+                            # Limpa session_state após salvar
+                            st.session_state.fiscais_temp = []
+                        # Salva contrato
+                        try:
+                            salvar_contrato(dados_contrato, arquivo_pdf, arquivos_aditivos, dados_aditivos_list)
+                            st.success(f"✅ Contrato **{numero}** cadastrado com sucesso!")
+                            if arquivos_aditivos and len(arquivos_aditivos) > 0:
                             st.success(f"📑 **{len(arquivos_aditivos)} aditivo(s)** anexado(s) com sucesso!")
                         
                         # st.balloons() removido para manter perfil institucional TJSP
