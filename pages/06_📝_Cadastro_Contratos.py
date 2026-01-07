@@ -504,12 +504,11 @@ def main():
                             salvar_contrato(dados_contrato, arquivo_pdf, arquivos_aditivos, dados_aditivos_list)
                             st.success(f"✅ Contrato **{numero}** cadastrado com sucesso!")
                             if arquivos_aditivos and len(arquivos_aditivos) > 0:
-                            st.success(f"📑 **{len(arquivos_aditivos)} aditivo(s)** anexado(s) com sucesso!")
-                        
-                        # st.balloons() removido para manter perfil institucional TJSP
-                        st.info(f"**ID gerado:** {contrato_id}")
-                    except Exception as e:
-                        st.error(f"❌ Erro ao salvar contrato: {str(e)}")
+                                st.success(f"📑 **{len(arquivos_aditivos)} aditivo(s)** anexado(s) com sucesso!")
+                            # st.balloons() removido para manter perfil institucional TJSP
+                            st.info(f"**ID gerado:** {contrato_id}")
+                        except Exception as e:
+                            st.error(f"❌ Erro ao salvar contrato: {str(e)}")
     
     with tab2:
         st.markdown("### 📋 Contratos Cadastrados via Upload")
