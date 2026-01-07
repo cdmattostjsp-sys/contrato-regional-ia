@@ -184,22 +184,16 @@ def main():
                     help="Valor total do contrato"
                 )
             
-            import locale
-            locale.setlocale(locale.LC_TIME, 'pt_BR.UTF-8')
-            from datetime import datetime
-            def date_input_br(label, key=None, help=None):
-                # Mostra o campo no formato brasileiro
-                data = st.date_input(label, format="%d/%m/%Y", key=key, help=help)
-                return data
-
             with col2:
-                data_inicio = date_input_br(
+                data_inicio = st.date_input(
                     "Data de Início *",
+                    format="DD/MM/YYYY",
                     help="Data de início da vigência",
                     key="data_inicio"
                 )
-                data_fim = date_input_br(
+                data_fim = st.date_input(
                     "Data de Término *",
+                    format="DD/MM/YYYY",
                     help="Data de término da vigência",
                     key="data_fim"
                 )
@@ -339,8 +333,9 @@ def main():
                     with st.container():
                         col_a, col_b = st.columns(2)
                         with col_a:
-                            data_aditivo = date_input_br(
+                            data_aditivo = st.date_input(
                                 f"Data do Aditivo {i}",
+                                format="DD/MM/YYYY",
                                 key=f"data_aditivo_{i}",
                                 help="Data de assinatura do aditivo"
                             )
@@ -392,8 +387,9 @@ def main():
                                 )
                                 dados_aditivo['prorrogacao_dias'] = prorrogacao_dias
                             with col_p2:
-                                nova_data_fim = date_input_br(
+                                nova_data_fim = st.date_input(
                                     f"Nova Data de Término {i}",
+                                    format="DD/MM/YYYY",
                                     key=f"nova_data_{i}"
                                 )
                                 dados_aditivo['nova_data_fim'] = nova_data_fim.isoformat() if nova_data_fim else ''
