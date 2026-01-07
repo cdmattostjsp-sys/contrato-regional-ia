@@ -8,6 +8,9 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional
 import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def listar_documentos_disponiveis() -> List[Dict]:
@@ -78,36 +81,98 @@ def classificar_documento(nome_arquivo: str) -> str:
 
 def extrair_texto_pdf(caminho_pdf: str) -> str:
     """
-    Extrai texto de um arquivo PDF.
-    
-    NOTA: Esta é uma implementação placeholder para o MVP.
-    Em produção, usar biblioteca como PyPDF2, pdfplumber ou pypdf.
+    Extrai texto de um arquivo PDF usando PyMuPDF (fitz).
     
     Args:
         caminho_pdf: Caminho completo do arquivo PDF
         
     Returns:
-        Texto extraído do PDF
+        Texto extraído do PDF ou string vazia em caso de erro
     """
-    # TODO: Implementar extração real com PyPDF2 ou pdfplumber
-    # Para isso, adicionar ao requirements.txt:
-    # - PyPDF2==3.0.1 ou
-    # - pdfplumber==0.10.3
-    
-    return """
-    [PLACEHOLDER - Extração de PDF não implementada no MVP]
-    
-    Para implementar:
-    1. Adicionar dependência: pip install PyPDF2
-    2. Implementar extração real de texto
-    3. Tratar erros de leitura
-    4. Fazer cache do conteúdo extraído
-    
-    Os documentos estão disponíveis em:
-    - Manual de Contratos - TJSP - 2025.pdf
-    - INSTRUÇÃO NORMATIVA Nº 12-2025 2 1.pdf
-    - manual-de-boas-praticas-em-contratacoes-publicas.pdf
+    try:
+        import fitz  # PyMuPDF
+        
+        texto_completo = []
+        
+        # Abre o PDF
+        doc = fitz.open(caminho_pdf)
+        
+        # Extrai texto de cada página
+        for pagina_num in range(len(doc)):
+            pagina = doc[pagina_num]
+            texto = pagina.get_text("text")
+            if texto.strip():
+                texto_completo.append(f"\n--- Página {pagina_num + 1} ---\n{texto}")
+        
+        doc.close()
+        
+        return "\n".join(texto_completo)
+        
+    except ImportError:
+        logger.warning("⚠️ PyMuPDF (fitz) não instalado. Instale com: pip install pymupdf")
+        return ""
+    except Exception as e:
+        logger.error(f"Erro ao extrair texto do PDF {caminho_pdf}: {e}")
+        return ""
+
+
+def filtrar_trechos_relevantes(texto_completo: str, palavras_chave: List[str], tamanho_janela: int = 800, max_trechos: int = 5) -> str:
     """
+    Filtra trechos relevantes de um texto longo baseado em palavras-chave.
+    
+    Args:
+        texto_completo: Texto completo extraído
+        palavras_chave: Lista de palavras-chave para buscar
+        tamanho_janela: Tamanho da janela de contexto (caracteres antes e depois)
+        max_trechos: Número máximo de trechos a retornar
+        
+    Returns:
+        Texto com os trechos mais relevantes
+    """
+    if not texto_completo or not palavras_chave:
+        return texto_completo[:5000]  # Retorna início se não houver filtro
+    
+    texto_lower = texto_completo.lower()
+    palavras_lower = [p.lower() for p in palavras_chave]
+    
+    # Encontra posições onde palavras-chave aparecem
+    ocorrencias = []
+    for palavra in palavras_lower:
+        pos = 0
+        while True:
+            pos = texto_lower.find(palavra, pos)
+            if pos == -1:
+                break
+            ocorrencias.append(pos)
+            pos += 1
+    
+    if not ocorrencias:
+        # Se não encontrou palavras-chave, retorna início
+        return texto_completo[:5000]
+    
+    # Ordena ocorrências
+    ocorrencias.sort()
+    
+    # Extrai trechos com janela de contexto
+    trechos = []
+    usado = set()
+    
+    for pos in ocorrencias:
+        if len(trechos) >= max_trechos:
+            break
+        
+        inicio = max(0, pos - tamanho_janela)
+        fim = min(len(texto_completo), pos + tamanho_janela)
+        
+        # Evita sobreposição
+        if any(i in usado for i in range(inicio, fim)):
+            continue
+        
+        trecho = texto_completo[inicio:fim]
+        trechos.append(f"\n[...]{trecho}[...]\n")
+        usado.update(range(inicio, fim))
+    
+    return "\n".join(trechos) if trechos else texto_completo[:5000]
 
 
 def buscar_em_documento(query: str, documento_nome: str) -> List[Dict]:

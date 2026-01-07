@@ -17,7 +17,7 @@ GOVERNANÇA:
 """
 
 import streamlit as st
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, List
 from datetime import datetime
 import logging
 
@@ -170,6 +170,130 @@ Use quebras de linha para separar seções.
 # GERAÇÃO DE SUGESTÃO VIA IA
 # ============================================================================
 
+def _enriquecer_contexto_com_documentos(contexto_contrato: Dict, motivo: str) -> Dict:
+    """
+    Enriquece contexto com texto extraído de PDFs do contrato e Base de Conhecimento.
+    
+    Args:
+        contexto_contrato: Contexto sanitizado do contrato
+        motivo: Motivo da notificação (para filtrar trechos relevantes)
+        
+    Returns:
+        Dict com:
+        - 'texto_contrato': Trechos relevantes do contrato
+        - 'texto_aditivos': Trechos relevantes dos aditivos
+        - 'texto_conhecimento': Trechos da Base de Conhecimento
+        - 'fontes_usadas': Lista de fontes consultadas (para governança)
+    """
+    from services.contract_service import obter_documentos_contrato
+    from services.document_service import extrair_texto_pdf, filtrar_trechos_relevantes
+    from services.library_search_service import buscar_documentos_relevantes, formatar_resultado_busca
+    
+    resultado = {
+        'texto_contrato': '',
+        'texto_aditivos': '',
+        'texto_conhecimento': '',
+        'fontes_usadas': []
+    }
+    
+    # Extrai palavras-chave do motivo para filtrar trechos relevantes
+    palavras_chave = _extrair_palavras_chave(motivo)
+    
+    try:
+        # 1. BUSCA PDFs DO CONTRATO
+        contrato_id = contexto_contrato.get('numero', '').replace('/', '_').replace(' ', '')
+        if contrato_id:
+            docs = obter_documentos_contrato(contrato_id)
+            
+            # Extrai texto do contrato original
+            if docs['contrato']:
+                logger.info(f"Extraindo PDF do contrato: {docs['contrato']}")
+                texto_completo = extrair_texto_pdf(docs['contrato'])
+                if texto_completo:
+                    resultado['texto_contrato'] = filtrar_trechos_relevantes(
+                        texto_completo, 
+                        palavras_chave, 
+                        tamanho_janela=1000,
+                        max_trechos=3
+                    )
+                    resultado['fontes_usadas'].append(f"Contrato {contexto_contrato.get('numero')}")
+            
+            # Extrai texto dos aditivos
+            if docs['aditivos']:
+                trechos_aditivos = []
+                for idx, caminho_aditivo in enumerate(docs['aditivos'], 1):
+                    logger.info(f"Extraindo PDF do aditivo {idx}: {caminho_aditivo}")
+                    texto_aditivo = extrair_texto_pdf(caminho_aditivo)
+                    if texto_aditivo:
+                        trecho = filtrar_trechos_relevantes(
+                            texto_aditivo,
+                            palavras_chave,
+                            tamanho_janela=800,
+                            max_trechos=2
+                        )
+                        if trecho:
+                            trechos_aditivos.append(f"\n--- Aditivo {idx} ---\n{trecho}")
+                            resultado['fontes_usadas'].append(f"Aditivo {idx}")
+                
+                resultado['texto_aditivos'] = "\n".join(trechos_aditivos)
+        
+        # 2. BUSCA NA BASE DE CONHECIMENTO INSTITUCIONAL
+        logger.info("Consultando Base de Conhecimento institucional")
+        docs_conhecimento = buscar_documentos_relevantes(
+            pergunta=motivo,
+            limite=3,
+            tamanho_trecho=600
+        )
+        
+        if docs_conhecimento:
+            resultado['texto_conhecimento'] = formatar_resultado_busca(docs_conhecimento)
+            for doc in docs_conhecimento:
+                fonte = f"{doc.get('tipo', 'Documento')} - {doc.get('titulo', 'sem título')}"
+                resultado['fontes_usadas'].append(fonte)
+        
+        logger.info(f"Contexto enriquecido: {len(resultado['fontes_usadas'])} fontes consultadas")
+        
+    except Exception as e:
+        logger.warning(f"Erro ao enriquecer contexto: {e}. Continuando sem contexto adicional.")
+    
+    return resultado
+
+
+def _extrair_palavras_chave(texto: str, min_tamanho: int = 4) -> List[str]:
+    """
+    Extrai palavras-chave relevantes de um texto.
+    
+    Args:
+        texto: Texto para extrair palavras-chave
+        min_tamanho: Tamanho mínimo das palavras
+        
+    Returns:
+        Lista de palavras-chave
+    """
+    import re
+    
+    # Remove pontuação e converte para minúsculas
+    texto_limpo = re.sub(r'[^\w\s]', ' ', texto.lower())
+    palavras = texto_limpo.split()
+    
+    # Palavras irrelevantes (stopwords básicas)
+    stopwords = {
+        'para', 'com', 'sem', 'pelo', 'pela', 'pelos', 'pelas',
+        'este', 'esta', 'esse', 'essa', 'aquele', 'aquela',
+        'que', 'qual', 'quais', 'como', 'quando', 'onde',
+        'muito', 'mais', 'menos', 'mesmo', 'outra', 'outro'
+    }
+    
+    # Filtra palavras relevantes
+    palavras_relevantes = [
+        p for p in palavras 
+        if len(p) >= min_tamanho and p not in stopwords
+    ]
+    
+    # Remove duplicatas mantendo ordem
+    return list(dict.fromkeys(palavras_relevantes[:15]))  # Máximo 15 palavras
+
+
 def gerar_sugestao_notificacao(
     contexto_contrato: Dict,
     dados_notificacao: Dict
@@ -202,23 +326,36 @@ def gerar_sugestao_notificacao(
             "modo": "MODO_PADRAO"
         }
     
-    # Sanitiza contexto
+    # Sanitiza contexto básico
     contexto_sanitizado = _sanitizar_contexto_contrato(contexto_contrato)
     
-    # Monta prompt contextual
-    prompt_contexto = _montar_prompt_contexto(contexto_sanitizado, dados_notificacao)
+    # NOVO: Enriquece contexto com documentos do contrato e Base de Conhecimento
+    motivo = dados_notificacao.get('motivo', '')
+    contexto_enriquecido = _enriquecer_contexto_com_documentos(contexto_contrato, motivo)
+    
+    # Monta prompt contextual com dados enriquecidos
+    prompt_contexto = _montar_prompt_contexto(
+        contexto_sanitizado, 
+        dados_notificacao,
+        contexto_enriquecido
+    )
     
     # Consulta IA
     try:
         texto_ia = _consultar_openai_notificacao(prompt_contexto)
         
         if texto_ia:
+            # Monta resumo com fontes usadas
+            fontes = contexto_enriquecido.get('fontes_usadas', [])
+            resumo_fontes = f" | Fontes: {len(fontes)}" if fontes else ""
+            
             return {
                 "sucesso": True,
                 "texto_sugerido": texto_ia,
-                "resumo_criterios": f"Gerado por IA | Tipo: {dados_notificacao.get('tipo')} | Prazo: {dados_notificacao.get('prazo')} dias",
+                "resumo_criterios": f"Gerado por IA | Tipo: {dados_notificacao.get('tipo')} | Prazo: {dados_notificacao.get('prazo')} dias{resumo_fontes}",
                 "mensagem": "✅ Sugestão gerada com sucesso. Revise e ajuste conforme necessário.",
-                "modo": "IA_ATIVA"
+                "modo": "IA_ATIVA",
+                "fontes_usadas": fontes  # NOVO: para governança
             }
         else:
             return {
@@ -240,17 +377,35 @@ def gerar_sugestao_notificacao(
         }
 
 
-def _montar_prompt_contexto(contexto: Dict, dados: Dict) -> str:
+def _montar_prompt_contexto(contexto: Dict, dados: Dict, contexto_enriquecido: Dict = None) -> str:
     """
     Monta prompt contextualizado para a IA.
     
     Args:
         contexto: Contexto sanitizado do contrato
         dados: Dados do formulário
+        contexto_enriquecido: Contexto adicional com documentos (opcional)
         
     Returns:
         Prompt completo para enviar à IA
     """
+    # Seção de documentos anexados (se houver)
+    secao_documentos = ""
+    if contexto_enriquecido:
+        partes_docs = []
+        
+        if contexto_enriquecido.get('texto_contrato'):
+            partes_docs.append(f"TRECHOS DO CONTRATO:\n{contexto_enriquecido['texto_contrato']}")
+        
+        if contexto_enriquecido.get('texto_aditivos'):
+            partes_docs.append(f"TRECHOS DOS ADITIVOS:\n{contexto_enriquecido['texto_aditivos']}")
+        
+        if contexto_enriquecido.get('texto_conhecimento'):
+            partes_docs.append(f"DOCUMENTOS INSTITUCIONAIS RELEVANTES:\n{contexto_enriquecido['texto_conhecimento']}")
+        
+        if partes_docs:
+            secao_documentos = "\n\n---\nDOCUMENTAÇÃO DE APOIO:\n\n" + "\n\n".join(partes_docs) + "\n\n---\n"
+    
     prompt = f"""
 CONTEXTO DO CONTRATO:
 - Número: {contexto['numero']}
@@ -272,13 +427,15 @@ PRAZO PARA RESPOSTA:
 {dados.get('prazo', 5)} dias úteis
 
 FUNDAMENTAÇÃO LEGAL (se fornecida):
-{dados.get('fundamentacao', '(não fornecida - usar referência genérica ao contrato e legislação aplicável)')}
-
----
+{dados.get('fundamentacao', '(não fornecida - usar referência genérica ao contrato e legislação aplicável)')}{secao_documentos}
 
 TAREFA:
 Gere um texto formal de notificação contratual seguindo a estrutura institucional do TJSP.
 O texto será revisado e ajustado pelo servidor antes do envio.
+
+IMPORTANTE: Se cláusulas ou trechos contratuais foram fornecidos acima, cite-os LITERALMENTE.
+NÃO invente cláusulas ou números que não apareçam nos trechos fornecidos.
+Se não houver cláusula específica aplicável, use fundamentação genérica.
 
 Inclua:
 1. Cabeçalho com destinatário
@@ -383,7 +540,8 @@ def registrar_geracao_notificacao(
     tipo_notificacao: str,
     categoria: str,
     modo: str,
-    usuario: Optional[str] = None
+    usuario: Optional[str] = None,
+    fontes_usadas: Optional[List[str]] = None
 ) -> None:
     """
     Registra geração de notificação para fins de governança.
@@ -396,12 +554,17 @@ def registrar_geracao_notificacao(
         categoria: Categoria (Gestor/Fiscal)
         modo: Modo de geração (IA_ATIVA | MODO_PADRAO | ERRO_IA)
         usuario: ID do usuário (opcional)
+        fontes_usadas: Lista de fontes consultadas (opcional)
     """
     try:
         from services.history_service import log_event
         
         # Prepara metadados
         details = f"{categoria} - {tipo_notificacao} | Modo: {modo}"
+        
+        # Adiciona informação sobre fontes (se houver)
+        if fontes_usadas:
+            details += f" | Fontes: {', '.join(fontes_usadas[:5])}"  # Máximo 5 fontes no resumo
         
         # Registra evento
         log_event(
@@ -415,11 +578,12 @@ def registrar_geracao_notificacao(
                 "tipo": tipo_notificacao,
                 "modo": modo,
                 "timestamp": datetime.now().isoformat(),
-                "usuario": usuario or "não identificado"
+                "usuario": usuario or "não identificado",
+                "fontes_usadas": fontes_usadas or []  # Lista completa de fontes
             }
         )
         
-        logger.info(f"Geração registrada: {modo} - {tipo_notificacao}")
+        logger.info(f"Geração registrada: {modo} - {tipo_notificacao} | {len(fontes_usadas or [])} fontes")
         
     except Exception as e:
         # Falha no registro não deve impedir funcionamento

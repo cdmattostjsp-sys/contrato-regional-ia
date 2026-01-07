@@ -148,12 +148,13 @@ def main():
                         dados_notificacao=dados_notificacao
                     )
                     
-                    # Registra uso (governança)
+                    # Registra uso (governança) - ATUALIZADO para incluir fontes
                     registrar_geracao_notificacao(
                         contrato_id=contrato.get("id", "desconhecido"),
                         tipo_notificacao=tipo_notificacao_legivel,
                         categoria=categoria_notificacao,
-                        modo=resultado["modo"]
+                        modo=resultado["modo"],
+                        fontes_usadas=resultado.get("fontes_usadas", [])
                     )
                     
                     # Armazena resultado no session_state

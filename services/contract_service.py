@@ -547,3 +547,37 @@ def adicionar_aditivo_contrato(contrato_id: str, arquivo_pdf, dados_aditivo: dic
     except Exception as e:
         print(f"Erro ao adicionar aditivo: {e}")
         return False
+
+
+def obter_documentos_contrato(contrato_id: str) -> Dict[str, List[str]]:
+    """
+    Retorna caminhos dos PDFs vinculados ao contrato (contrato original + aditivos).
+    
+    Args:
+        contrato_id: ID do contrato
+        
+    Returns:
+        Dict com:
+        - 'contrato': caminho do PDF do contrato original (ou None)
+        - 'aditivos': lista de caminhos dos PDFs de aditivos
+    """
+    contrato_dir = Path("knowledge/contratos") / contrato_id
+    
+    resultado = {
+        'contrato': None,
+        'aditivos': []
+    }
+    
+    if not contrato_dir.exists():
+        return resultado
+    
+    # Busca PDF do contrato original
+    for arquivo in contrato_dir.glob(f"{contrato_id}.pdf"):
+        resultado['contrato'] = str(arquivo)
+        break
+    
+    # Busca PDFs de aditivos
+    for arquivo in sorted(contrato_dir.glob(f"{contrato_id}_ADITIVO_*.pdf")):
+        resultado['aditivos'].append(str(arquivo))
+    
+    return resultado
