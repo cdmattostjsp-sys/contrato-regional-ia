@@ -80,6 +80,11 @@ def calcular_alertas(contratos: List[Dict]) -> List[Dict]:
                     'dias_restantes': dias_restantes,
                     'data_alerta': hoje,
                     'acao_sugerida': 'planejamento'
+                        # Dual Write: Sincroniza cada alerta criado no V1 para o V2
+                        try:
+                            from services.dual_write_service import criar_alerta_dual
+                        except ImportError:
+                            criar_alerta_dual = None
                 })
             
             # ALERTA VENCIDO
@@ -93,7 +98,7 @@ def calcular_alertas(contratos: List[Dict]) -> List[Dict]:
                     'descricao': f"Contrato {contrato['numero']} está VENCIDO. Verificar situação imediatamente.",
                     'contrato_id': contrato['id'],
                     'contrato_numero': contrato['numero'],
-                    'dias_restantes': dias_restantes,
+                                    alerta = {
                     'data_alerta': hoje,
                     'acao_sugerida': 'verificacao'
                 })
@@ -107,10 +112,12 @@ def calcular_alertas(contratos: List[Dict]) -> List[Dict]:
                 'categoria': 'Status',
                 'titulo': 'Contrato com status CRÍTICO',
                 'descricao': f"Contrato {contrato['numero']} está marcado como crítico. Requer atenção imediata.",
+                                    if criar_alerta_dual:
+                                        criar_alerta_dual(alerta)
                 'contrato_id': contrato['id'],
                 'contrato_numero': contrato['numero'],
                 'data_alerta': hoje,
-                'acao_sugerida': 'verificacao'
+                                    alerta = {
             })
         
         # ALERTA PENDÊNCIAS
@@ -124,10 +131,12 @@ def calcular_alertas(contratos: List[Dict]) -> List[Dict]:
                 'titulo': f'{len(pendencias)} pendência(s) identificada(s)',
                 'descricao': f"Contrato {contrato['numero']}: {', '.join(pendencias[:2])}{'...' if len(pendencias) > 2 else ''}",
                 'contrato_id': contrato['id'],
+                                    if criar_alerta_dual:
+                                        criar_alerta_dual(alerta)
                 'contrato_numero': contrato['numero'],
                 'total_pendencias': len(pendencias),
                 'data_alerta': hoje,
-                'acao_sugerida': 'resolucao'
+                                    alerta = {
             })
         
         # ALERTA VALOR ALTO (> R$ 50M)
@@ -141,10 +150,12 @@ def calcular_alertas(contratos: List[Dict]) -> List[Dict]:
                 'titulo': f'Contrato de alto valor: R$ {valor/1_000_000:.1f}M',
                 'descricao': f"Contrato {contrato['numero']} possui valor elevado. Acompanhamento especial recomendado.",
                 'contrato_id': contrato['id'],
+                                    if criar_alerta_dual:
+                                        criar_alerta_dual(alerta)
                 'contrato_numero': contrato['numero'],
                 'valor': valor,
                 'data_alerta': hoje,
-                'acao_sugerida': 'acompanhamento'
+                                alerta = {
             })
     
     # Ordena por criticidade e dias restantes
@@ -157,11 +168,13 @@ def calcular_alertas(contratos: List[Dict]) -> List[Dict]:
 def get_alertas_por_tipo(alertas: List[Dict]) -> Dict[str, int]:
     """
     Conta alertas por tipo.
+                                if criar_alerta_dual:
+                                    criar_alerta_dual(alerta)
     
     Args:
         alertas: Lista de alertas
         
-    Returns:
+                                alerta = {
         Dicionário com contagens por tipo
     """
     contagens = {
@@ -175,11 +188,13 @@ def get_alertas_por_tipo(alertas: List[Dict]) -> Dict[str, int]:
         contagens[tipo] = contagens.get(tipo, 0) + 1
     
     return contagens
+                                if criar_alerta_dual:
+                                    criar_alerta_dual(alerta)
 
 
 def get_alertas_por_categoria(alertas: List[Dict]) -> Dict[str, List[Dict]]:
     """
-    Agrupa alertas por categoria.
+                                alerta = {
     
     Args:
         alertas: Lista de alertas
@@ -193,6 +208,8 @@ def get_alertas_por_categoria(alertas: List[Dict]) -> Dict[str, List[Dict]]:
         categoria = alerta.get('categoria', 'Outros')
         if categoria not in agrupados:
             agrupados[categoria] = []
+                                if criar_alerta_dual:
+                                    criar_alerta_dual(alerta)
         agrupados[categoria].append(alerta)
     
     return agrupados
@@ -215,6 +232,13 @@ def upsert_ff_alerts(alertas_ff: List[Dict], contrato: Dict) -> List[Dict]:
         Lista de alertas FF processados
     """
     # Enriquece alertas com dados do contrato
+                        # Dual Write: Sincroniza resolução no V2
+                        try:
+                            from services.dual_write_service import sincronizar_acao_dual
+                            if sincronizar_acao_dual:
+                                sincronizar_acao_dual(resolucao)
+                        except ImportError:
+                            pass
     for alerta in alertas_ff:
         alerta['contrato_numero'] = contrato.get('numero', contrato.get('id'))
         alerta['status'] = STATUS_ATIVO
