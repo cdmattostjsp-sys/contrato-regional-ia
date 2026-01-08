@@ -24,9 +24,31 @@ from services.alert_service import (
     STATUS_ATIVO,
     STATUS_RESOLVIDO
 )
+from services.alert_lifecycle_service import (
+    listar_alertas_v2,
+    criar_alerta_v2,
+    transicionar_estado,
+    registrar_acao,
+    get_alerta_v2_por_id,
+    get_estatisticas_alertas_v2,
+    TIPO_PREVENTIVO,
+    TIPO_CRITICO,
+    CATEGORIA_VIGENCIA,
+    CRITICIDADE_ALTA,
+    CRITICIDADE_MEDIA,
+    ESTADO_EM_ANALISE,
+    ESTADO_RESOLVIDO,
+    ACAO_DECISAO_RENOVAR
+)
 from services.email_service import get_email_service
 from services.history_service import log_event
 from components.layout_header import render_module_banner
+from components.alertas_v2_ui import (
+    render_alerta_v2_card,
+    render_registro_acao_form,
+    render_historico_alerta,
+    render_comparacao_v1_v2
+)
 
 
 def render_alerta_card(alerta: dict, on_resolvido=None):
@@ -186,6 +208,38 @@ def main():
         
         st.markdown("---")
         
+        # ========================================
+        # FEATURE FLAG: Toggle V1 vs V2
+        # ========================================
+        
+        col_toggle, col_info, col_modo = st.columns([2, 3, 2])
+        
+        with col_toggle:
+            usar_v2 = st.toggle(
+                "🚀 Novo Modelo (V2)",
+                value=st.session_state.get('alertas_usar_v2', False),
+                help="Ativa o sistema de alertas com ciclo de vida, estados e análise de risco"
+            )
+            st.session_state['alertas_usar_v2'] = usar_v2
+        
+        with col_info:
+            if usar_v2:
+                st.success("🆕 **Modo V2:** Ciclo de vida completo")
+            else:
+                st.info("📌 **Modo V1:** Sistema tradicional")
+        
+        with col_modo:
+            if usar_v2:
+                modo_visualizacao = st.selectbox(
+                    "Visualização",
+                    ["Apenas V2", "Comparar V1 vs V2"],
+                    key="modo_visualizacao_alertas"
+                )
+            else:
+                modo_visualizacao = "V1"
+        
+        st.markdown("---")
+        
         # Carrega contratos e calcula alertas
         with st.spinner("Calculando alertas..."):
             contratos = get_todos_contratos()
@@ -210,6 +264,20 @@ def main():
                 # Se falhar, usa apenas alertas contratuais
                 st.warning(f"⚠️ Alertas FF não puderam ser calculados: {e}")
                 alertas = alertas_contratuais
+            
+            # Carrega alertas V2 se modo ativo
+            alertas_v2 = []
+            if usar_v2:
+                alertas_v2 = listar_alertas_v2()
+                # Se não houver alertas V2, criar alguns de exemplo baseados nos V1
+                if not alertas_v2 and alertas:
+                    st.info("💡 Primeira vez no modo V2. Importando alguns alertas como exemplo...")
+                    from services.alert_lifecycle_service import importar_alerta_v1_para_v2
+                    # Importa até 3 alertas críticos como exemplo
+                    alertas_criticos = [a for a in alertas if a.get('tipo') == 'critico'][:3]
+                    for alerta_v1 in alertas_criticos:
+                        importar_alerta_v1_para_v2(alerta_v1)
+                    alertas_v2 = listar_alertas_v2()
             
             alertas_resolvidos = load_alertas_resolvidos()
             # Lista de ids resolvidos
@@ -244,6 +312,229 @@ def main():
         import traceback
         st.exception(e)
         return
+    
+    # ========================================
+    # VISUALIZAÇÃO BASEADA NO MODO SELECIONADO
+    # ========================================
+    
+    if modo_visualizacao == "Comparar V1 vs V2":
+        # Modo comparação lado a lado
+        render_comparacao_v1_v2(alertas, alertas_v2)
+        st.markdown("---")
+        
+        # Mostra ambas as listas
+        col_v1, col_v2 = st.columns(2)
+        
+        with col_v1:
+            st.markdown("### 📌 Alertas V1 (Sistema Atual)")
+            if not alertas:
+                st.info("Nenhum alerta V1 encontrado")
+            else:
+                for alerta in alertas[:5]:  # Limita a 5 para comparação
+                    render_alerta_card(alerta, on_resolvido=lambda id: st.info("V1: Marcar resolvido"))
+        
+        with col_v2:
+            st.markdown("### 🚀 Alertas V2 (Novo Modelo)")
+            if not alertas_v2:
+                st.info("Nenhum alerta V2 encontrado. Use o toggle acima para importar exemplos.")
+            else:
+                def handle_action_v2(acao, alerta):
+                    if acao == 'ver_contrato':
+                        contratos = get_todos_contratos()
+                        contrato = next((c for c in contratos if c['id'] == alerta['contrato_id']), None)
+                        if contrato:
+                            st.session_state.contrato_selecionado = contrato
+                            st.switch_page("pages/01_📄_Contrato.py")
+                    elif acao == 'registrar_acao':
+                        st.session_state['acao_alerta_v2'] = alerta['id']
+                        st.rerun()
+                    elif acao == 'ver_historico':
+                        st.session_state['historico_alerta_v2'] = alerta['id']
+                        st.rerun()
+                    elif acao == 'resolver':
+                        st.session_state['resolver_alerta_v2'] = alerta['id']
+                        st.rerun()
+                
+                for alerta_v2 in alertas_v2[:5]:  # Limita a 5 para comparação
+                    render_alerta_v2_card(alerta_v2, on_action=handle_action_v2)
+        
+        return  # Encerra aqui no modo comparação
+    
+    # ========================================
+    # MODO NORMAL (V1 ou V2 apenas)
+    # ========================================
+    
+    if usar_v2:
+        # Exibe apenas V2
+        st.markdown("### 🚀 Alertas com Ciclo de Vida (V2)")
+        
+        # Estatísticas V2
+        stats_v2 = get_estatisticas_alertas_v2()
+        
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            st.metric("📊 Total", stats_v2.get('total_alertas', 0))
+        
+        with col2:
+            st.metric("🔴 Risco Alto", stats_v2.get('alertas_risco_alto', 0))
+        
+        with col3:
+            risco_medio = stats_v2.get('risco_medio', 0)
+            st.metric("⚠️ Risco Médio", f"{int(risco_medio * 100)}%")
+        
+        with col4:
+            st.metric("📋 Ações", stats_v2.get('total_acoes', 0))
+        
+        st.markdown("---")
+        
+        # Filtros V2
+        col_f1, col_f2, col_f3 = st.columns(3)
+        
+        with col_f1:
+            filtro_tipo_v2 = st.selectbox(
+                "Tipo",
+                ["Todos", "Preventivo", "Operacional", "Crítico", "Escalonado", "Informativo"],
+                key="filtro_tipo_v2"
+            )
+        
+        with col_f2:
+            filtro_estado_v2 = st.selectbox(
+                "Estado",
+                ["Todos", "novo", "em_analise", "providencia_em_curso", "aguardando_prazo", "resolvido"],
+                key="filtro_estado_v2"
+            )
+        
+        with col_f3:
+            st.write("")
+            st.write("")
+            if st.button("🔄 Atualizar", key="atualizar_v2"):
+                st.rerun()
+        
+        # Aplica filtros
+        alertas_v2_filtrados = alertas_v2
+        
+        if filtro_tipo_v2 != "Todos":
+            tipo_map = {
+                "Preventivo": "preventivo",
+                "Operacional": "operacional",
+                "Crítico": "critico",
+                "Escalonado": "escalonado",
+                "Informativo": "informativo"
+            }
+            tipo_busca = tipo_map.get(filtro_tipo_v2)
+            if tipo_busca:
+                alertas_v2_filtrados = [a for a in alertas_v2_filtrados if a.get('tipo') == tipo_busca]
+        
+        if filtro_estado_v2 != "Todos":
+            alertas_v2_filtrados = [a for a in alertas_v2_filtrados if a.get('estado') == filtro_estado_v2]
+        
+        st.markdown("---")
+        
+        # Formulários modais
+        if st.session_state.get('acao_alerta_v2'):
+            alerta_id = st.session_state['acao_alerta_v2']
+            alerta = get_alerta_v2_por_id(alerta_id)
+            
+            if alerta:
+                def on_submit_acao(dados_acao):
+                    usuario = st.session_state.get('usuario_atual', 'Gestor')
+                    acao = registrar_acao(
+                        alerta_id=alerta_id,
+                        tipo_acao=dados_acao['tipo_acao'],
+                        usuario=usuario,
+                        justificativa=dados_acao['justificativa'],
+                        decisao=dados_acao.get('decisao'),
+                        prazo_novo_dias=dados_acao.get('prazo_novo_dias'),
+                        documentos=dados_acao.get('documentos', [])
+                    )
+                    
+                    # Transiciona estado se necessário
+                    if 'decisao' in dados_acao['tipo_acao']:
+                        transicionar_estado(alerta_id, ESTADO_EM_ANALISE, usuario, "Decisão registrada")
+                    
+                    st.success("✅ Ação registrada com sucesso!")
+                    st.session_state.pop('acao_alerta_v2')
+                    st.rerun()
+                
+                render_registro_acao_form(alerta, on_submit=on_submit_acao)
+        
+        elif st.session_state.get('historico_alerta_v2'):
+            alerta_id = st.session_state['historico_alerta_v2']
+            alerta = get_alerta_v2_por_id(alerta_id)
+            
+            if alerta:
+                render_historico_alerta(alerta)
+                
+                if st.button("❌ Fechar", key="fechar_historico"):
+                    st.session_state.pop('historico_alerta_v2')
+                    st.rerun()
+        
+        elif st.session_state.get('resolver_alerta_v2'):
+            alerta_id = st.session_state['resolver_alerta_v2']
+            alerta = get_alerta_v2_por_id(alerta_id)
+            
+            if alerta:
+                st.warning("🔒 Resolver Alerta")
+                st.write(f"**{alerta.get('titulo')}**")
+                
+                with st.form("form_resolver_v2"):
+                    justificativa = st.text_area(
+                        "Justificativa de resolução",
+                        placeholder="Descreva como o alerta foi resolvido...",
+                        height=120
+                    )
+                    
+                    col_res1, col_res2 = st.columns(2)
+                    with col_res1:
+                        submitted = st.form_submit_button("✅ Confirmar", type="primary", use_container_width=True)
+                    with col_res2:
+                        cancel = st.form_submit_button("❌ Cancelar", use_container_width=True)
+                    
+                    if submitted and justificativa:
+                        usuario = st.session_state.get('usuario_atual', 'Gestor')
+                        transicionar_estado(alerta_id, ESTADO_RESOLVIDO, usuario, justificativa)
+                        st.success("✅ Alerta resolvido!")
+                        st.session_state.pop('resolver_alerta_v2')
+                        st.rerun()
+                    
+                    if cancel:
+                        st.session_state.pop('resolver_alerta_v2')
+                        st.rerun()
+        
+        # Lista de alertas V2
+        else:
+            if not alertas_v2_filtrados:
+                st.success("✅ Nenhum alerta encontrado com os filtros aplicados!")
+            else:
+                st.info(f"📊 Exibindo **{len(alertas_v2_filtrados)}** alerta(s)")
+                
+                def handle_action(acao, alerta):
+                    if acao == 'ver_contrato':
+                        contratos = get_todos_contratos()
+                        contrato = next((c for c in contratos if c['id'] == alerta['contrato_id']), None)
+                        if contrato:
+                            st.session_state.contrato_selecionado = contrato
+                            st.switch_page("pages/01_📄_Contrato.py")
+                    elif acao == 'registrar_acao':
+                        st.session_state['acao_alerta_v2'] = alerta['id']
+                        st.rerun()
+                    elif acao == 'ver_historico':
+                        st.session_state['historico_alerta_v2'] = alerta['id']
+                        st.rerun()
+                    elif acao == 'resolver':
+                        st.session_state['resolver_alerta_v2'] = alerta['id']
+                        st.rerun()
+                
+                for alerta_v2 in alertas_v2_filtrados:
+                    render_alerta_v2_card(alerta_v2, on_action=handle_action)
+                    st.markdown("---")
+        
+        return  # Encerra modo V2
+    
+    # ========================================
+    # MODO V1 (SISTEMA TRADICIONAL)
+    # ========================================
     
     # Estatísticas de alertas
     contagens = get_alertas_por_tipo(alertas)
