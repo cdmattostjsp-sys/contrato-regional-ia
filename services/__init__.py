@@ -11,6 +11,13 @@ from .session_manager import (
     add_log,
     get_current_user_info
 )
+from .dual_write_service import (
+    criar_alerta_dual,
+    atualizar_alerta_dual,
+    sincronizar_acao_dual,
+    mapear_v1_para_v2,
+    buscar_v2_por_v1
+)
 from .contract_service import (
     get_contratos_mock,
     get_contrato_by_id,
@@ -27,6 +34,11 @@ from .document_service import (
 )
 
 __all__ = [
+        'criar_alerta_dual',
+        'atualizar_alerta_dual',
+        'sincronizar_acao_dual',
+        'mapear_v1_para_v2',
+        'buscar_v2_por_v1',
     'initialize_session_state',
     'reset_chat_history',
     'reset_notificacao',
