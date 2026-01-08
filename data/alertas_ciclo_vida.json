@@ -1,0 +1,132 @@
+[
+  {
+    "id": "8b855697-e009-4325-8d71-33da63027307",
+    "tipo": "preventivo",
+    "categoria": "Vigência",
+    "titulo": "Contrato próximo ao vencimento",
+    "descricao": "Contrato 123/2025 vence em 90 dias",
+    "contrato_id": "cont_001",
+    "contrato_numero": "123/2025",
+    "responsavel": "gestor.teste",
+    "estado": "em_analise",
+    "estado_anterior": "novo",
+    "data_criacao": "2026-01-08T21:24:34.656742",
+    "data_ultima_atualizacao": "2026-01-08T21:24:34.671548",
+    "prazo_resposta": "2026-02-07T21:24:34.656742",
+    "prazo_resposta_dias": 30,
+    "criticidade": "alta",
+    "dias_restantes": 30,
+    "janela_seguranca_dias": 10,
+    "alerta_origem_id": null,
+    "geracao": 1,
+    "alertas_derivados": [
+      "7b81751e-2049-4340-8068-fdc6d156a241"
+    ],
+    "score_risco": 0.24,
+    "fatores_risco": {
+      "urgencia_temporal": 0.0,
+      "criticidade": 0.8,
+      "historico_adiamentos": 0.0,
+      "geracao_alerta": 0.0
+    },
+    "recomendacao_ia": null,
+    "acoes_ids": [
+      "bb9e3084-01bb-4696-85a3-132a7d25ddbc"
+    ],
+    "historico_estados": [
+      {
+        "estado": "novo",
+        "data": "2026-01-08T21:24:34.656742",
+        "usuario": "sistema",
+        "observacao": "Alerta criado automaticamente"
+      },
+      {
+        "estado": "em_analise",
+        "estado_anterior": "novo",
+        "data": "2026-01-08T21:24:34.661863",
+        "usuario": "gestor.teste",
+        "observacao": "Iniciando análise do alerta"
+      }
+    ],
+    "metadados": {
+      "tempo_medio_execucao_dias": 20
+    },
+    "versao": 2
+  },
+  {
+    "id": "7b81751e-2049-4340-8068-fdc6d156a241",
+    "tipo": "operacional",
+    "categoria": "Vigência",
+    "titulo": "Iniciar processo de renovação",
+    "descricao": "Após decisão de renovar, iniciar procedimento administrativo",
+    "contrato_id": "cont_001",
+    "contrato_numero": "123/2025",
+    "responsavel": "gestor.teste",
+    "estado": "novo",
+    "estado_anterior": null,
+    "data_criacao": "2026-01-08T21:24:34.668640",
+    "data_ultima_atualizacao": "2026-01-08T21:24:34.668640",
+    "prazo_resposta": "2026-02-22T21:24:34.668640",
+    "prazo_resposta_dias": 45,
+    "criticidade": "alta",
+    "dias_restantes": 45,
+    "janela_seguranca_dias": null,
+    "alerta_origem_id": "8b855697-e009-4325-8d71-33da63027307",
+    "geracao": 2,
+    "alertas_derivados": [],
+    "score_risco": null,
+    "fatores_risco": {},
+    "recomendacao_ia": null,
+    "acoes_ids": [],
+    "historico_estados": [
+      {
+        "estado": "novo",
+        "data": "2026-01-08T21:24:34.668640",
+        "usuario": "sistema",
+        "observacao": "Alerta criado automaticamente"
+      }
+    ],
+    "metadados": {},
+    "versao": 2
+  },
+  {
+    "id": "25ec4a50-df9e-442d-9e5f-5c9a425d2298",
+    "tipo": "critico",
+    "categoria": "Vigência",
+    "titulo": "Alerta V1 de teste",
+    "descricao": "Este é um alerta do sistema antigo",
+    "contrato_id": "cont_old_001",
+    "contrato_numero": "999/2024",
+    "responsavel": "não_definido",
+    "estado": "novo",
+    "estado_anterior": null,
+    "data_criacao": "2026-01-08T21:24:34.679347",
+    "data_ultima_atualizacao": "2026-01-08T21:24:34.679347",
+    "prazo_resposta": "2026-02-22T21:24:34.679347",
+    "prazo_resposta_dias": 45,
+    "criticidade": "alta",
+    "dias_restantes": 45,
+    "janela_seguranca_dias": null,
+    "alerta_origem_id": null,
+    "geracao": 1,
+    "alertas_derivados": [],
+    "score_risco": null,
+    "fatores_risco": {},
+    "recomendacao_ia": null,
+    "acoes_ids": [],
+    "historico_estados": [
+      {
+        "estado": "novo",
+        "data": "2026-01-08T21:24:34.679347",
+        "usuario": "sistema",
+        "observacao": "Alerta criado automaticamente"
+      }
+    ],
+    "metadados": {
+      "importado_de_v1": true,
+      "id_v1": "VIG_CRIT_old_001",
+      "data_alerta_v1": ""
+    },
+    "versao": 2
+  }
+]

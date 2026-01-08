@@ -1,0 +1,20 @@
+[
+  {
+    "id": "bb9e3084-01bb-4696-85a3-132a7d25ddbc",
+    "alerta_id": "8b855697-e009-4325-8d71-33da63027307",
+    "tipo_acao": "decisao_renovar",
+    "usuario": "gestor.teste",
+    "data_acao": "2026-01-08T21:24:34.664416",
+    "justificativa": "Necessidade de continuidade do serviço conforme Art. 57 da Lei 8.666/93",
+    "decisao": "RENOVAR",
+    "prazo_novo_dias": 60,
+    "documentos": [],
+    "metadados": {
+      "parecer_juridico": "PAJ-2025-001",
+      "fundamentacao": "Art. 57, II, Lei 8.666/93"
+    },
+    "justificativa_categoria": null,
+    "justificativa_completude": null,
+    "fundamentacao_legal": null
+  }
+]
