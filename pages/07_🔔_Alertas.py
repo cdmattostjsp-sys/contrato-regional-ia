@@ -49,6 +49,7 @@ from components.alertas_v2_ui import (
     render_historico_alerta,
     render_comparacao_v1_v2
 )
+from components.bi_alertas_dashboard import render_dashboard_bi_completo
 
 
 def render_alerta_card(alerta: dict, on_resolvido=None):
@@ -365,74 +366,81 @@ def main():
     # ========================================
     
     if usar_v2:
-        # Exibe apenas V2
-        st.markdown("### 🚀 Alertas com Ciclo de Vida (V2)")
+        # ========================================
+        # MODO V2: TABS PARA ALERTAS E BI
+        # ========================================
         
-        # Estatísticas V2
-        stats_v2 = get_estatisticas_alertas_v2()
+        tab_alertas, tab_bi = st.tabs(["🔔 Alertas", "📊 Business Intelligence"])
         
-        col1, col2, col3, col4 = st.columns(4)
-        
-        with col1:
-            st.metric("📊 Total", stats_v2.get('total_alertas', 0))
-        
-        with col2:
-            st.metric("🔴 Risco Alto", stats_v2.get('alertas_risco_alto', 0))
-        
-        with col3:
-            risco_medio = stats_v2.get('risco_medio', 0)
-            st.metric("⚠️ Risco Médio", f"{int(risco_medio * 100)}%")
-        
-        with col4:
-            st.metric("📋 Ações", stats_v2.get('total_acoes', 0))
-        
-        st.markdown("---")
-        
-        # Filtros V2
-        col_f1, col_f2, col_f3 = st.columns(3)
-        
-        with col_f1:
-            filtro_tipo_v2 = st.selectbox(
-                "Tipo",
-                ["Todos", "Preventivo", "Operacional", "Crítico", "Escalonado", "Informativo"],
-                key="filtro_tipo_v2"
-            )
-        
-        with col_f2:
-            filtro_estado_v2 = st.selectbox(
-                "Estado",
-                ["Todos", "novo", "em_analise", "providencia_em_curso", "aguardando_prazo", "resolvido"],
-                key="filtro_estado_v2"
-            )
-        
-        with col_f3:
-            st.write("")
-            st.write("")
-            if st.button("🔄 Atualizar", key="atualizar_v2"):
-                st.rerun()
-        
-        # Aplica filtros
-        alertas_v2_filtrados = alertas_v2
-        
-        if filtro_tipo_v2 != "Todos":
-            tipo_map = {
-                "Preventivo": "preventivo",
-                "Operacional": "operacional",
-                "Crítico": "critico",
-                "Escalonado": "escalonado",
-                "Informativo": "informativo"
-            }
-            tipo_busca = tipo_map.get(filtro_tipo_v2)
-            if tipo_busca:
-                alertas_v2_filtrados = [a for a in alertas_v2_filtrados if a.get('tipo') == tipo_busca]
-        
-        if filtro_estado_v2 != "Todos":
-            alertas_v2_filtrados = [a for a in alertas_v2_filtrados if a.get('estado') == filtro_estado_v2]
-        
-        st.markdown("---")
-        
-        # Formulários modais
-        if st.session_state.get('acao_alerta_v2'):
+        with tab_alertas:
+            # Exibe apenas V2
+            st.markdown("### 🚀 Alertas com Ciclo de Vida (V2)")
+            
+            # Estatísticas V2
+            stats_v2 = get_estatisticas_alertas_v2()
+            
+            col1, col2, col3, col4 = st.columns(4)
+            
+            with col1:
+                st.metric("📊 Total", stats_v2.get('total_alertas', 0))
+            
+            with col2:
+                st.metric("🔴 Risco Alto", stats_v2.get('alertas_risco_alto', 0))
+            
+            with col3:
+                risco_medio = stats_v2.get('risco_medio', 0)
+                st.metric("⚠️ Risco Médio", f"{int(risco_medio * 100)}%")
+            
+            with col4:
+                st.metric("📋 Ações", stats_v2.get('total_acoes', 0))
+            
+            st.markdown("---")
+            
+            # Filtros V2
+            col_f1, col_f2, col_f3 = st.columns(3)
+            
+            with col_f1:
+                filtro_tipo_v2 = st.selectbox(
+                    "Tipo",
+                    ["Todos", "Preventivo", "Operacional", "Crítico", "Escalonado", "Informativo"],
+                    key="filtro_tipo_v2"
+                )
+            
+            with col_f2:
+                filtro_estado_v2 = st.selectbox(
+                    "Estado",
+                    ["Todos", "novo", "em_analise", "providencia_em_curso", "aguardando_prazo", "resolvido"],
+                    key="filtro_estado_v2"
+                )
+            
+            with col_f3:
+                st.write("")
+                st.write("")
+                if st.button("🔄 Atualizar", key="atualizar_v2"):
+                    st.rerun()
+            
+            # Aplica filtros
+            alertas_v2_filtrados = alertas_v2
+            
+            if filtro_tipo_v2 != "Todos":
+                tipo_map = {
+                    "Preventivo": "preventivo",
+                    "Operacional": "operacional",
+                    "Crítico": "critico",
+                    "Escalonado": "escalonado",
+                    "Informativo": "informativo"
+                }
+                tipo_busca = tipo_map.get(filtro_tipo_v2)
+                if tipo_busca:
+                    alertas_v2_filtrados = [a for a in alertas_v2_filtrados if a.get('tipo') == tipo_busca]
+            
+            if filtro_estado_v2 != "Todos":
+                alertas_v2_filtrados = [a for a in alertas_v2_filtrados if a.get('estado') == filtro_estado_v2]
+            
+            st.markdown("---")
+            
+            # Formulários modais
+            if st.session_state.get('acao_alerta_v2'):
             alerta_id = st.session_state['acao_alerta_v2']
             alerta = get_alerta_v2_por_id(alerta_id)
             
@@ -529,6 +537,17 @@ def main():
                 for alerta_v2 in alertas_v2_filtrados:
                     render_alerta_v2_card(alerta_v2, on_action=handle_action)
                     st.markdown("---")
+        
+        # Tab de BI
+        with tab_bi:
+            st.markdown("### 📊 Business Intelligence - Alertas Prospectivos")
+            st.caption("Análise preditiva e indicadores de risco")
+            
+            try:
+                render_dashboard_bi_completo(contratos, alertas_v2)
+            except Exception as e:
+                st.error(f"Erro ao carregar dashboard de BI: {e}")
+                st.exception(e)
         
         return  # Encerra modo V2
     
