@@ -327,7 +327,7 @@ def main():
         col_v1, col_v2 = st.columns(2)
         
         with col_v1:
-            st.markdown("### 📌 Alertas V1 (Sistema Atual)")
+            st.markdown("## Alertas V1 (Sistema Atual)")
             if not alertas:
                 st.info("Nenhum alerta V1 encontrado")
             else:
@@ -335,7 +335,7 @@ def main():
                     render_alerta_card(alerta, on_resolvido=lambda id: st.info("V1: Marcar resolvido"))
         
         with col_v2:
-            st.markdown("### 🚀 Alertas V2 (Novo Modelo)")
+            st.markdown("## Alertas V2 (Novo Modelo)")
             if not alertas_v2:
                 st.info("Nenhum alerta V2 encontrado. Use o toggle acima para importar exemplos.")
             else:
@@ -374,7 +374,7 @@ def main():
         
         with tab_alertas:
             # Exibe apenas V2
-            st.markdown("### 🚀 Alertas com Ciclo de Vida (V2)")
+            st.markdown("## Alertas com Ciclo de Vida (V2)")
             
             # Estatísticas V2
             stats_v2 = get_estatisticas_alertas_v2()
@@ -540,7 +540,7 @@ def main():
         
         # Tab de BI
         with tab_bi:
-            st.markdown("### 📊 Business Intelligence - Alertas Prospectivos")
+            st.markdown("## Business Intelligence - Alertas Prospectivos")
             st.caption("Análise preditiva e indicadores de risco")
             
             try:
@@ -793,7 +793,7 @@ def main():
         else:
             if len(alertas_filtrados) != len(alertas):
                 st.info(f"📊 Exibindo **{len(alertas_filtrados)}** de {len(alertas)} alertas")
-            st.markdown("### 📋 Lista de Alertas")
+            st.markdown("## Lista de Alertas")
             for alerta in alertas_filtrados:
                 render_alerta_card(alerta, on_resolvido=marcar_resolvido)
     

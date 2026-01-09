@@ -374,7 +374,7 @@ def render_bloco_aditivos(contrato: dict):
     """, unsafe_allow_html=True)
     
     # Timeline de aditivos
-    st.markdown("### 📅 Timeline de Modificações")
+    st.markdown("### Timeline de Modificações")
     
     historico = contrato.get('historico_aditivos', [])
     
@@ -491,7 +491,7 @@ def render_bloco_aditivos(contrato: dict):
     aditivos_pdfs = contrato.get('aditivos', [])
     if aditivos_pdfs:
         st.markdown("---")
-        st.markdown("### 📎 Documentos dos Aditivos")
+        st.markdown("### Documentos dos Aditivos")
         
         for aditivo in aditivos_pdfs:
             col1, col2 = st.columns([3, 1])
@@ -582,7 +582,7 @@ def render_formulario_aditivo(contrato: dict):
         }
         
         if "Prorrogação de Prazo" in tipos_modificacao:
-            st.markdown("#### ⏰ Dados da Prorrogação")
+            st.markdown("#### Dados da Prorrogação")
             col_p1, col_p2 = st.columns(2)
             with col_p1:
                 prorrogacao_dias = st.number_input(
@@ -601,7 +601,7 @@ def render_formulario_aditivo(contrato: dict):
                 dados_aditivo['nova_data_fim'] = nova_data_fim.isoformat() if nova_data_fim else ''
         
         if "Acréscimo de Valor" in tipos_modificacao:
-            st.markdown("#### 💲 Dados do Acréscimo")
+            st.markdown("#### Dados do Acréscimo")
             col_a1, col_a2 = st.columns(2)
             with col_a1:
                 percentual_acrescimo = st.number_input(
@@ -624,7 +624,7 @@ def render_formulario_aditivo(contrato: dict):
                 dados_aditivo['valor_acrescimo'] = float(valor_acrescimo)
         
         if "Supressão de Valor" in tipos_modificacao:
-            st.markdown("#### 💸 Dados da Supressão")
+            st.markdown("#### Dados da Supressão")
             col_s1, col_s2 = st.columns(2)
             with col_s1:
                 percentual_supressao = st.number_input(
@@ -647,7 +647,7 @@ def render_formulario_aditivo(contrato: dict):
                 dados_aditivo['valor_supressao'] = float(valor_supressao)
         
         if "Alteração Qualitativa" in tipos_modificacao:
-            st.markdown("#### 📝 Alterações Qualitivas")
+            st.markdown("#### Alterações Qualitativas")
             alteracoes_qualitativas = st.text_area(
                 "Descreva as alterações qualitativas",
                 height=100,
@@ -751,7 +751,7 @@ def render_contrato_detalhes(contrato: dict):
 
 
 def render_bloco_dados_gerais(contrato: dict):
-    st.markdown("### 🔘 Ações rápidas")
+    st.markdown("## Ações rápidas")
 
     c1, c2, c3, c4 = st.columns(4)
     kid = str(contrato.get("id", contrato.get("numero", "sem_id")))
@@ -774,14 +774,14 @@ def render_bloco_dados_gerais(contrato: dict):
             st.switch_page("pages/04_📖_Como_Proceder.py")
 
     st.markdown("---")
-    st.markdown("### 📌 Resumo do Contrato")
+    st.markdown("## Resumo do Contrato")
     st.write(f"**Número:** {contrato.get('numero','')}")
     st.write(f"**Objeto:** {contrato.get('objeto','')}")
     st.write(f"**Fornecedor:** {contrato.get('fornecedor','')}")
     st.write(f"**Unidade/RAJ:** {contrato.get('unidade','')}")
     st.write(f"**Status:** {contrato.get('status','')}")
     st.write(f"**Vigência:** {contrato.get('vigencia','')}")
-    st.markdown("### ⚠️ Pendências")
+    st.markdown("## Pendências")
     st.info("Nenhuma pendência registrada.")
 
 def render_bloco_apoio_gestor(contrato: dict):
@@ -803,7 +803,7 @@ def render_bloco_apoio_gestor(contrato: dict):
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("### 📖 Informações Trabalhistas")
+        st.markdown("### Informações Trabalhistas")
         possui_mao_obra = info_trabalhista.get("possui_mao_obra_residente", False)
         aplica_cc = info_trabalhista.get("aplica_convencao_coletiva", False)
         if possui_mao_obra:
@@ -818,15 +818,15 @@ def render_bloco_apoio_gestor(contrato: dict):
             st.warning("⚠️ Aplicável: Acordo/Convenção Coletiva de Trabalho")
 
     with col2:
-        st.markdown("### 📚 Base Normativa")
-        with st.expander("📕 CLT - Consolidação das Leis do Trabalho"):
+        st.markdown("### Base Normativa")
+        with st.expander("CLT - Consolidação das Leis do Trabalho"):
             st.write("""
             - **Art. 58**: Jornada de trabalho (8h diárias, 44h semanais)
             - **Art. 71**: Intervalos para repouso e alimentação
             - **Art. 457**: Composição do salário
             - **Art. 468**: Alteração das condições de trabalho
             """)
-        with st.expander("📘 Normativas Correlatas"):
+        with st.expander("Normativas Correlatas"):
             st.write("""
             - **IN SEGES/ME nº 5/2017**: Contratação de serviços com dedicação exclusiva
             - **Lei nº 8.666/93**: Licitações e Contratos Administrativos
@@ -834,7 +834,7 @@ def render_bloco_apoio_gestor(contrato: dict):
             """)
 
     st.markdown("---")
-    st.markdown("### 💬 Tire Dúvidas com o Copiloto")
+    st.markdown("### Tire Dúvidas com o Copiloto")
     st.write("O Copiloto pode responder questões sobre legislação trabalhista aplicável a este contrato.")
     if st.button("💬 Abrir Copiloto para Consulta Normativa", width="stretch", type="primary"):
         st.session_state.copilot_contexto = "normativo"
@@ -842,15 +842,15 @@ def render_bloco_apoio_gestor(contrato: dict):
 
 def render_bloco_documentos(contrato: dict):
     st.markdown("""
-        <h3 style='color: #003366; margin: 0 0 1rem 0;'>
-            📁 Documentos do Contrato
-        </h3>
+        <h2 style='color: #003366; margin: 0 0 1rem 0;'>
+            Documentos do Contrato
+        </h2>
     """, unsafe_allow_html=True)
 
 
     # Formulário de upload de documentos (sempre visível)
     st.markdown("---")
-    st.markdown("#### 📤 Cadastrar Novo Documento")
+    st.markdown("### Cadastrar Novo Documento")
     with st.form(key="form_upload_documento"):
         nome_doc = st.text_input("Nome do Documento", placeholder="Ex: Edital, Termo de Referência, etc.")
         arquivo_doc = st.file_uploader("Selecione o arquivo (PDF)", type=["pdf"], key="upload_novo_documento")

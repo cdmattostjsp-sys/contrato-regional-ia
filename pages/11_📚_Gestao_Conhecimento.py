@@ -73,7 +73,7 @@ def render_estatisticas():
 def render_formulario_upload():
     """Renderiza formulário de upload com metadados."""
     
-    st.markdown("### 📤 Publicar Novo Documento")
+    st.markdown("## Publicar Novo Documento")
     
     # Verifica perfil
     autorizado, msg_perfil = verificar_perfil_autorizado()
@@ -199,7 +199,7 @@ def render_formulario_upload():
 def render_lista_documentos():
     """Renderiza lista de documentos publicados."""
     
-    st.markdown("### 📋 Documentos Publicados")
+    st.markdown("## Documentos Publicados")
     
     # Filtros
     col1, col2, col3 = st.columns(3)
@@ -385,7 +385,7 @@ def main():
         col1, col2 = st.columns(2)
         
         with col1:
-            st.markdown("### 📁 Por Tipo de Documento")
+            st.markdown("### Por Tipo de Documento")
             if stats["por_tipo"]:
                 for tipo, qtd in stats["por_tipo"].items():
                     st.markdown(f"- **{tipo}**: {qtd}")
@@ -393,7 +393,7 @@ def main():
                 st.info("Nenhum documento publicado ainda.")
         
         with col2:
-            st.markdown("### 🏢 Por Área Responsável")
+            st.markdown("### Por Área Responsável")
             if stats["por_area"]:
                 for area, qtd in stats["por_area"].items():
                     st.markdown(f"- **{area}**: {qtd}")

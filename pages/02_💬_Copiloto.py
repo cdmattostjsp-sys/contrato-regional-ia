@@ -87,7 +87,7 @@ def main():
     st.markdown("---")
 
     # Área de chat
-    st.markdown("### 💬 Conversa")
+    st.markdown("## Conversa")
 
     # Instruções
     with st.expander("ℹ️ Como usar o Copiloto"):

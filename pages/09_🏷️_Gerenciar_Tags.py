@@ -64,7 +64,7 @@ def main():
     
     # ===== TAB 1: TAGS DISPONÍVEIS =====
     with tab1:
-        st.markdown("### 🏷️ Tags do Sistema")
+        st.markdown("## Tags do Sistema")
         
         todas_tags = tag_service.obter_todas_tags()
         
@@ -73,7 +73,7 @@ def main():
         tags_customizadas = [t for t in todas_tags if t.get('customizada', False)]
         
         # Tags do sistema
-        st.markdown("#### 📌 Tags Pré-definidas")
+        st.markdown("### Tags Pré-definidas")
         
         cols = st.columns(4)
         for idx, tag in enumerate(tags_sistema):
@@ -84,7 +84,7 @@ def main():
         st.markdown("---")
         
         # Tags customizadas
-        st.markdown("#### ✏️ Tags Personalizadas")
+        st.markdown("### Tags Personalizadas")
         
         if tags_customizadas:
             for tag in tags_customizadas:
@@ -141,7 +141,7 @@ def main():
     
     # ===== TAB 2: CRIAR TAG =====
     with tab2:
-        st.markdown("### ➕ Criar Nova Tag")
+        st.markdown("## Criar Nova Tag")
         
         with st.form("criar_tag_form"):
             col_form1, col_form2 = st.columns(2)
@@ -167,7 +167,7 @@ def main():
                     help="Cor de fundo da tag"
                 )
                 
-                st.markdown("#### Pré-visualização")
+                st.markdown("### Pré-visualização")
                 if nome_tag:
                     preview_tag = {
                         'nome': nome_tag,
@@ -204,7 +204,7 @@ def main():
         
         # Sugestões de cores
         st.markdown("---")
-        st.markdown("#### 🎨 Paleta de Cores Sugeridas")
+        st.markdown("### Paleta de Cores Sugeridas")
         
         cores_sugeridas = {
             "Vermelho": "#DC3545",
@@ -233,7 +233,7 @@ def main():
     
     # ===== TAB 3: ESTATÍSTICAS =====
     with tab3:
-        st.markdown("### 📊 Estatísticas de Uso de Tags")
+        st.markdown("## Estatísticas de Uso de Tags")
         
         estatisticas = tag_service.obter_estatisticas_tags()
         
@@ -263,7 +263,7 @@ def main():
             st.markdown("---")
             
             # Tabela de uso
-            st.markdown("#### 📋 Detalhamento por Tag")
+            st.markdown("### Detalhamento por Tag")
             
             for tag_id, stat in stats_ordenadas:
                 if stat['uso'] > 0:  # Mostra apenas tags em uso

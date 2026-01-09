@@ -326,11 +326,65 @@ def apply_tjsp_styles():
         }
         
         /* =====================================================
+           HIERARQUIA DE TÍTULOS INSTITUCIONAL
+           ===================================================== */
+        /* Título principal da página - mantém destaque */
+        h1 {
+            font-size: 1.8rem !important;
+            font-weight: 700 !important;
+            color: var(--tjsp-azul-primario) !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        /* Subtítulos principais (seções) - REDUZIDO */
+        h2 {
+            font-size: 1.1rem !important;
+            font-weight: 600 !important;
+            color: var(--tjsp-azul-primario) !important;
+            margin-top: 1.5rem !important;
+            margin-bottom: 0.8rem !important;
+        }
+        
+        /* Subtítulos secundários (subseções) - AINDA MENOR */
+        h3 {
+            font-size: 0.95rem !important;
+            font-weight: 600 !important;
+            color: var(--tjsp-cinza-escuro) !important;
+            margin-top: 1rem !important;
+            margin-bottom: 0.6rem !important;
+        }
+        
+        /* Subtítulos terciários */
+        h4 {
+            font-size: 0.9rem !important;
+            font-weight: 500 !important;
+            color: var(--tjsp-cinza-medio) !important;
+            margin-top: 0.8rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+        
+        /* =====================================================
            RESPONSIVIDADE
            ===================================================== */
         @media (max-width: 768px) {
             .tjsp-header h1 {
                 font-size: 1.5rem;
+            }
+            
+            h1 {
+                font-size: 1.5rem !important;
+            }
+            
+            h2 {
+                font-size: 1rem !important;
+            }
+            
+            h3 {
+                font-size: 0.9rem !important;
+            }
+            
+            h4 {
+                font-size: 0.85rem !important;
             }
             
             .contract-header {
