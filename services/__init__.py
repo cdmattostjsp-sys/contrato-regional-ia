@@ -13,10 +13,15 @@ from .session_manager import (
 )
 from .dual_write_service import (
     criar_alerta_dual,
-    atualizar_alerta_dual,
+    sincronizar_resolucao,
     sincronizar_acao_dual,
     mapear_v1_para_v2,
-    buscar_v2_por_v1
+    buscar_v2_por_v1,
+    buscar_v1_por_v2,
+    registrar_mapeamento,
+    obter_estatisticas_mapeamento,
+    obter_estatisticas_dual_write,
+    validar_integridade
 )
 from .contract_service import (
     get_contratos_mock,
@@ -35,9 +40,15 @@ from .document_service import (
 
 __all__ = [
         'criar_alerta_dual',
-        'atualizar_alerta_dual',
+        'sincronizar_resolucao',
         'sincronizar_acao_dual',
         'mapear_v1_para_v2',
+        'buscar_v2_por_v1',
+        'buscar_v1_por_v2',
+        'registrar_mapeamento',
+        'obter_estatisticas_mapeamento',
+        'obter_estatisticas_dual_write',
+        'validar_integridade',
         'buscar_v2_por_v1',
     'initialize_session_state',
     'reset_chat_history',

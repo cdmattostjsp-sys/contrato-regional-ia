@@ -1,0 +1,16 @@
+{
+  "v1_to_v2": {
+    "TIME_001": {
+      "v2_id": "uuid-time-001",
+      "timestamp": "2026-01-09T14:35:47.982102",
+      "metadados": {}
+    }
+  },
+  "v2_to_v1": {
+    "uuid-time-001": {
+      "v1_id": "TIME_001",
+      "timestamp": "2026-01-09T14:35:47.982102",
+      "metadados": {}
+    }
+  }
+}
