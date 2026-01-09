@@ -19,6 +19,12 @@ from typing import List, Dict
 import json
 from pathlib import Path
 
+# Importação condicional para evitar dependência circular
+try:
+    from services.dual_write_service import criar_alerta_dual
+except ImportError:
+    criar_alerta_dual = None
+
 # Estados possíveis do alerta
 STATUS_ATIVO = "ATIVO"
 STATUS_RESOLVIDO = "RESOLVIDO"
