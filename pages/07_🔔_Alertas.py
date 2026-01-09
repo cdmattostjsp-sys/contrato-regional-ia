@@ -441,102 +441,102 @@ def main():
             
             # Formulários modais
             if st.session_state.get('acao_alerta_v2'):
-            alerta_id = st.session_state['acao_alerta_v2']
-            alerta = get_alerta_v2_por_id(alerta_id)
-            
-            if alerta:
-                def on_submit_acao(dados_acao):
-                    usuario = st.session_state.get('usuario_atual', 'Gestor')
-                    acao = registrar_acao(
-                        alerta_id=alerta_id,
-                        tipo_acao=dados_acao['tipo_acao'],
-                        usuario=usuario,
-                        justificativa=dados_acao['justificativa'],
-                        decisao=dados_acao.get('decisao'),
-                        prazo_novo_dias=dados_acao.get('prazo_novo_dias'),
-                        documentos=dados_acao.get('documentos', [])
-                    )
-                    
-                    # Transiciona estado se necessário
-                    if 'decisao' in dados_acao['tipo_acao']:
-                        transicionar_estado(alerta_id, ESTADO_EM_ANALISE, usuario, "Decisão registrada")
-                    
-                    st.success("✅ Ação registrada com sucesso!")
-                    st.session_state.pop('acao_alerta_v2')
-                    st.rerun()
+                alerta_id = st.session_state['acao_alerta_v2']
+                alerta = get_alerta_v2_por_id(alerta_id)
                 
-                render_registro_acao_form(alerta, on_submit=on_submit_acao)
-        
-        elif st.session_state.get('historico_alerta_v2'):
-            alerta_id = st.session_state['historico_alerta_v2']
-            alerta = get_alerta_v2_por_id(alerta_id)
-            
-            if alerta:
-                render_historico_alerta(alerta)
-                
-                if st.button("❌ Fechar", key="fechar_historico"):
-                    st.session_state.pop('historico_alerta_v2')
-                    st.rerun()
-        
-        elif st.session_state.get('resolver_alerta_v2'):
-            alerta_id = st.session_state['resolver_alerta_v2']
-            alerta = get_alerta_v2_por_id(alerta_id)
-            
-            if alerta:
-                st.warning("🔒 Resolver Alerta")
-                st.write(f"**{alerta.get('titulo')}**")
-                
-                with st.form("form_resolver_v2"):
-                    justificativa = st.text_area(
-                        "Justificativa de resolução",
-                        placeholder="Descreva como o alerta foi resolvido...",
-                        height=120
-                    )
-                    
-                    col_res1, col_res2 = st.columns(2)
-                    with col_res1:
-                        submitted = st.form_submit_button("✅ Confirmar", type="primary", use_container_width=True)
-                    with col_res2:
-                        cancel = st.form_submit_button("❌ Cancelar", use_container_width=True)
-                    
-                    if submitted and justificativa:
+                if alerta:
+                    def on_submit_acao(dados_acao):
                         usuario = st.session_state.get('usuario_atual', 'Gestor')
-                        transicionar_estado(alerta_id, ESTADO_RESOLVIDO, usuario, justificativa)
-                        st.success("✅ Alerta resolvido!")
-                        st.session_state.pop('resolver_alerta_v2')
+                        acao = registrar_acao(
+                            alerta_id=alerta_id,
+                            tipo_acao=dados_acao['tipo_acao'],
+                            usuario=usuario,
+                            justificativa=dados_acao['justificativa'],
+                            decisao=dados_acao.get('decisao'),
+                            prazo_novo_dias=dados_acao.get('prazo_novo_dias'),
+                            documentos=dados_acao.get('documentos', [])
+                        )
+                        
+                        # Transiciona estado se necessário
+                        if 'decisao' in dados_acao['tipo_acao']:
+                            transicionar_estado(alerta_id, ESTADO_EM_ANALISE, usuario, "Decisão registrada")
+                        
+                        st.success("✅ Ação registrada com sucesso!")
+                        st.session_state.pop('acao_alerta_v2')
                         st.rerun()
                     
-                    if cancel:
-                        st.session_state.pop('resolver_alerta_v2')
+                    render_registro_acao_form(alerta, on_submit=on_submit_acao)
+            
+            elif st.session_state.get('historico_alerta_v2'):
+                alerta_id = st.session_state['historico_alerta_v2']
+                alerta = get_alerta_v2_por_id(alerta_id)
+                
+                if alerta:
+                    render_historico_alerta(alerta)
+                    
+                    if st.button("❌ Fechar", key="fechar_historico"):
+                        st.session_state.pop('historico_alerta_v2')
                         st.rerun()
-        
-        # Lista de alertas V2
-        else:
-            if not alertas_v2_filtrados:
-                st.success("✅ Nenhum alerta encontrado com os filtros aplicados!")
+            
+            elif st.session_state.get('resolver_alerta_v2'):
+                alerta_id = st.session_state['resolver_alerta_v2']
+                alerta = get_alerta_v2_por_id(alerta_id)
+                
+                if alerta:
+                    st.warning("🔒 Resolver Alerta")
+                    st.write(f"**{alerta.get('titulo')}**")
+                    
+                    with st.form("form_resolver_v2"):
+                        justificativa = st.text_area(
+                            "Justificativa de resolução",
+                            placeholder="Descreva como o alerta foi resolvido...",
+                            height=120
+                        )
+                        
+                        col_res1, col_res2 = st.columns(2)
+                        with col_res1:
+                            submitted = st.form_submit_button("✅ Confirmar", type="primary", use_container_width=True)
+                        with col_res2:
+                            cancel = st.form_submit_button("❌ Cancelar", use_container_width=True)
+                        
+                        if submitted and justificativa:
+                            usuario = st.session_state.get('usuario_atual', 'Gestor')
+                            transicionar_estado(alerta_id, ESTADO_RESOLVIDO, usuario, justificativa)
+                            st.success("✅ Alerta resolvido!")
+                            st.session_state.pop('resolver_alerta_v2')
+                            st.rerun()
+                        
+                        if cancel:
+                            st.session_state.pop('resolver_alerta_v2')
+                            st.rerun()
+            
+            # Lista de alertas V2
             else:
-                st.info(f"📊 Exibindo **{len(alertas_v2_filtrados)}** alerta(s)")
-                
-                def handle_action(acao, alerta):
-                    if acao == 'ver_contrato':
-                        contratos = get_todos_contratos()
-                        contrato = next((c for c in contratos if c['id'] == alerta['contrato_id']), None)
-                        if contrato:
-                            st.session_state.contrato_selecionado = contrato
-                            st.switch_page("pages/01_📄_Contrato.py")
-                    elif acao == 'registrar_acao':
-                        st.session_state['acao_alerta_v2'] = alerta['id']
-                        st.rerun()
-                    elif acao == 'ver_historico':
-                        st.session_state['historico_alerta_v2'] = alerta['id']
-                        st.rerun()
-                    elif acao == 'resolver':
-                        st.session_state['resolver_alerta_v2'] = alerta['id']
-                        st.rerun()
-                
-                for alerta_v2 in alertas_v2_filtrados:
-                    render_alerta_v2_card(alerta_v2, on_action=handle_action)
-                    st.markdown("---")
+                if not alertas_v2_filtrados:
+                    st.success("✅ Nenhum alerta encontrado com os filtros aplicados!")
+                else:
+                    st.info(f"📊 Exibindo **{len(alertas_v2_filtrados)}** alerta(s)")
+                    
+                    def handle_action(acao, alerta):
+                        if acao == 'ver_contrato':
+                            contratos = get_todos_contratos()
+                            contrato = next((c for c in contratos if c['id'] == alerta['contrato_id']), None)
+                            if contrato:
+                                st.session_state.contrato_selecionado = contrato
+                                st.switch_page("pages/01_📄_Contrato.py")
+                        elif acao == 'registrar_acao':
+                            st.session_state['acao_alerta_v2'] = alerta['id']
+                            st.rerun()
+                        elif acao == 'ver_historico':
+                            st.session_state['historico_alerta_v2'] = alerta['id']
+                            st.rerun()
+                        elif acao == 'resolver':
+                            st.session_state['resolver_alerta_v2'] = alerta['id']
+                            st.rerun()
+                    
+                    for alerta_v2 in alertas_v2_filtrados:
+                        render_alerta_v2_card(alerta_v2, on_action=handle_action)
+                        st.markdown("---")
         
         # Tab de BI
         with tab_bi:
