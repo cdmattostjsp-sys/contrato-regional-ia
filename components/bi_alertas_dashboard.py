@@ -78,7 +78,7 @@ def render_kpis_principais(kpis: Dict):
 def render_previsao_rupturas(previsoes: List[Dict]):
     """Renderiza tabela de previsão de rupturas"""
     
-    st.subheader("🔮 Previsão de Rupturas - Próximos Contratos em Risco")
+    st.subheader("📊 Previsão de Rupturas - Próximos Contratos em Risco")
     
     if not previsoes:
         st.success("✅ Nenhum contrato em risco identificado no momento")
